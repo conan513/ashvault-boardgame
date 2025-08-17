@@ -8,6 +8,7 @@ let LAST_TARGETS = [];
 const $ = sel => document.querySelector(sel);
 
 const rollBtn = $("#rollBtn");
+const endTurnBtn = $("#endTurnBtn");
 const diceOut = $("#diceOut");
 
 socket.on("connect", () => {
@@ -28,17 +29,27 @@ socket.on("updateGame", (state) => {
 });
 
 socket.on("turnChanged", (playerId) => {
-  updateTurnUI(playerId);
+  // azonnali frissítés
+  const mine = (playerId === MY_ID);
+  $("#turnInfo").innerHTML = mine
+  ? `<span class="badge turn">A te köröd</span>`
+  : `Most: <b>${shortName(playerId) || "-"}</b>`;
+  rollBtn.disabled = !mine;
+  endTurnBtn.disabled = !mine;
 });
 
-socket.on("diceResult", ({ dice, targets }) => {
+socket.on("diceResult", ({ dice, targets, playerId }) => {
   LAST_DICE = dice;
   LAST_TARGETS = targets;
-  diceOut.textContent = `Dobás: ${dice}`;
-  highlightTargets(targets, (targetId) => {
-    socket.emit("confirmMove", { dice, targetCellId: targetId });
-    clearHighlights();
-  });
+  if (playerId === MY_ID) {
+    diceOut.textContent = `Dobás: ${dice}`;
+    highlightTargets(targets, (targetId) => {
+      socket.emit("confirmMove", { dice, targetCellId: targetId });
+      clearHighlights();
+    });
+  } else {
+    showToast(`🎲 ${shortName(playerId)} dobott: ${dice}`);
+  }
 });
 
 socket.on("cardDrawn", (payload) => { renderCard(payload); });
@@ -84,6 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
   rollBtn.addEventListener("click", () => {
     socket.emit("rollDice");
   });
+
+  endTurnBtn.addEventListener("click", () => {
+    socket.emit("endTurn");
+  });
 });
 
 function updateTurnUI() {
@@ -94,4 +109,5 @@ function updateTurnUI() {
   ? `<span class="badge turn">A te köröd</span>`
   : `Most: <b>${shortName(current) || "-"}</b>`;
   rollBtn.disabled = !mine;
+  endTurnBtn.disabled = !mine;
 }

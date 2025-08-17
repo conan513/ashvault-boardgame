@@ -133,13 +133,28 @@ io.on("connection", (socket) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
     if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
+
     const dice = Math.floor(Math.random() * 6) + 1;
     const player = gameState.players[socket.id];
     if (!player || !player.alive) return;
     const targets = adjacencyAtDistance(gameState.board, player.position, dice);
-    socket.emit("diceResult", { dice, targets });
+
+    io.to(socket.currentRoom).emit("diceResult", {
+      dice,
+      targets,
+      playerId: socket.id
+    });
   });
 
+  socket.on("endTurn", () => {
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
+    advanceTurn(socket.currentRoom);
+  });
+
+  // confirmMove, resolvePVP, disconnect -> marad a múltkori több szobás logika
+  // (nincs változtatás, mert már minden io.emit szobára ment)
   socket.on("confirmMove", ({ dice, targetCellId }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
