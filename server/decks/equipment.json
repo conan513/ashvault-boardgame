@@ -1,1 +1,122 @@
-[{"id":"eq1","name":"Master-Crafted Blade","statMods":{"ATK":2}},{"id":"eq2","name":"Storm Shield","statMods":{"DEF":2}},{"id":"eq3","name":"Psy-Focus Talisman","statMods":{"PSY":2}},{"id":"eq4","name":"Refractor Field","statMods":{"RES":2}},{"id":"eq5","name":"Med-Patch","statMods":{}},{"id":"eq6","name":"Plasma Pistol","statMods":{"ATK":1}},{"id":"eq7","name":"Rune of Warding","statMods":{"RES":1,"PSY":1}},{"id":"eq8","name":"Wraithbone Charm","statMods":{"PSY":1}},{"id":"eq9","name":"Choppa of Da Boss","statMods":{"ATK":2}},{"id":"eq10","name":"Ramshackle Plates","statMods":{"DEF":1}},{"id":"eq11","name":"Daemonblade","statMods":{"ATK":2,"RES":-1}},{"id":"eq12","name":"Mark of the Warrior","statMods":{"ATK":1,"DEF":1}},{"id":"eq13","name":"Servo-Boost","statMods":{"ATK":1,"RES":1}},{"id":"eq14","name":"Purity Seals","statMods":{"RES":1}},{"id":"eq15","name":"Hexed Trinket","statMods":{"ATK":1,"PSY":1}},{"id":"eq16","name":"Power Fist","statMods":{"ATK":2}},{"id":"eq17","name":"Artificer Armor","statMods":{"DEF":2}},{"id":"eq18","name":"Spirit Stone","statMods":{"PSY":2}},{"id":"eq19","name":"Painboy Brew","statMods":{}},{"id":"eq20","name":"Warp-Touched Charm","statMods":{"PSY":1,"RES":1}}]
+[
+  {
+    "id": "eq1",
+    "name": "Master-Crafted Blade",
+    "statMods": { "ATK": 2 },
+    "image": "/images/items/eq1.png"
+  },
+  {
+    "id": "eq2",
+    "name": "Storm Shield",
+    "statMods": { "DEF": 2 },
+    "image": "/images/items/eq2.png"
+  },
+  {
+    "id": "eq3",
+    "name": "Psy-Focus Talisman",
+    "statMods": { "PSY": 2 },
+    "image": "/images/items/eq3.png"
+  },
+  {
+    "id": "eq4",
+    "name": "Refractor Field",
+    "statMods": { "RES": 2 },
+    "image": "/images/items/eq4.png"
+  },
+  {
+    "id": "eq5",
+    "name": "Med-Patch",
+    "statMods": {},
+    "image": "/images/items/eq5.png"
+  },
+  {
+    "id": "eq6",
+    "name": "Plasma Pistol",
+    "statMods": { "ATK": 1 },
+    "image": "/images/items/eq6.png"
+  },
+  {
+    "id": "eq7",
+    "name": "Rune of Warding",
+    "statMods": { "RES": 1, "PSY": 1 },
+    "image": "/images/items/eq7.png"
+  },
+  {
+    "id": "eq8",
+    "name": "Wraithbone Charm",
+    "statMods": { "PSY": 1 },
+    "image": "/images/items/eq8.png"
+  },
+  {
+    "id": "eq9",
+    "name": "Choppa of Da Boss",
+    "statMods": { "ATK": 2 },
+    "image": "/images/items/eq9.png"
+  },
+  {
+    "id": "eq10",
+    "name": "Ramshackle Plates",
+    "statMods": { "DEF": 1 },
+    "image": "/images/items/eq10.png"
+  },
+  {
+    "id": "eq11",
+    "name": "Daemonblade",
+    "statMods": { "ATK": 2, "RES": -1 },
+    "image": "/images/items/eq11.png"
+  },
+  {
+    "id": "eq12",
+    "name": "Mark of the Warrior",
+    "statMods": { "ATK": 1, "DEF": 1 },
+    "image": "/images/items/eq12.png"
+  },
+  {
+    "id": "eq13",
+    "name": "Servo-Boost",
+    "statMods": { "ATK": 1, "RES": 1 },
+    "image": "/images/items/eq13.png"
+  },
+  {
+    "id": "eq14",
+    "name": "Purity Seals",
+    "statMods": { "RES": 1 },
+    "image": "/images/items/eq14.png"
+  },
+  {
+    "id": "eq15",
+    "name": "Hexed Trinket",
+    "statMods": { "ATK": 1, "PSY": 1 },
+    "image": "/images/items/eq15.png"
+  },
+  {
+    "id": "eq16",
+    "name": "Power Fist",
+    "statMods": { "ATK": 2 },
+    "image": "/images/items/eq16.png"
+  },
+  {
+    "id": "eq17",
+    "name": "Artificer Armor",
+    "statMods": { "DEF": 2 },
+    "image": "/images/items/eq17.png"
+  },
+  {
+    "id": "eq18",
+    "name": "Spirit Stone",
+    "statMods": { "PSY": 2 },
+    "image": "/images/items/eq18.png"
+  },
+  {
+    "id": "eq19",
+    "name": "Painboy Brew",
+    "statMods": {},
+    "image": "/images/items/eq19.png"
+  },
+  {
+    "id": "eq20",
+    "name": "Warp-Touched Charm",
+    "statMods": { "PSY": 1, "RES": 1 },
+    "image": "/images/items/eq20.png"
+  }
+]

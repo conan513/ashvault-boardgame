@@ -74,7 +74,17 @@ socket.on("diceResult", ({ dice, targets, playerId }) => {
 socket.on("cardDrawn", (payload) => { renderCard(payload); });
 socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); });
 socket.on("battleResult", (data) => { renderBattle(data); });
-socket.on("itemLooted", ({ playerId, item }) => { showToast(`🎁 ${shortName(playerId)} kapta: ${item.name}`); });
+socket.on("itemLooted", ({ playerId, item }) => {
+  showToast(`🎁 ${shortName(playerId)} kapta: ${item.name}`);
+
+  const view = document.getElementById("cardView");
+  view.innerHTML = `
+  <div class="card">
+  <div class="title">${item.name}</div>
+  <img src="${item.image}" alt="${item.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />
+  </div>
+  `;
+});
 socket.on("itemStolen", ({ from, to, item }) => { showToast(`🗡️ ${shortName(to)} ellopta ${shortName(from)} tárgyát: ${item.name}`); });
 socket.on("playerDied", ({ playerId }) => { showToast(`💀 ${shortName(playerId)} elesett!`); });
 socket.on("pvpStarted", ({ aId, bId, cellName }) => {
