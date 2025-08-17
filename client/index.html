@@ -24,7 +24,18 @@
 
   <main>
     <section id="leftPanel">
-      <div id="joinPanel" class="panel">
+
+      <!-- SZOBA PANEL -->
+      <div id="roomPanel" class="panel">
+        <h2>Szoba</h2>
+        <form id="roomForm">
+          <label>Szoba neve: <input id="roomName" required maxlength="16" /></label>
+          <button type="submit">Létrehozás / Csatlakozás</button>
+        </form>
+      </div>
+
+      <!-- KARAKTERVÁLASZTÁS -->
+      <div id="joinPanel" class="panel" style="display:none">
         <h2>Csatlakozás</h2>
         <form id="joinForm">
           <label>Név: <input id="playerName" required maxlength="16" /></label>
@@ -55,7 +66,7 @@
   </main>
 
   <footer>
-    <small>Fan-made, nem hivatalos – Games Workshop tulajdon. (Kód: kliens modulok: ./ui/*.js, szerver: ./server/*) <!-- Ha csak index.html-t töltesz vissza, lásd: server/index.js --> </small>
+    <small>Fan-made, nem hivatalos – Games Workshop tulajdon. (Kód: kliens modulok: ./ui/*.js, szerver: ./server/*)</small>
   </footer>
 </body>
 </html>

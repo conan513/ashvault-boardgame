@@ -1,7 +1,4 @@
 // server/index.js
-// Főindító: Express + Socket.IO + statikus fájlok kiszolgálása
-// Hivatkozik: ./gameLoop.js, ./board.js, ./characters.js, ./battleSystem.js, ./inventory.js, ./decks/*.json
-
 const path = require("path");
 const express = require("express");
 const http = require("http");
@@ -18,7 +15,7 @@ const {
   drawEquipmentCard,
   drawEnemyCard,
   resetDecksState
-} = require("./gameLoop"); // itt tároljuk a paklik állapotát és húzást
+} = require("./gameLoop");
 
 const app = express();
 app.use(cors());
@@ -28,31 +25,36 @@ app.use("/", express.static(path.join(__dirname, "..", "client")));
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-/** ---- JÁTÉK ÁLLAPOT ---- **/
-let gameState = {
-  board: initBoard(),
-  players: {}, // socketId -> player
-  turnOrder: [],
-  currentTurnIndex: 0,
-  lastDrawn: null, // utolsó húzott kártya UI-hoz
-  pvpPending: null // {aId,bId,cellId}
-};
+/** ---- TÖBB SZOBÁS JÁTÉK ---- **/
+let rooms = {}; // roomName -> gameState
 
-resetDecksState(); // paklik keverése
+function makeGameState() {
+  return {
+    board: initBoard(),
+    players: {},
+    turnOrder: [],
+    currentTurnIndex: 0,
+    lastDrawn: null,
+    pvpPending: null
+  };
+}
 
-function getCurrentPlayerId() {
-  return gameState.turnOrder[gameState.currentTurnIndex] || null;
+function getCurrentPlayerId(state) {
+  return state.turnOrder[state.currentTurnIndex] || null;
 }
-function isPlayersTurn(socketId) {
-  return socketId === getCurrentPlayerId();
+function isPlayersTurn(state, socketId) {
+  return socketId === getCurrentPlayerId(state);
 }
-function broadcast() {
-  io.emit("updateGame", sanitizeGameStateForClients(gameState));
+function broadcast(roomName) {
+  const state = rooms[roomName];
+  if (!state) return;
+  io.to(roomName).emit("updateGame", sanitizeGameStateForClients(state));
 }
-function advanceTurn() {
-  if (gameState.turnOrder.length === 0) return;
-  gameState.currentTurnIndex = (gameState.currentTurnIndex + 1) % gameState.turnOrder.length;
-  io.emit("turnChanged", getCurrentPlayerId());
+function advanceTurn(roomName) {
+  const state = rooms[roomName];
+  if (!state || state.turnOrder.length === 0) return;
+  state.currentTurnIndex = (state.currentTurnIndex + 1) % state.turnOrder.length;
+  io.to(roomName).emit("turnChanged", getCurrentPlayerId(state));
 }
 
 function sanitizeGameStateForClients(state) {
@@ -75,7 +77,7 @@ function sanitizeGameStateForClients(state) {
     players,
     turnOrder: state.turnOrder,
     currentTurnIndex: state.currentTurnIndex,
-    currentPlayer: getCurrentPlayerId(),
+    currentPlayer: getCurrentPlayerId(state),
     lastDrawn: state.lastDrawn,
     pvpPending: state.pvpPending
   };
@@ -84,9 +86,22 @@ function sanitizeGameStateForClients(state) {
 /** ---- SOCKET.IO ---- **/
 io.on("connection", (socket) => {
   console.log("Kapcsolódott:", socket.id);
-  socket.emit("hello", { factions, characters });
+
+  socket.on("createOrJoinRoom", ({ roomName }) => {
+    if (!rooms[roomName]) {
+      rooms[roomName] = makeGameState();
+      resetDecksState();
+    }
+    socket.join(roomName);
+    socket.currentRoom = roomName;
+    socket.emit("roomJoined", { roomName });
+    socket.emit("hello", { factions, characters });
+  });
 
   socket.on("joinGame", ({ playerName, characterId }) => {
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+
     const c = characters.find(ch => ch.id === characterId);
     if (!c) return socket.emit("errorMsg", "Ismeretlen karakter.");
 
@@ -109,13 +124,15 @@ io.on("connection", (socket) => {
     gameState.turnOrder.push(socket.id);
     if (gameState.turnOrder.length === 1) {
       gameState.currentTurnIndex = 0;
-      io.emit("turnChanged", getCurrentPlayerId());
+      io.to(socket.currentRoom).emit("turnChanged", socket.id);
     }
-    broadcast();
+    broadcast(socket.currentRoom);
   });
 
   socket.on("rollDice", () => {
-    if (!isPlayersTurn(socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
     const dice = Math.floor(Math.random() * 6) + 1;
     const player = gameState.players[socket.id];
     if (!player || !player.alive) return;
@@ -124,7 +141,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("confirmMove", ({ dice, targetCellId }) => {
-    if (!isPlayersTurn(socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
     const player = gameState.players[socket.id];
     if (!player || !player.alive) return;
 
@@ -136,109 +155,113 @@ io.on("connection", (socket) => {
     player.position = targetCellId;
 
     const othersHere = Object.values(gameState.players)
-      .filter(p => p.id !== player.id && p.alive && p.position === targetCellId);
+    .filter(p => p.id !== player.id && p.alive && p.position === targetCellId);
     const differentFaction = othersHere.find(p => p.faction !== player.faction);
 
     const cell = cellById(gameState.board, targetCellId);
 
     if (differentFaction) {
       gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
-      io.emit("pvpStarted", { aId: player.id, bId: differentFaction.id, cellName: cell.name });
+      io.to(socket.currentRoom).emit("pvpStarted", { aId: player.id, bId: differentFaction.id, cellName: cell.name });
     } else {
       if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
         const card = drawFactionCard(cell.faction);
         gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
-        io.emit("cardDrawn", gameState.lastDrawn);
+        io.to(socket.currentRoom).emit("cardDrawn", gameState.lastDrawn);
 
         const sameFaction = (player.faction === cell.faction);
 
         if (card.effect === "battle") {
           const enemy = drawEnemyCard();
-          io.emit("enemyDrawn", enemy);
+          io.to(socket.currentRoom).emit("enemyDrawn", enemy);
           const result = battlePVE(player, enemy, io, socket.id);
-          io.emit("battleResult", { type: "PVE", result, playerId: player.id, enemy });
+          io.to(socket.currentRoom).emit("battleResult", { type: "PVE", result, playerId: player.id, enemy });
           if (result.winner === "enemy") {
             if (player.stats.HP <= 0) {
               player.alive = false;
-              io.emit("playerDied", { playerId: player.id, cause: "PVE" });
+              io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
             }
           } else {
             if (!sameFaction || card.loot) {
               const item = drawEquipmentCard();
               applyItemToPlayer(player, item);
-              io.emit("itemLooted", { playerId: player.id, item });
+              io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
             }
           }
         } else {
           if (card.loot) {
             const item = drawEquipmentCard();
             applyItemToPlayer(player, item);
-            io.emit("itemLooted", { playerId: player.id, item });
+            io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
           }
           if (card.hpDelta) {
             player.stats.HP += card.hpDelta;
             if (player.stats.HP <= 0) {
               player.alive = false;
-              io.emit("playerDied", { playerId: player.id, cause: "Event" });
+              io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
             }
           }
           if (card.statMods) {
             for (const [k, v] of Object.entries(card.statMods)) {
               player.stats[k] = Math.max(0, player.stats[k] + v);
             }
-            io.emit("statsChanged", { playerId: player.id, stats: player.stats });
+            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
           }
         }
       }
     }
 
-    broadcast();
-    if (!gameState.pvpPending) advanceTurn();
+    broadcast(socket.currentRoom);
+    if (!gameState.pvpPending) advanceTurn(socket.currentRoom);
   });
 
-  socket.on("resolvePVP", () => {
-    const pending = gameState.pvpPending;
-    if (!pending) return;
-    const A = gameState.players[pending.aId];
-    const B = gameState.players[pending.bId];
-    if (!A || !B || !A.alive || !B.alive) {
+    socket.on("resolvePVP", () => {
+      const gameState = rooms[socket.currentRoom];
+      if (!gameState) return;
+      const pending = gameState.pvpPending;
+      if (!pending) return;
+      const A = gameState.players[pending.aId];
+      const B = gameState.players[pending.bId];
+      if (!A || !B || !A.alive || !B.alive) {
+        gameState.pvpPending = null;
+        broadcast(socket.currentRoom);
+        advanceTurn(socket.currentRoom);
+        return;
+      }
+      const result = battlePVP(A, B, io);
+      io.to(socket.currentRoom).emit("battleResult", { type: "PVP", result, aId: A.id, bId: B.id, cellId: pending.cellId });
+
+      const loser = result.winner === "A" ? B : A;
+      loser.stats.HP -= 5;
+      if (loser.stats.HP <= 0) {
+        loser.alive = false;
+        io.to(socket.currentRoom).emit("playerDied", { playerId: loser.id, cause: "PVP" });
+      }
+
+      const winner = result.winner === "A" ? A : B;
+      if (loser.inventory.length > 0) {
+        const stolen = loser.inventory.pop();
+        applyItemToPlayer(winner, stolen);
+        io.to(socket.currentRoom).emit("itemStolen", { from: loser.id, to: winner.id, item: stolen });
+      }
+
       gameState.pvpPending = null;
-      broadcast();
-      advanceTurn();
-      return;
-    }
-    const result = require("./battleSystem").battlePVP(A, B, io);
-    io.emit("battleResult", { type: "PVP", result, aId: A.id, bId: B.id, cellId: pending.cellId });
+      broadcast(socket.currentRoom);
+      advanceTurn(socket.currentRoom);
+    });
 
-    const loser = result.winner === "A" ? B : A;
-    loser.stats.HP -= 5;
-    if (loser.stats.HP <= 0) {
-      loser.alive = false;
-      io.emit("playerDied", { playerId: loser.id, cause: "PVP" });
-    }
-
-    const winner = result.winner === "A" ? A : B;
-    if (loser.inventory.length > 0) {
-      const stolen = loser.inventory.pop();
-      applyItemToPlayer(winner, stolen);
-      io.emit("itemStolen", { from: loser.id, to: winner.id, item: stolen });
-    }
-
-    gameState.pvpPending = null;
-    broadcast();
-    advanceTurn();
-  });
-
-  socket.on("disconnect", () => {
-    const wasCurrent = getCurrentPlayerId() === socket.id;
-    delete gameState.players[socket.id];
-    gameState.turnOrder = gameState.turnOrder.filter(id => id !== socket.id);
-    if (gameState.currentTurnIndex >= gameState.turnOrder.length) {
-      gameState.currentTurnIndex = 0;
-    }
-    broadcast();
-    if (wasCurrent) io.emit("turnChanged", getCurrentPlayerId());
-  });
+    socket.on("disconnect", () => {
+      const gameState = rooms[socket.currentRoom];
+      if (!gameState) return;
+      const wasCurrent = getCurrentPlayerId(gameState) === socket.id;
+      delete gameState.players[socket.id];
+      gameState.turnOrder = gameState.turnOrder.filter(id => id !== socket.id);
+      if (gameState.currentTurnIndex >= gameState.turnOrder.length) {
+        gameState.currentTurnIndex = 0;
+      }
+      broadcast(socket.currentRoom);
+      if (wasCurrent) io.to(socket.currentRoom).emit("turnChanged", getCurrentPlayerId(gameState));
+    });
 });
 
 const PORT = process.env.PORT || 3000;

@@ -14,6 +14,7 @@ socket.on("connect", () => {
   MY_ID = socket.id;
 });
 
+// a szoba kiválasztás után jön a hello
 socket.on("hello", ({ factions, characters }) => {
   renderCharacterSelect(characters);
 });
@@ -54,8 +55,23 @@ socket.on("errorMsg", (m) => alert(m));
 
 function shortName(pid){ const p = GAME?.players?.[pid]; return p ? p.name : pid; }
 
-// Join form
+// Join form + Room form
 document.addEventListener("DOMContentLoaded", () => {
+
+  // szoba form
+  $("#roomForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = $("#roomName").value.trim();
+    if (!name) return;
+    socket.emit("createOrJoinRoom", { roomName: name });
+  });
+
+  socket.on("roomJoined", ({ roomName }) => {
+    $("#roomPanel").style.display = "none";   // szoba panel eltűnik
+    $("#joinPanel").style.display = "block";  // karakterválasztó megjelenik
+  });
+
+  // karakter választó
   $("#joinForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const name = $("#playerName").value.trim();
@@ -75,7 +91,7 @@ function updateTurnUI() {
   const current = GAME.currentPlayer;
   const mine = (current === MY_ID);
   $("#turnInfo").innerHTML = mine
-    ? `<span class="badge turn">A te köröd</span>`
-    : `Most: <b>${shortName(current) || "-"}</b>`;
+  ? `<span class="badge turn">A te köröd</span>`
+  : `Most: <b>${shortName(current) || "-"}</b>`;
   rollBtn.disabled = !mine;
 }
