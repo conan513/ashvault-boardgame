@@ -41,9 +41,28 @@ socket.on("turnChanged", (playerId) => {
 socket.on("diceResult", ({ dice, targets, playerId }) => {
   LAST_DICE = dice;
   LAST_TARGETS = targets;
+
   if (playerId === MY_ID) {
     diceOut.textContent = `Dobás: ${dice}`;
-    highlightTargets(targets, (targetId) => {
+
+    const myCell = GAME.board.find(c => c.id === GAME.players[MY_ID].position);
+    if (!myCell) return;
+
+    const myRing = myCell.ring;
+    // összes mező ebben a gyűrűben, sorrendben ID szerint
+    const ringCells = GAME.board
+    .filter(c => c.ring === myRing)
+    .sort((a,b) => a.id - b.id);
+
+    // pozícióm indexe a gyűrűn belül
+    const myIdx = ringCells.findIndex(c => c.id === myCell.id);
+    const size = ringCells.length;
+
+    // két irányban a 'dice' lépésnyire lévő mezők
+    const target1 = ringCells[(myIdx + dice) % size].id;
+    const target2 = ringCells[(myIdx - dice + size) % size].id;
+
+    highlightTargets([target1, target2], (targetId) => {
       socket.emit("confirmMove", { dice, targetCellId: targetId });
       clearHighlights();
     });
