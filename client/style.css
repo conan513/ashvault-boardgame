@@ -1,0 +1,51 @@
+:root {
+  --bg: #0c0f14;
+  --fg: #e6e6e6;
+  --accent: #50d1ff;
+  --sm: #2a7fff;
+  --el: #32d1a0;
+  --ok: #70d13e;
+  --ch: #c04ff0;
+  --neutral: #888;
+  --danger: #ff6b6b;
+  --good: #6bff9e;
+  --panel: #131823;
+  --border: #24324a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
+header, footer { padding: 10px 16px; background: #0b1220; border-bottom: 1px solid var(--border); }
+h1 { font-size: 20px; margin: 6px 0; }
+main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 100px); }
+#leftPanel { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+#boardPanel { display: grid; place-items: center; padding: 12px; }
+#boardSVG { background: radial-gradient(ellipse at center, #0b0f15 0%, #0b0f15 60%, #0a0d12 100%); border: 1px solid var(--border); border-radius: 8px; }
+#statusBar { display: flex; gap: 12px; align-items: center; }
+#rollBtn[disabled] { opacity: 0.5; }
+.faction-sm { color: var(--sm); } .faction-el { color: var(--el); }
+.faction-ok { color: var(--ok); } .faction-ch { color: var(--ch); }
+.cell { cursor: default; }
+.cell.Outer { fill: transparent; }
+.cell circle { stroke: #233046; stroke-width: 2px; fill: #0f1521; }
+.cell text { fill: #9eb3d7; font-size: 10px; text-anchor: middle; }
+.cell.sm circle { stroke: var(--sm); }
+.cell.el circle { stroke: var(--el); }
+.cell.ok circle { stroke: var(--ok); }
+.cell.ch circle { stroke: var(--ch); }
+.cell.ne circle { stroke: var(--neutral); }
+.cell.highlight circle { fill: #1e2a3f; filter: drop-shadow(0 0 6px rgba(80,209,255,0.6)); }
+.cell.highlight { cursor: pointer; }
+.cell.current circle { stroke-width: 4px; }
+.playerToken { stroke: #fff; stroke-width: 2px; }
+.playerToken text { fill: #fff; font-size: 11px; font-weight: bold; }
+.card { border: 1px solid var(--border); padding: 8px; border-radius: 6px; background:#0f1521; }
+.card .title { font-weight: 700; }
+.card .faction { opacity: 0.8; }
+#playersList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.playerRow { display: grid; grid-template-columns: 1fr auto; gap: 8px; border:1px solid var(--border); padding:6px;border-radius:6px; }
+.playerRow .stats { font-size: 12px; opacity: 0.9; }
+.playerRow .dead { color: var(--danger); font-weight: 700; }
+.badge { padding: 2px 6px; border-radius: 999px; border:1px solid var(--border); font-size: 12px; }
+.badge.turn { background: #132338; color: var(--accent); }
+#battleView .line { margin:6px 0; }

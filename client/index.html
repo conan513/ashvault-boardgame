@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <title>WH40K Online Társasjáték</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./style.css" />
+  <script src="/socket.io/socket.io.js"></script>
+  <script defer src="./app.js"></script>
+  <script defer src="./ui/boardUI.js"></script>
+  <script defer src="./ui/characterSelect.js"></script>
+  <script defer src="./ui/deckUI.js"></script>
+  <script defer src="./ui/battleUI.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Warhammer 40,000 – Online Boardgame</h1>
+    <div id="statusBar">
+      <span id="turnInfo">Kapcsolódás...</span>
+      <button id="rollBtn" disabled>🎲 Dobás</button>
+      <span id="diceOut"></span>
+    </div>
+  </header>
+
+  <main>
+    <section id="leftPanel">
+      <div id="joinPanel" class="panel">
+        <h2>Csatlakozás</h2>
+        <form id="joinForm">
+          <label>Név: <input id="playerName" required maxlength="16" /></label>
+          <div id="charSelect"></div>
+          <button type="submit">Belépés</button>
+        </form>
+      </div>
+
+      <div id="playersPanel" class="panel">
+        <h2>Játékosok</h2>
+        <ul id="playersList"></ul>
+      </div>
+
+      <div id="lastCard" class="panel">
+        <h2>Utolsó húzott kártya</h2>
+        <div id="cardView"></div>
+      </div>
+
+      <div id="battlePanel" class="panel">
+        <h2>Csata</h2>
+        <div id="battleView"></div>
+      </div>
+    </section>
+
+    <section id="boardPanel">
+      <svg id="boardSVG" viewBox="0 0 900 900" width="900" height="900" aria-label="Játéktábla"></svg>
+    </section>
+  </main>
+
+  <footer>
+    <small>Fan-made, nem hivatalos – Games Workshop tulajdon. (Kód: kliens modulok: ./ui/*.js, szerver: ./server/*) <!-- Ha csak index.html-t töltesz vissza, lásd: server/index.js --> </small>
+  </footer>
+</body>
+</html>
