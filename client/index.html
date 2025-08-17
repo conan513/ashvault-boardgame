@@ -14,13 +14,17 @@
 </head>
 <body>
   <header>
-    <h1>Warhammer 40,000 – Online Boardgame</h1>
-    <div id="statusBar">
-      <span id="turnInfo">Kapcsolódás...</span>
-      <button id="rollBtn" disabled>🎲 Dobás</button>
-      <button id="endTurnBtn" disabled>➡️ Kör vége</button>
-      <span id="diceOut"></span>
-    </div>
+  <h1 data-i18n="ui.header.title">Warhammer 40,000 – Online Boardgame</h1>
+  <div id="statusBar">
+    <span id="turnInfo" data-i18n="ui.labels.connecting">Connecting...</span>
+    <button id="rollBtn" disabled data-i18n="ui.buttons.roll">🎲 Roll</button>
+    <button id="endTurnBtn" disabled data-i18n="ui.buttons.endTurn">➡️ End Turn</button>
+    <span id="diceOut"></span>
+    <select id="langSelect" style="margin-left:auto">
+      <option value="en">English</option>
+      <option value="hu">Magyar</option>
+    </select>
+  </div>
   </header>
 
   <main>

@@ -1,4 +1,3 @@
-// server/index.js
 const path = require("path");
 const express = require("express");
 const http = require("http");
@@ -153,22 +152,47 @@ io.on("connection", (socket) => {
     advanceTurn(socket.currentRoom);
   });
 
-  // confirmMove, resolvePVP, disconnect -> marad a múltkori több szobás logika
-  // (nincs változtatás, mert már minden io.emit szobára ment)
   socket.on("confirmMove", ({ dice, targetCellId }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
     if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
+
     const player = gameState.players[socket.id];
     if (!player || !player.alive) return;
 
-    const targets = adjacencyAtDistance(gameState.board, player.position, dice);
-    if (!targets.includes(targetCellId)) {
-      return socket.emit("errorMsg", "Érvénytelen célmező.");
+    // Get the current position of the player
+    const currentCell = gameState.board.find(c => c.id === player.position);
+
+    // Determine valid movement options based on current cell (inner or outer ring)
+    const validTargets = adjacencyAtDistance(gameState.board, player.position, dice);
+
+    // Ensure the target is within the valid set based on the ring and distance
+    const isInOuterRing = currentCell.ring === "OUTER";
+    const isInInnerRing = currentCell.ring === "INNER";
+
+    // Ensure the target is within the valid set based on the player's current ring
+    if (isInOuterRing) {
+      // Can only move in the outer ring
+      if (!validTargets.includes(targetCellId) || gameState.board[targetCellId].ring !== "OUTER") {
+        return socket.emit("errorMsg", "Érvénytelen célmező az Outer gyűrűben.");
+      }
+    } else if (isInInnerRing) {
+      // Can only move in the inner ring
+      if (!validTargets.includes(targetCellId) || gameState.board[targetCellId].ring !== "INNER") {
+        return socket.emit("errorMsg", "Érvénytelen célmező az Inner gyűrűben.");
+      }
     }
 
+    // Ensure that the target is exactly the right distance from the current position
+    const distance = Math.abs(currentCell.id - targetCellId);
+    if (distance !== dice) {
+      return socket.emit("errorMsg", "A mozgás távolsága nem egyezik meg a dobott számú mezővel.");
+    }
+
+    // Move the player to the target cell
     player.position = targetCellId;
 
+    // Handle potential battle or events at the new position
     const othersHere = Object.values(gameState.players)
     .filter(p => p.id !== player.id && p.alive && p.position === targetCellId);
     const differentFaction = othersHere.find(p => p.faction !== player.faction);
@@ -229,6 +253,7 @@ io.on("connection", (socket) => {
     broadcast(socket.currentRoom);
     if (!gameState.pvpPending) advanceTurn(socket.currentRoom);
   });
+
 
     socket.on("resolvePVP", () => {
       const gameState = rooms[socket.currentRoom];
