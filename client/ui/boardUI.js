@@ -76,6 +76,52 @@ function renderBoard(state) {
   }
 }
 
+function animateMove(player, path, callback) {
+  const svg = document.getElementById("boardSVG");
+  const token = [...svg.querySelectorAll(".playerToken")]
+  .find(t => t.querySelector("text").textContent === player.name.slice(0,2).toUpperCase());
+  if (!token) {
+    if (callback) callback();
+    return;
+  }
+
+  const disk = token.querySelector("circle");
+  const txt = token.querySelector("text");
+
+  let step = 0;
+  function moveNext() {
+    if (step >= path.length) {
+      if (callback) callback();
+      return;
+    }
+
+    const cell = BOARD_CACHE.find(c => c.id === path[step]);
+    const { x, y } = (function posFor(cell) {
+      const cx = 450, cy = 450;
+      const rOuter = 360, rInner = 240;
+      if (cell.ring === "CENTER") return { x: cx, y: cy };
+      if (cell.ring === "OUTER") {
+        const angle = (cell.id / 24) * Math.PI * 2 - Math.PI / 2;
+        return { x: cx + Math.cos(angle) * rOuter, y: cy + Math.sin(angle) * rOuter };
+      } else if (cell.ring === "INNER") {
+        const angle = ((cell.id - 24) / 12) * Math.PI * 2 - Math.PI / 2;
+        return { x: cx + Math.cos(angle) * rInner, y: cy + Math.sin(angle) * rInner };
+      }
+    })(cell);
+
+    // pozíció frissítés
+    disk.setAttribute("cx", x);
+    disk.setAttribute("cy", y);
+    txt.setAttribute("x", x);
+    txt.setAttribute("y", y + 4);
+
+    step++;
+    setTimeout(moveNext, 400); // 400ms lépésenként
+  }
+
+  moveNext();
+}
+
 function highlightTargets(targetIds, onPick) {
   clearHighlights();
   const svg = document.getElementById("boardSVG");
@@ -83,11 +129,42 @@ function highlightTargets(targetIds, onPick) {
     const g = svg.querySelector(`.cell[data-id="${id}"]`);
     if (!g) continue;
     g.classList.add("highlight");
-    const handler = () => onPick(id);
+    const handler = () => {
+      const me = GAME.players[MY_ID];
+      const myCell = GAME.board.find(c => c.id === me.position);
+      const ringCells = GAME.board.filter(c => c.ring === myCell.ring).sort((a,b) => a.id - b.id);
+      const myIdx = ringCells.findIndex(c => c.id === myCell.id);
+      const targetIdx = ringCells.findIndex(c => c.id === id);
+      const N = ringCells.length;
+
+      // jobbra haladás
+      let pathRight = [];
+      for (let step = 1; step <= LAST_DICE; step++) {
+        pathRight.push(ringCells[(myIdx + step) % N].id);
+      }
+
+      // balra haladás
+      let pathLeft = [];
+      for (let step = 1; step <= LAST_DICE; step++) {
+        pathLeft.push(ringCells[(myIdx - step + N) % N].id);
+      }
+
+      // válasszuk ki amelyik ténylegesen a targethez vezet
+      let chosenPath = pathRight;
+      if (pathLeft[pathLeft.length - 1] === id) {
+        chosenPath = pathLeft;
+      }
+
+      animateMove(me, chosenPath, () => {
+        socket.emit("confirmMove", { dice: LAST_DICE, targetCellId: id });
+        clearHighlights();
+      });
+    };
     g.addEventListener("click", handler, { once: true });
     HIGHLIGHTS.push({ g, handler });
   }
 }
+
 
 function clearHighlights() {
   for (const h of HIGHLIGHTS) {
@@ -115,3 +192,4 @@ window.renderBoard = renderBoard;
 window.highlightTargets = highlightTargets;
 window.clearHighlights = clearHighlights;
 window.showToast = showToast;
+window.animateMove = animateMove;
