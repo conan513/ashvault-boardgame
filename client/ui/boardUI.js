@@ -1,4 +1,3 @@
-// client/ui/boardUI.js
 let BOARD_CACHE = null;
 let HIGHLIGHTS = [];
 
@@ -13,17 +12,21 @@ function renderBoard(state) {
 
   function posFor(cell) {
     if (cell.ring === "CENTER") return { x: cx, y: cy };
-    const isOuter = cell.ring === "OUTER";
-    const ringIdx = isOuter ? cell.id : (cell.id - 20);
-    const angle = (ringIdx / 20) * Math.PI * 2 - Math.PI / 2;
-    const r = isOuter ? rOuter : rInner;
-    return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+    if (cell.ring === "OUTER") {
+      const ringIdx = cell.id;
+      const angle = (ringIdx / 24) * Math.PI * 2 - Math.PI / 2;
+      return { x: cx + Math.cos(angle) * rOuter, y: cy + Math.sin(angle) * rOuter };
+    } else if (cell.ring === "INNER") {
+      const ringIdx = cell.id - 24;
+      const angle = (ringIdx / 12) * Math.PI * 2 - Math.PI / 2;
+      return { x: cx + Math.cos(angle) * rInner, y: cy + Math.sin(angle) * rInner };
+    }
   }
 
   const ringStyle = "stroke:#2a3d5b; stroke-width:3; fill:none";
   svg.insertAdjacentHTML("beforeend",
-    `<circle cx="${cx}" cy="${cy}" r="${rInner}" style="${ringStyle}" />` +
-    `<circle cx="${cx}" cy="${cy}" r="${rOuter}" style="${ringStyle}" />`
+                         `<circle cx="${cx}" cy="${cy}" r="${rInner}" style="${ringStyle}" />` +
+                         `<circle cx="${cx}" cy="${cy}" r="${rOuter}" style="${ringStyle}" />`
   );
 
   for (const cell of state.board) {
@@ -85,6 +88,7 @@ function highlightTargets(targetIds, onPick) {
     HIGHLIGHTS.push({ g, handler });
   }
 }
+
 function clearHighlights() {
   for (const h of HIGHLIGHTS) {
     h.g.classList.remove("highlight");

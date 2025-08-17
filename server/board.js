@@ -1,43 +1,54 @@
-// server/board.js
-// Két gyűrűs 40 mező + 41. központ. 4 átjáró.
+// Két gyűrűs: külső 24 mező, belső 12 mező + 1 központ. 4 átjáró.
 
 const { factions } = require("./factions");
 
-const gatewaysOuter = [0, 5, 10, 15];
-const gatewaysInner = [20, 25, 30, 35];
+const gatewaysOuter = [0, 6, 12, 18];
+const gatewaysInner = [24, 27, 30, 33];
 
 function factionForIndex(i) {
-  const idx = i % 20;
-  if (idx >= 0 && idx <= 4) return "Space Marines";
-  if (idx >= 5 && idx <= 9) return "Eldar";
-  if (idx >= 10 && idx <= 14) return "Orks";
-  if (idx >= 15 && idx <= 19) return "Chaos";
+  if (i < 24) {
+    const idx = i % 24;
+    if (idx < 6) return "Space Marines";
+    if (idx < 12) return "Eldar";
+    if (idx < 18) return "Orks";
+    if (idx < 24) return "Chaos";
+  } else if (i < 36) {
+    const idx = (i - 24) % 12;
+    if (idx < 3) return "Space Marines";
+    if (idx < 6) return "Eldar";
+    if (idx < 9) return "Orks";
+    if (idx < 12) return "Chaos";
+  }
   return "NEUTRAL";
 }
 
 function nameForCell(i) {
   const namesOuter = [
-    "Macragge Watch","Titus’ Rampart","Astartes Bastion","Librarium Gate","Techmarine Forge",
-    "Ulthwé Path","Biel-Tan Grove","Saim-Hann Way","Iyanden Veil","Alaitoc Ridge",
-    "Waaagh! Cliff","Grot Tunnels","Big Mek Yard","Squig Plain","Warboss Roost",
-    "Vox of Chaos","Daemon Rift","Warp Scar","Black Legion Way","Eightfold Spire"
+    // 24 külső mező neve
+    "Macragge Watch","Titus’ Rampart","Astartes Bastion","Librarium Gate","Techmarine Forge","Honor Guard Keep",
+    "Ulthwé Path","Biel-Tan Grove","Saim-Hann Way","Iyanden Veil","Alaitoc Ridge","Webway Portal",
+    "Waaagh! Cliff","Grot Tunnels","Big Mek Yard","Squig Plain","Warboss Roost","Deff Docks",
+    "Vox of Chaos","Daemon Rift","Warp Scar","Black Legion Way","Eightfold Spire","Oblivion Post"
   ];
   const namesInner = [
-    "Inner Macragge","Inner Librarium","Servo Reliquary","Astartes Shrine","Honor Hall",
-    "Infinity Circuit","Crystal Dome","Spirit Gate","Seer Council","Wraith Hall",
-    "Teef Market","Stompa Pit","Ork Scrapway","Zogwort Den","Green Tide",
-    "Dark Creed","Eye of Terror","Warp Altar","Despoiler Route","Plague Chapel"
+    // 12 belső mező neve
+    "Inner Macragge","Servo Reliquary","Astartes Shrine","Infinity Circuit","Spirit Gate","Seer Council",
+    "Teef Market","Ork Scrapway","Zogwort Den","Dark Creed","Warp Altar","Plague Chapel"
   ];
-  if (i < 20) return namesOuter[i];
-  if (i >= 20 && i < 40) return namesInner[i - 20];
+  if (i < 24) return namesOuter[i];
+  if (i >= 24 && i < 36) return namesInner[i - 24];
   return "No Man’s Land";
 }
 
 function initBoard() {
   const cells = [];
-  for (let i = 0; i < 20; i++) cells.push({ id:i, ring:"OUTER", name:nameForCell(i), faction:factionForIndex(i) });
-  for (let i = 20; i < 40; i++) cells.push({ id:i, ring:"INNER", name:nameForCell(i), faction:factionForIndex(i) });
-  cells.push({ id:40, ring:"CENTER", name:nameForCell(40), faction:"NEUTRAL" });
+  for (let i = 0; i < 24; i++) {
+    cells.push({ id:i, ring:"OUTER", name:nameForCell(i), faction:factionForIndex(i) });
+  }
+  for (let i = 24; i < 36; i++) {
+    cells.push({ id:i, ring:"INNER", name:nameForCell(i), faction:factionForIndex(i) });
+  }
+  cells.push({ id:36, ring:"CENTER", name:nameForCell(36), faction:"NEUTRAL" });
   return cells;
 }
 
@@ -47,15 +58,15 @@ function neighbors(board, id) {
   if (cell.ring === "CENTER") return [];
   const res = [];
   if (cell.ring === "OUTER") {
-    const left = (id + 19) % 20;
-    const right = (id + 1) % 20;
+    const left = (id + 23) % 24;
+    const right = (id + 1) % 24;
     res.push(left, right);
     const gi = gatewaysOuter.indexOf(id);
     if (gi >= 0) res.push(gatewaysInner[gi]);
   } else if (cell.ring === "INNER") {
-    const innerIdx = id - 20;
-    const left = 20 + ((innerIdx + 19) % 20);
-    const right = 20 + ((innerIdx + 1) % 20);
+    const innerIdx = id - 24;
+    const left = 24 + ((innerIdx + 11) % 12);
+    const right = 24 + ((innerIdx + 1) % 12);
     res.push(left, right);
     const gi = gatewaysInner.indexOf(id);
     if (gi >= 0) res.push(gatewaysOuter[gi]);
