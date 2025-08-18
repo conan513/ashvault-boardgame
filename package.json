@@ -7,8 +7,10 @@
     "dev": "NODE_ENV=development node server/index.js"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "express": "^4.19.2",
     "socket.io": "^4.7.5",
-    "cors": "^2.8.5"
+    "sqlite3": "^5.1.7"
   }
 }
