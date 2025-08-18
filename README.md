@@ -41,8 +41,8 @@
 | HP   | Health Points |
 | ATK  | Attack |
 | DEF  | Defense |
-| PSY  | Psychic Power |
-| RES  | Resistance |
+| PSY  | Psychic Power |  <-- not implemented yet
+| RES  | Resistance |  <-- not implemented yet
 
 - **Death & Elimination**: If HP ≤ 0, the character dies and is removed from the game.
 
