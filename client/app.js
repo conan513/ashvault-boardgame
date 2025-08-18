@@ -4,6 +4,7 @@ let MY_ID = null;
 window.GAME = null;
 let LAST_DICE = null;
 let LAST_TARGETS = [];
+let canRoll = true; // Hozzáadva a dobás engedélyezésének ellenőrzéséhez
 
 const $ = sel => document.querySelector(sel);
 
@@ -29,14 +30,21 @@ socket.on("updateGame", (state) => {
 });
 
 socket.on("turnChanged", (playerId) => {
-  // azonnali frissítés
   const mine = (playerId === MY_ID);
   $("#turnInfo").innerHTML = mine
   ? `<span class="badge turn">A te köröd</span>`
   : `Most: <b>${shortName(playerId) || "-"}</b>`;
-  rollBtn.disabled = !mine;
+
+  // Ellenőrizzük, hogy dobhatok-e (csak az aktuális játékosnak)
+  rollBtn.disabled = !mine || !canRoll;
   endTurnBtn.disabled = !mine;
+
+  // Reset the roll button state after the turn changes
+  if (mine) {
+    canRoll = true;  // Ha én következem, akkor újra dobhatok
+  }
 });
+
 
 socket.on("diceResult", ({ dice, targets, playerId }) => {
   LAST_DICE = dice;
@@ -122,11 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   rollBtn.addEventListener("click", () => {
-    socket.emit("rollDice");
+    if (canRoll) { // Csak akkor engedélyezett, ha nem dobtam még
+      socket.emit("rollDice");
+      canRoll = false; // Lezárjuk a dobást a kör végéig
+    }
   });
 
   endTurnBtn.addEventListener("click", () => {
     socket.emit("endTurn");
+    canRoll = true; // Újra engedélyezzük a dobást, amikor a kör véget ér
   });
 });
 
@@ -137,6 +149,6 @@ function updateTurnUI() {
   $("#turnInfo").innerHTML = mine
   ? `<span class="badge turn">A te köröd</span>`
   : `Most: <b>${shortName(current) || "-"}</b>`;
-  rollBtn.disabled = !mine;
+  rollBtn.disabled = !mine || !canRoll; // Ha nem az én köröm, vagy már dobtam, akkor letiltva
   endTurnBtn.disabled = !mine;
 }

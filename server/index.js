@@ -53,8 +53,16 @@ function broadcast(roomName) {
 function advanceTurn(roomName) {
   const state = rooms[roomName];
   if (!state || state.turnOrder.length === 0) return;
+
+  // Először is, növeljük a turnIndex-et
   state.currentTurnIndex = (state.currentTurnIndex + 1) % state.turnOrder.length;
-  io.to(roomName).emit("turnChanged", getCurrentPlayerId(state));
+  const newCurrentPlayerId = getCurrentPlayerId(state);
+
+  // Küldjük ki minden játékosnak, hogy változott a kör
+  io.to(roomName).emit("turnChanged", newCurrentPlayerId);
+
+  // Új kör frissítése minden kliensnél
+  io.to(roomName).emit("updateGame", sanitizeGameStateForClients(state));
 }
 
 function sanitizeGameStateForClients(state) {
@@ -149,8 +157,15 @@ io.on("connection", (socket) => {
   socket.on("endTurn", () => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
-    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
-    advanceTurn(socket.currentRoom);
+
+    if (!isPlayersTurn(gameState, socket.id)) {
+      return socket.emit("errorMsg", "Nem a te köröd!");
+    }
+
+    advanceTurn(socket.currentRoom);  // Küldjük az új kör állapotát mindenkinek
+
+    // Ha vége a körnek, frissítsük a gombok állapotát
+    io.to(socket.currentRoom).emit("turnChanged", getCurrentPlayerId(gameState));
   });
 
   // confirmMove, resolvePVP, disconnect -> marad a múltkori több szobás logika

@@ -12,23 +12,106 @@
   --panel: #131823;
   --border: #24324a;
 }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
-header, footer { padding: 10px 16px; background: #0b1220; border-bottom: 1px solid var(--border); }
-h1 { font-size: 20px; margin: 6px 0; }
-main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 100px); }
-#leftPanel { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
-#boardPanel { display: grid; place-items: center; padding: 12px; }
-#boardSVG { background: radial-gradient(ellipse at center, #0b0f15 0%, #0b0f15 60%, #0a0d12 100%); border: 1px solid var(--border); border-radius: 8px; }
-#statusBar { display: flex; gap: 12px; align-items: center; }
-#rollBtn[disabled] { opacity: 0.5; }
-.faction-sm { color: var(--sm); } .faction-el { color: var(--el); }
-.faction-ok { color: var(--ok); } .faction-ch { color: var(--ch); }
-.cell { cursor: default; }
-.cell.Outer { fill: transparent; }
-.cell circle { stroke: #233046; stroke-width: 2px; fill: #0f1521; }
-.cell text { fill: #9eb3d7; font-size: 10px; text-anchor: middle; }
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header, footer {
+  padding: 1vw 1.5vw;
+  background: #0b1220;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 2vw;
+  margin: 6px 0;
+}
+
+main {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden; /* Ne legyen görgetés a fő tartalomnak */
+}
+
+#leftPanel,
+#rightPanel {
+padding: 1vw;
+display: flex;
+flex-direction: column;
+gap: 1vw;
+overflow: hidden; /* Ne legyen görgetés */
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1vw;
+}
+
+#boardPanel {
+display: flex;
+justify-content: center;
+align-items: center;
+flex-grow: 1; /* Töltsük ki a maradék helyet */
+overflow: hidden; /* Ne legyen görgetés */
+}
+
+#boardSVG {
+background: radial-gradient(ellipse at center, #0b0f15 0%, #0b0f15 60%, #0a0d12 100%);
+border: 1px solid var(--border);
+border-radius: 8px;
+width: 100%;
+height: 100%;
+object-fit: contain; /* Arányosan kitöltjük a rendelkezésre álló teret */
+}
+
+#statusBar {
+display: flex;
+gap: 2vw;
+align-items: center;
+}
+
+#rollBtn[disabled] {
+opacity: 0.5;
+}
+
+.faction-sm { color: var(--sm); }
+.faction-el { color: var(--el); }
+.faction-ok { color: var(--ok); }
+.faction-ch { color: var(--ch); }
+
+.cell {
+  cursor: default;
+}
+
+.cell.Outer {
+  fill: transparent;
+}
+
+.cell circle {
+  stroke: #233046;
+  stroke-width: 2px;
+  fill: #0f1521;
+}
+
+.cell text {
+  fill: #9eb3d7;
+  font-size: 1.2vw;
+  text-anchor: middle;
+}
+
 .cell.sm circle { stroke: var(--sm); }
 .cell.el circle { stroke: var(--el); }
 .cell.ok circle { stroke: var(--ok); }
@@ -37,18 +120,76 @@ main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh -
 .cell.highlight circle { fill: #1e2a3f; filter: drop-shadow(0 0 6px rgba(80,209,255,0.6)); }
 .cell.highlight { cursor: pointer; }
 .cell.current circle { stroke-width: 4px; }
-.playerToken { stroke: #fff; stroke-width: 2px; }
-.playerToken text { fill: #fff; font-size: 11px; font-weight: bold; }
-.card { border: 1px solid var(--border); padding: 8px; border-radius: 6px; background:#0f1521; }
-.card .title { font-weight: 700; }
-.card .faction { opacity: 0.8; }
-#playersList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.playerRow { display: grid; grid-template-columns: 1fr auto; gap: 8px; border:1px solid var(--border); padding:6px;border-radius:6px; }
-.playerRow .stats { font-size: 12px; opacity: 0.9; }
-.playerRow .dead { color: var(--danger); font-weight: 700; }
-.badge { padding: 2px 6px; border-radius: 999px; border:1px solid var(--border); font-size: 12px; }
-.badge.turn { background: #132338; color: var(--accent); }
-#battleView .line { margin:6px 0; }
+
+.playerToken {
+  stroke: #fff;
+  stroke-width: 2px;
+}
+
+.playerToken text {
+  fill: #fff;
+  font-size: 1.2vw;
+  font-weight: bold;
+}
+
+.card {
+  border: 1px solid var(--border);
+  padding: 1vw;
+  border-radius: 6px;
+  background: #0f1521;
+}
+
+.card .title {
+  font-weight: 700;
+}
+
+.card .faction {
+  opacity: 0.8;
+}
+
+#playersList {
+list-style: none;
+padding: 0;
+margin: 0;
+display: flex;
+flex-direction: column;
+gap: 1vw;
+}
+
+.playerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5vw;
+  border: 1px solid var(--border);
+  padding: 1vw;
+  border-radius: 6px;
+}
+
+.playerRow .stats {
+  font-size: 1.2vw;
+  opacity: 0.9;
+}
+
+.playerRow .dead {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.badge {
+  padding: 0.5vw 1vw;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 1.2vw;
+}
+
+.badge.turn {
+  background: #132338;
+  color: var(--accent);
+}
+
+#battleView .line {
+margin: 1.5vw 0;
+}
 
 .card img {
   display: block;
@@ -56,4 +197,43 @@ main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh -
   max-width: 100%;
   border: 1px solid var(--border);
   border-radius: 6px;
+}
+
+/* Reszponzív mobilnézet: jobb panel a tábla alá */
+@media (max-width: 900px) {
+  main {
+    flex-direction: column;
+  }
+
+  #boardPanel {
+  order: 2;
+  }
+
+  #rightPanel {
+  order: 3;
+  }
+
+  #leftPanel {
+  order: 1;
+  }
+
+  #boardSVG {
+  width: 100%;
+  height: 100%;
+  }
+}
+
+@media (min-width: 1200px) {
+  main {
+    flex-direction: row;
+  }
+
+  #boardSVG {
+  width: 95%;
+  height: 95%;
+  }
+
+  #statusBar {
+  font-size: 1.2vw;
+  }
 }
