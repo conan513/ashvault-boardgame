@@ -199,7 +199,12 @@ io.on("connection", (socket) => {
       if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
         const card = drawFactionCard(cell.faction);
         gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
-        io.to(socket.currentRoom).emit("cardDrawn", gameState.lastDrawn);
+        io.to(socket.currentRoom).emit("cardDrawn", {
+          playerId: player.id,
+          type: "FACTION",
+          faction: cell.faction,
+          card
+        });
 
         const sameFaction = (player.faction === cell.faction);
         const effect = sameFaction ? card.selfEffect : card.otherEffect;
