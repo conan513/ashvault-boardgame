@@ -28,6 +28,7 @@ const io = new Server(server, { cors: { origin: "*" } });
 /** ---- TÖBB SZOBÁS JÁTÉK ---- **/
 let rooms = {}; // roomName -> gameState
 
+// Játék állapot létrehozása
 function makeGameState() {
   return {
     board: initBoard(),
@@ -39,17 +40,24 @@ function makeGameState() {
   };
 }
 
+// Jelenlegi játékos azonosítójának megszerzése
 function getCurrentPlayerId(state) {
   return state.turnOrder[state.currentTurnIndex] || null;
 }
+
+// Ellenőrizzük, hogy a játékosnak van-e köre
 function isPlayersTurn(state, socketId) {
   return socketId === getCurrentPlayerId(state);
 }
+
+// Állapot frissítése minden szobába
 function broadcast(roomName) {
   const state = rooms[roomName];
   if (!state) return;
   io.to(roomName).emit("updateGame", sanitizeGameStateForClients(state));
 }
+
+// Kör előrehaladása
 function advanceTurn(roomName) {
   const state = rooms[roomName];
   if (!state || state.turnOrder.length === 0) return;
@@ -65,6 +73,7 @@ function advanceTurn(roomName) {
   io.to(roomName).emit("updateGame", sanitizeGameStateForClients(state));
 }
 
+// Játékállapot tisztítása a kliensek számára
 function sanitizeGameStateForClients(state) {
   const players = {};
   for (const [id, p] of Object.entries(state.players)) {
@@ -95,6 +104,7 @@ function sanitizeGameStateForClients(state) {
 io.on("connection", (socket) => {
   console.log("Kapcsolódott:", socket.id);
 
+  // Szoba létrehozása vagy csatlakozás
   socket.on("createOrJoinRoom", ({ roomName }) => {
     if (!rooms[roomName]) {
       rooms[roomName] = makeGameState();
@@ -106,6 +116,7 @@ io.on("connection", (socket) => {
     socket.emit("hello", { factions, characters });
   });
 
+  // Játékos csatlakozása a játékhoz
   socket.on("joinGame", ({ playerName, characterId }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
@@ -137,6 +148,7 @@ io.on("connection", (socket) => {
     broadcast(socket.currentRoom);
   });
 
+  // Dadozás
   socket.on("rollDice", () => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
@@ -154,6 +166,14 @@ io.on("connection", (socket) => {
     });
   });
 
+  // Üzenet küldés
+  socket.on("sendChat", ({ message, playerId }) => {
+    const player = rooms[socket.currentRoom]?.players[playerId] || { name: "Névtelen" };
+    const chatMessage = `${player.name}: ${message}`;
+    io.to(socket.currentRoom).emit("receiveChat", { playerId, message: chatMessage });
+  });
+
+  // Kör vége
   socket.on("endTurn", () => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
@@ -162,14 +182,11 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "Nem a te köröd!");
     }
 
-    advanceTurn(socket.currentRoom);  // Küldjük az új kör állapotát mindenkinek
-
-    // Ha vége a körnek, frissítsük a gombok állapotát
+    advanceTurn(socket.currentRoom);
     io.to(socket.currentRoom).emit("turnChanged", getCurrentPlayerId(gameState));
   });
 
-  // confirmMove, resolvePVP, disconnect -> marad a múltkori több szobás logika
-  // (nincs változtatás, mert már minden io.emit szobára ment)
+  // Mozgás megerősítése
   socket.on("confirmMove", ({ dice, targetCellId }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
@@ -191,11 +208,9 @@ io.on("connection", (socket) => {
     const cell = cellById(gameState.board, targetCellId);
 
     if (differentFaction) {
-      // Ha más frakcióval rendelkező játékos lépett a cellára, PVP-t indítunk
       gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
       io.to(socket.currentRoom).emit("pvpStarted", { aId: player.id, bId: differentFaction.id, cellName: cell.name });
     } else {
-      // Ha saját frakció vagy semmi nincs a cellán
       if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
         const card = drawFactionCard(cell.faction);
         gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
@@ -209,7 +224,6 @@ io.on("connection", (socket) => {
         const sameFaction = (player.faction === cell.faction);
         const effect = sameFaction ? card.selfEffect : card.otherEffect;
 
-        // Kártya hatásának alkalmazása
         if (effect.effect === "battle") {
           const enemy = drawEnemyCard();
           io.to(socket.currentRoom).emit("enemyDrawn", enemy);
@@ -238,6 +252,7 @@ io.on("connection", (socket) => {
             if (player.stats.HP <= 0) {
               player.alive = false;
               io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
+              io.to(socket.currentRoom).emit("receiveChat", { playerId: socket.id, message: `${player.name} died due to an event.` });
             }
           }
           if (effect.statMods) {
@@ -254,7 +269,7 @@ io.on("connection", (socket) => {
     if (!gameState.pvpPending) advanceTurn(socket.currentRoom);
   });
 
-
+    // PVP megoldása
     socket.on("resolvePVP", () => {
       const gameState = rooms[socket.currentRoom];
       if (!gameState) return;
@@ -285,11 +300,14 @@ io.on("connection", (socket) => {
         io.to(socket.currentRoom).emit("itemStolen", { from: loser.id, to: winner.id, item: stolen });
       }
 
+      io.to(socket.currentRoom).emit("receiveChat", { playerId: socket.id, message: `${A.name} defeated ${B.name} in PvP.` });
+
       gameState.pvpPending = null;
       broadcast(socket.currentRoom);
       advanceTurn(socket.currentRoom);
     });
 
+    // Leállás esetén
     socket.on("disconnect", () => {
       const gameState = rooms[socket.currentRoom];
       if (!gameState) return;

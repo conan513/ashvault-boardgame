@@ -228,3 +228,78 @@ footer {
   width: 100%;
   }
 }
+
+/* --- Chat Panel --- */
+#chatPanel {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+#chatLog {
+background: var(--panel);
+color: var(--fg);
+padding: 10px;
+border-radius: var(--radius);
+font-size: 0.9rem;
+max-height: 300px;
+overflow-y: auto;
+}
+
+#chatInput {
+width: 100%;
+padding: 10px;
+border-radius: var(--radius);
+border: 1px solid var(--border);
+background: var(--bg);
+color: var(--fg);
+}
+
+button#sendChatBtn {
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+button#sendChatBtn:hover {
+  background: #6fe0ff;
+}
+/* Chat popup alapállapotban elcsúsztatva jobbra */
+.chat-popup {
+  position: fixed;
+  top: 70px; /* fejléc alatt */
+  right: -320px; /* induljon a képernyőn kívülről */
+  width: 300px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 1rem;
+  opacity: 0;
+  transition: all 0.3s ease; /* sima átmenet */
+}
+
+/* Aktív állapot – helyére csúszik és látszik */
+.chat-popup.show {
+  right: 20px;
+  opacity: 1;
+}
+/* Pulzáló animáció új üzenetnél */
+@keyframes pulseNotify {
+  0%   { transform: scale(1); box-shadow: 0 0 0px rgba(255, 0, 0, 0.6); }
+  50%  { transform: scale(1.15); box-shadow: 0 0 15px rgba(255, 0, 0, 0.8); }
+  100% { transform: scale(1); box-shadow: 0 0 0px rgba(255, 0, 0, 0.6); }
+}
+
+#toggleChatBtn.notify {
+animation: pulseNotify 0.8s infinite;
+background-color: #ff4b4b; /* piros jelzés */
+color: white;
+border-radius: 6px;
+}

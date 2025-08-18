@@ -26,6 +26,7 @@
         <option value="en">English</option>
         <option value="hu">Magyar</option>
       </select>
+      <button id="toggleChatBtn" style="margin-left: 10px;">💬 Chat</button>
     </div>
   </header>
 
@@ -74,5 +75,12 @@
   <footer>
     Fan-made, unofficial – all rights belong to Games Workshop. Project by Conan.
   </footer>
+  <!-- Chat Panel – popup -->
+<div id="chatPanel" class="panel chat-popup">
+  <h2>Chat</h2>
+  <div id="chatLog" style="max-height: 300px; overflow-y: auto; margin-bottom: 10px;"></div>
+  <textarea id="chatInput" placeholder="Type a message..." rows="3"></textarea>
+  <button id="sendChatBtn">Send</button>
+</div>
 </body>
 </html>

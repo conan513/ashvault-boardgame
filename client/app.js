@@ -101,6 +101,29 @@ socket.on("cardDrawn", ({ playerId, card, type }) => {
   `;
 });
 
+// Chat küldés
+sendChatBtn.addEventListener("click", () => {
+  const message = chatInput.value.trim();
+  if (message) {
+    socket.emit("sendChat", { message, playerId: MY_ID });
+    chatInput.value = ''; // Törlés
+  }
+});
+
+// Chat üzenet fogadás
+socket.on("receiveChat", ({ playerId, message }) => {
+  const player = GAME?.players?.[playerId] || { name: playerId };
+  chatLog.innerHTML += `<p><strong>${player.name}:</strong> ${message}</p>`;
+  chatLog.scrollTop = chatLog.scrollHeight;
+  const chatPanel = document.getElementById("chatPanel");
+  const toggleChatBtn = document.getElementById("toggleChatBtn");
+
+  // Ha a chatpanel épp nincs nyitva, jelezz a gombon
+  if (!chatPanel.classList.contains("show")) {
+    toggleChatBtn.classList.add("notify");
+  }
+});
+
 socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); });
 socket.on("battleResult", (data) => { renderBattle(data); });
 socket.on("itemLooted", ({ playerId, item }) => {
@@ -125,6 +148,18 @@ function shortName(pid){ const p = GAME?.players?.[pid]; return p ? p.name : pid
 
 // Join form + Room form
 document.addEventListener("DOMContentLoaded", () => {
+  // Chat popup nyitás/zárás
+  const chatPanel = document.getElementById("chatPanel");
+  const toggleChatBtn = document.getElementById("toggleChatBtn");
+
+  toggleChatBtn.addEventListener("click", () => {
+    chatPanel.classList.toggle("show");
+
+    // Ha kinyitottad a chatet, szedd le az értesítő animációt
+    if (chatPanel.classList.contains("show")) {
+      toggleChatBtn.classList.remove("notify");
+    }
+  });
 
   // szoba form
   $("#roomForm").addEventListener("submit", (e) => {
