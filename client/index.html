@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="hu">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>WH40K Online Társasjáték</title>
+  <title>Warhammer 40,000 Online Boardgame – Fan-made Project by Conan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./style.css" />
   <script src="/socket.io/socket.io.js"></script>
@@ -11,110 +11,16 @@
   <script defer src="./ui/characterSelect.js"></script>
   <script defer src="./ui/deckUI.js"></script>
   <script defer src="./ui/battleUI.js"></script>
-  <style>
-    :root {
-      --bg: #0c0f14;
-      --fg: #e6e6e6;
-      --accent: #50d1ff;
-      --sm: #2a7fff;
-      --el: #32d1a0;
-      --ok: #70d13e;
-      --ch: #c04ff0;
-      --neutral: #888;
-      --danger: #ff6b6b;
-      --good: #6bff9e;
-      --panel: #131823;
-      --border: #24324a;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
-    header, footer { padding: 10px 16px; background: #0b1220; border-bottom: 1px solid var(--border); }
-    h1 { font-size: 20px; margin: 6px 0; }
-    main {
-      display: grid;
-      grid-template-columns: 320px 1fr 320px;
-      min-height: calc(100vh - 100px);
-      gap: 0;
-    }
-    #leftPanel,
-    #rightPanel {
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
-    }
-    #boardPanel { display: grid; place-items: center; padding: 12px; }
-    #boardSVG {
-      background: radial-gradient(ellipse at center, #0b0f15 0%, #0b0f15 60%, #0a0d12 100%);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    #statusBar { display: flex; gap: 12px; align-items: center; }
-    #rollBtn[disabled] { opacity: 0.5; }
-    .faction-sm { color: var(--sm); } .faction-el { color: var(--el); }
-    .faction-ok { color: var(--ok); } .faction-ch { color: var(--ch); }
-    .cell { cursor: default; }
-    .cell.Outer { fill: transparent; }
-    .cell circle { stroke: #233046; stroke-width: 2px; fill: #0f1521; }
-    .cell text { fill: #9eb3d7; font-size: 10px; text-anchor: middle; }
-    .cell.sm circle { stroke: var(--sm); }
-    .cell.el circle { stroke: var(--el); }
-    .cell.ok circle { stroke: var(--ok); }
-    .cell.ch circle { stroke: var(--ch); }
-    .cell.ne circle { stroke: var(--neutral); }
-    .cell.highlight circle { fill: #1e2a3f; filter: drop-shadow(0 0 6px rgba(80,209,255,0.6)); }
-    .cell.highlight { cursor: pointer; }
-    .cell.current circle { stroke-width: 4px; }
-    .playerToken { stroke: #fff; stroke-width: 2px; }
-    .playerToken text { fill: #fff; font-size: 11px; font-weight: bold; }
-    .card { border: 1px solid var(--border); padding: 8px; border-radius: 6px; background:#0f1521; }
-    .card .title { font-weight: 700; }
-    .card .faction { opacity: 0.8; }
-    #playersList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-    .playerRow { display: grid; grid-template-columns: 1fr auto; gap: 8px; border:1px solid var(--border); padding:6px;border-radius:6px; }
-    .playerRow .stats { font-size: 12px; opacity: 0.9; }
-    .playerRow .dead { color: var(--danger); font-weight: 700; }
-    .badge { padding: 2px 6px; border-radius: 999px; border:1px solid var(--border); font-size: 12px; }
-    .badge.turn { background: #132338; color: var(--accent); }
-    #battleView .line { margin:6px 0; }
-    .card img {
-      display: block;
-      margin: 0 auto;
-      max-width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-    }
-
-    /* Reszponzív mobilnézet: jobb panel a tábla alá */
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-      #rightPanel {
-        order: 3;
-      }
-      #boardPanel {
-        order: 2;
-      }
-      #leftPanel {
-        order: 1;
-      }
-    }
-  </style>
 </head>
 <body>
   <header>
-    <h1 data-i18n="ui.header.title">Warhammer 40,000 – Online Boardgame</h1>
+    <h1>Warhammer 40,000 – Online Boardgame
+      <small>(Fan-made by Conan)</small>
+    </h1>
     <div id="statusBar">
-      <span id="turnInfo" data-i18n="ui.labels.connecting">Connecting...</span>
-      <button id="rollBtn" disabled data-i18n="ui.buttons.roll">🎲 Roll</button>
-      <button id="endTurnBtn" disabled data-i18n="ui.buttons.endTurn">➡️ End Turn</button>
+      <span id="turnInfo">Connecting...</span>
+      <button id="rollBtn" disabled>🎲 Roll</button>
+      <button id="endTurnBtn" disabled>➡️ End Turn</button>
       <span id="diceOut"></span>
       <select id="langSelect" style="margin-left:auto">
         <option value="en">English</option>
@@ -124,51 +30,49 @@
   </header>
 
   <main>
-    <!-- Bal oldali panel -->
     <section id="leftPanel">
-      <!-- SZOBA PANEL -->
       <div id="roomPanel" class="panel">
-        <h2>Szoba</h2>
+        <h2>Room</h2>
         <form id="roomForm">
-          <label>Szoba neve: <input id="roomName" required maxlength="16" /></label>
-          <button type="submit">Létrehozás / Csatlakozás</button>
+          <label>Room name: <input id="roomName" required maxlength="16" /></label>
+          <button type="submit">Create / Join</button>
         </form>
       </div>
 
-      <!-- KARAKTERVÁLASZTÁS -->
       <div id="joinPanel" class="panel" style="display:none">
-        <h2>Csatlakozás</h2>
+        <h2>Join</h2>
         <form id="joinForm">
-          <label>Név: <input id="playerName" required maxlength="16" /></label>
+          <label>Name: <input id="playerName" required maxlength="16" /></label>
           <div id="charSelect"></div>
-          <button type="submit">Belépés</button>
+          <button type="submit">Enter</button>
         </form>
       </div>
 
       <div id="playersPanel" class="panel">
-        <h2>Játékosok</h2>
+        <h2>Players</h2>
         <ul id="playersList"></ul>
       </div>
     </section>
 
-    <!-- Középső: tábla -->
     <section id="boardPanel">
-      <svg id="boardSVG" viewBox="0 0 900 900" width="900" height="900" aria-label="Játéktábla"></svg>
+      <svg id="boardSVG" viewBox="0 0 900 900"></svg>
     </section>
 
-    <!-- Jobb oldali panel: áthelyezett kártya + csata -->
     <section id="rightPanel">
       <div id="lastCard" class="panel">
-        <h2>Utolsó húzott kártya</h2>
+        <h2>Last Drawn Card</h2>
         <div id="cardView"></div>
       </div>
 
       <div id="battlePanel" class="panel">
-        <h2>Csata</h2>
+        <h2>Battle</h2>
         <div id="battleView"></div>
       </div>
     </section>
   </main>
 
   <footer>
-    <small>Fan-made, nem hivatalos – Games Workshop tulajdon. (Kód: kliens modulok: ./ui/*.js
+    Fan-made, unofficial – all rights belong to Games Workshop. Project by Conan.
+  </footer>
+</body>
+</html>

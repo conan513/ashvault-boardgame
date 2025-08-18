@@ -1,97 +1,93 @@
 :root {
   --bg: #0c0f14;
-  --fg: #e6e6e6;
+  --fg: #f0f4f8;
   --accent: #50d1ff;
   --sm: #2a7fff;
   --el: #32d1a0;
   --ok: #70d13e;
   --ch: #c04ff0;
-  --neutral: #888;
+  --neutral: #999;
   --danger: #ff6b6b;
   --good: #6bff9e;
-  --panel: #131823;
-  --border: #24324a;
+  --panel: #141a26;
+  --border: #2a3a52;
+  --shadow: 0 4px 12px rgba(0,0,0,0.4);
+  --radius: 12px;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font-family: system-ui, sans-serif;
+  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
 header, footer {
-  padding: 1vw 1.5vw;
-  background: #0b1220;
+  padding: 1rem 1.5rem;
+  background: #101725;
   border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 h1 {
-  font-size: 2vw;
-  margin: 6px 0;
+  font-size: 1.4rem;
+  margin: 0;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+h1 small {
+  opacity: 0.7;
+  font-size: 0.9rem;
+  margin-left: .5rem;
 }
 
 main {
   display: flex;
   flex-grow: 1;
-  overflow: hidden; /* Ne legyen görgetés a fő tartalomnak */
+  overflow: hidden;
+  gap: 1rem;
+  padding: 1rem;
 }
 
 #leftPanel,
 #rightPanel {
-padding: 1vw;
+width: 300px;
 display: flex;
 flex-direction: column;
-gap: 1vw;
-overflow: hidden; /* Ne legyen görgetés */
+gap: 1rem;
 }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1vw;
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
 }
 
 #boardPanel {
+flex-grow: 1;
 display: flex;
 justify-content: center;
 align-items: center;
-flex-grow: 1; /* Töltsük ki a maradék helyet */
-overflow: hidden; /* Ne legyen görgetés */
 }
 
 #boardSVG {
-background: radial-gradient(ellipse at center, #0b0f15 0%, #0b0f15 60%, #0a0d12 100%);
+background: radial-gradient(ellipse at center, #111722 0%, #0b0f15 100%);
 border: 1px solid var(--border);
-border-radius: 8px;
-width: 100%;
-height: 100%;
-object-fit: contain; /* Arányosan kitöltjük a rendelkezésre álló teret */
+border-radius: var(--radius);
+box-shadow: var(--shadow);
+width: 95%;
+height: 95%;
 }
 
-#statusBar {
-display: flex;
-gap: 2vw;
-align-items: center;
-}
-
-#rollBtn[disabled] {
-opacity: 0.5;
-}
-
-.faction-sm { color: var(--sm); }
-.faction-el { color: var(--el); }
-.faction-ok { color: var(--ok); }
-.faction-ch { color: var(--ch); }
-
+/* --- Board cellák --- */
 .cell {
   cursor: default;
 }
@@ -108,8 +104,11 @@ opacity: 0.5;
 
 .cell text {
   fill: #9eb3d7;
-  font-size: 1.2vw;
+  font-size: clamp(10px, 1vw, 16px); /* min 10px, max 16px */
   text-anchor: middle;
+  dominant-baseline: middle;
+  letter-spacing: 0.05em;
+  pointer-events: none;
 }
 
 .cell.sm circle { stroke: var(--sm); }
@@ -117,10 +116,15 @@ opacity: 0.5;
 .cell.ok circle { stroke: var(--ok); }
 .cell.ch circle { stroke: var(--ch); }
 .cell.ne circle { stroke: var(--neutral); }
-.cell.highlight circle { fill: #1e2a3f; filter: drop-shadow(0 0 6px rgba(80,209,255,0.6)); }
+
+.cell.highlight circle {
+  fill: #1e2a3f;
+  filter: drop-shadow(0 0 6px rgba(80,209,255,0.6));
+}
 .cell.highlight { cursor: pointer; }
 .cell.current circle { stroke-width: 4px; }
 
+/* --- Player token --- */
 .playerToken {
   stroke: #fff;
   stroke-width: 2px;
@@ -132,108 +136,95 @@ opacity: 0.5;
   font-weight: bold;
 }
 
+/* --- Általános UI --- */
+#statusBar {
+display: flex;
+gap: 1rem;
+align-items: center;
+}
+
+button {
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover:not([disabled]) {
+  background: #6fe0ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(80,209,255,0.4);
+}
+
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .card {
   border: 1px solid var(--border);
-  padding: 1vw;
-  border-radius: 6px;
+  padding: 1rem;
+  border-radius: var(--radius);
   background: #0f1521;
-}
-
-.card .title {
-  font-weight: 700;
-}
-
-.card .faction {
-  opacity: 0.8;
-}
-
-#playersList {
-list-style: none;
-padding: 0;
-margin: 0;
-display: flex;
-flex-direction: column;
-gap: 1vw;
-}
-
-.playerRow {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1.5vw;
-  border: 1px solid var(--border);
-  padding: 1vw;
-  border-radius: 6px;
-}
-
-.playerRow .stats {
-  font-size: 1.2vw;
-  opacity: 0.9;
-}
-
-.playerRow .dead {
-  color: var(--danger);
-  font-weight: 700;
-}
-
-.badge {
-  padding: 0.5vw 1vw;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  font-size: 1.2vw;
-}
-
-.badge.turn {
-  background: #132338;
-  color: var(--accent);
-}
-
-#battleView .line {
-margin: 1.5vw 0;
+  box-shadow: var(--shadow);
 }
 
 .card img {
   display: block;
   margin: 0 auto;
   max-width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
-/* Reszponzív mobilnézet: jobb panel a tábla alá */
+#playersList {
+list-style: none;
+margin: 0;
+padding: 0;
+display: flex;
+flex-direction: column;
+gap: 0.5rem;
+}
+
+.playerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #192132;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius);
+}
+
+.badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+#battleView .line {
+margin: 1.5vw 0;
+}
+
+footer {
+  text-align: center;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  border-top: 1px solid var(--border);
+  background: #101725;
+}
+
+/* --- Reszponzív --- */
 @media (max-width: 900px) {
   main {
     flex-direction: column;
   }
-
-  #boardPanel {
-  order: 2;
-  }
-
-  #rightPanel {
-  order: 3;
-  }
-
-  #leftPanel {
-  order: 1;
-  }
-
-  #boardSVG {
+  #leftPanel, #rightPanel {
   width: 100%;
-  height: 100%;
-  }
-}
-
-@media (min-width: 1200px) {
-  main {
-    flex-direction: row;
-  }
-
-  #boardSVG {
-  width: 95%;
-  height: 95%;
-  }
-
-  #statusBar {
-  font-size: 1.2vw;
   }
 }
