@@ -1,1 +1,182 @@
-[{"id":"ch1","title":"Warp Whispers","text":"Suttog a Warp.","effect":"none","loot":false,"hpDelta":-1,"statMods":{"PSY":1}},{"id":"ch2","title":"Dark Pact","text":"Sötét alku – erő és ár.","effect":"none","loot":false,"hpDelta":-1,"statMods":{"ATK":1}},{"id":"ch3","title":"Rust and Rot","text":"Pusztulás.","effect":"none","loot":false,"statMods":{"DEF":-1}},{"id":"ch4","title":"Blessing of Ruin","text":"Rombolás áldása.","effect":"none","loot":false,"statMods":{"ATK":1,"RES":1}},{"id":"ch5","title":"Madness","text":"Őrület – sebzés.","effect":"none","loot":false,"hpDelta":-2},{"id":"ch6","title":"Daemon Echo","text":"Démon visszhang.","effect":"none","loot":false,"statMods":{"PSY":1}},{"id":"ch7","title":"Tainted Spoils","text":"Rombolt zsákmány – idegenen loot.","effect":"none","loot":true},{"id":"ch8","title":"Warp Surge","text":"Hullám – sérülés.","effect":"none","loot":false,"hpDelta":-1},{"id":"ch9","title":"Skirmish in the Dark","text":"Sötét összecsapás – idegenen csata.","effect":"battle","loot":true},{"id":"ch10","title":"Black Ritual","text":"Fekete rítus.","effect":"none","loot":false,"hpDelta":-1,"statMods":{"RES":1}},{"id":"ch11","title":"Possession Glint","text":"Megszállás csillan.","effect":"none","loot":false,"hpDelta":-1},{"id":"ch12","title":"Chaotic Forge","text":"Káosz-kohó.","effect":"none","loot":true},{"id":"ch13","title":"Corrupted Armor","text":"Korrupció.","effect":"none","loot":false,"statMods":{"DEF":1}},{"id":"ch14","title":"Rend the Veil","text":"Fátyol tépése – csata idegenen.","effect":"battle","loot":true},{"id":"ch15","title":"Frenzy","text":"Tombolás.","effect":"none","loot":false,"statMods":{"ATK":1}},{"id":"ch16","title":"Warp Sickness","text":"Warp-betegség.","effect":"none","loot":false,"hpDelta":-2},{"id":"ch17","title":"Dark Guidance","text":"Sötét útmutatás.","effect":"none","loot":false,"statMods":{"PSY":1}},{"id":"ch18","title":"Spiteful Boon","text":"Bosszús kegy.","effect":"none","loot":true},{"id":"ch19","title":"Unholy Skirmish","text":"Szentségtelen csata idegenen.","effect":"battle","loot":true},{"id":"ch20","title":"Gifts of Chaos","text":"Káosz ajándékai – loot.","effect":"none","loot":true}]
+[
+  {
+    "id": "ch1",
+    "faction": "chaos",
+    "name": "Whispers of the Warp",
+    "description": "Suttogások a Káosz Istenektől – erőért az életerő árán.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "loot": true, "statMods": { "HP": -2 } },
+    "image": "/images/cards/ch1.png"
+  },
+  {
+    "id": "ch2",
+    "faction": "chaos",
+    "name": "Pact of Tzeentch",
+    "description": "Az áruló tudás ára a stabilitás feláldozása.",
+    "selfEffect": { "statMods": { "PSY": 2 } },
+    "otherEffect": { "loot": true, "statMods": { "RES": -2 } },
+    "image": "/images/cards/ch2.png"
+  },
+  {
+    "id": "ch3",
+    "faction": "chaos",
+    "name": "Rotfather’s Touch",
+    "description": "Nurgle áldása rothasztja a páncélzatot.",
+    "selfEffect": { "statMods": { "RES": 1 } },
+    "otherEffect": { "statMods": { "DEF": -3 } },
+    "image": "/images/cards/ch3.png"
+  },
+  {
+    "id": "ch4",
+    "faction": "chaos",
+    "name": "Blessing of Khorne",
+    "description": "Vérrel szerzett erő, ami kioltja a gyengéket.",
+    "selfEffect": { "statMods": { "ATK": 2 } },
+    "otherEffect": { "loot": true, "statMods": { "HP": -3 } },
+    "image": "/images/cards/ch4.png"
+  },
+  {
+    "id": "ch5",
+    "faction": "chaos",
+    "name": "Madness of the Warp",
+    "description": "A pszichikus káosz megnöveli a harci dühöt.",
+    "selfEffect": { "statMods": { "PSY": 1, "ATK": 1 } },
+    "otherEffect": { "statMods": { "DEF": -2 } },
+    "image": "/images/cards/ch5.png"
+  },
+  {
+    "id": "ch6",
+    "faction": "chaos",
+    "name": "Echo of the Daemonhost",
+    "description": "A démoni megszállás kimeríti az ellenség csapásait.",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "statMods": { "ATK": -2 }, "effect": "battle" },
+    "image": "/images/cards/ch6.png"
+  },
+  {
+    "id": "ch7",
+    "faction": "chaos",
+    "name": "Plunder of the Eye of Terror",
+    "description": "Zsákmány a Terrortenger mélyéről.",
+    "selfEffect": { "statMods": { "DEF": 1 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ch7.png"
+  },
+  {
+    "id": "ch8",
+    "faction": "chaos",
+    "name": "Warp Surge",
+    "description": "A warp-energia hirtelen kitörése, pszichikus instabilitással.",
+    "selfEffect": { "statMods": { "ATK": 2 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ch8.png"
+  },
+  {
+    "id": "ch9",
+    "faction": "chaos",
+    "name": "Night Lords Ambush",
+    "description": "Éjjellátó vérengzés – lefegyverzi és kifosztja az áldozatot.",
+    "selfEffect": { "statMods": { "RES": 2 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ch9.png"
+  },
+  {
+    "id": "ch10",
+    "faction": "chaos",
+    "name": "Black Ritual of the Word Bearers",
+    "description": "Sötét imák a védelmet feláldozva.",
+    "selfEffect": { "statMods": { "PSY": 2 } },
+    "otherEffect": { "statMods": { "DEF": -3 }, "effect": "battle" },
+    "image": "/images/cards/ch10.png"
+  },
+  {
+    "id": "ch11",
+    "faction": "chaos",
+    "name": "Possession Glint",
+    "description": "Az átkozott fegyver villanása magával hozza a prédát.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "statMods": { "RES": -2 } },
+    "image": "/images/cards/ch11.png"
+  },
+  {
+    "id": "ch12",
+    "faction": "chaos",
+    "name": "Forge of the Dark Mechanicum",
+    "description": "Káoszgépészek védelmet kovácsolnak, támadás rovására.",
+    "selfEffect": { "statMods": { "DEF": 2 } },
+    "otherEffect": { "statMods": { "ATK": -2 } },
+    "image": "/images/cards/ch12.png"
+  },
+  {
+    "id": "ch13",
+    "faction": "chaos",
+    "name": "Plagueplate Armor",
+    "description": "Nurgle páncélja ellenálló, de nehéz és lassú.",
+    "selfEffect": { "statMods": { "RES": 1, "HP": 1 } },
+    "otherEffect": { "statMods": { "DEF": -3 } },
+    "image": "/images/cards/ch13.png"
+  },
+  {
+    "id": "ch14",
+    "faction": "chaos",
+    "name": "Rend the Veil",
+    "description": "A valóság megbontása után könnyebb zsákmányolni.",
+    "selfEffect": { "statMods": { "PSY": 1, "ATK": 1 } },
+    "otherEffect": { "statMods": { "RES": -2 } },
+    "image": "/images/cards/ch14.png"
+  },
+  {
+    "id": "ch15",
+    "faction": "chaos",
+    "name": "Berzerker Frenzy",
+    "description": "Khorne berzerkereinek esztelen dührohama.",
+    "selfEffect": { "statMods": { "ATK": 2 } },
+    "otherEffect": { "statMods": { "HP": -3 } },
+    "image": "/images/cards/ch15.png"
+  },
+  {
+    "id": "ch16",
+    "faction": "chaos",
+    "name": "Warp Pox",
+    "description": "Nurgle áldása: lassan öl, de páncéloz.",
+    "selfEffect": { "statMods": { "HP": -1 } },
+    "otherEffect": { "statMods": { "DEF": 2 } },
+    "image": "/images/cards/ch16.png"
+  },
+  {
+    "id": "ch17",
+    "faction": "chaos",
+    "name": "Dark Guidance of Slaanesh",
+    "description": "Csábító sugallat, ami elgyengíti a harci erőt.",
+    "selfEffect": { "statMods": { "ATK": -2 } },
+    "otherEffect": { "statMods": { "PSY": 2 } },
+    "image": "/images/cards/ch17.png"
+  },
+  {
+    "id": "ch18",
+    "faction": "chaos",
+    "name": "Boon of the Plague God",
+    "description": "Nurgle kegye – életerő árán állóképesség.",
+    "selfEffect": { "statMods": { "HP": -2 } },
+    "otherEffect": { "statMods": { "RES": 2 } },
+    "image": "/images/cards/ch18.png"
+  },
+  {
+    "id": "ch19",
+    "faction": "chaos",
+    "name": "Unholy Skirmish",
+    "description": "Gyors rajtaütés, ami fegyvert és javakat rabol.",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "statMods": { "ATK": -2 } },
+    "image": "/images/cards/ch19.png"
+  },
+  {
+    "id": "ch20",
+    "faction": "chaos",
+    "name": "Gifts of Chaos Undivided",
+    "description": "A négy Káoszisten ajándéka, mely őrületet hoz.",
+    "selfEffect": { "statMods": { "DEF": 1 } },
+    "otherEffect": { "statMods": { "PSY": -2 } },
+    "image": "/images/cards/ch20.png"
+  }
+]

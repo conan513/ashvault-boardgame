@@ -1,1 +1,162 @@
-[{"id":"sm1","title":"Rite of Purity","text":"Fegyelmezett rituálé – kemény próba saját területen.","effect":"none","loot":false,"hpDelta":-1},{"id":"sm2","title":"Drill Session","text":"Kiképzés keményre vesz – fárasztó.","effect":"none","loot":false,"hpDelta":-2},{"id":"sm3","title":"Ammo Shortage","text":"Lőszerhiány, mozgósítás.","effect":"none","loot":false,"hpDelta":0,"statMods":{"ATK":-1}},{"id":"sm4","title":"Librarius Insight","text":"Mentális edzés.","effect":"none","loot":false,"statMods":{"PSY":1}},{"id":"sm5","title":"Tech Blessing","text":"A fegyverek finomhangolása.","effect":"none","loot":false,"statMods":{"ATK":1}},{"id":"sm6","title":"Shield Maintenance","text":"Páncélkarbantartás.","effect":"none","loot":false,"statMods":{"DEF":1}},{"id":"sm7","title":"Chaplain’s Litanies","text":"Hit erősödik.","effect":"none","loot":false,"statMods":{"RES":1}},{"id":"sm8","title":"Field Fatigue","text":"Kimerültség.","effect":"none","loot":false,"hpDelta":-1},{"id":"sm9","title":"Honor Duel","text":"Más frakció területén kihívás. Harc és dicsőség.","effect":"battle","loot":true},{"id":"sm10","title":"Secured Supply","text":"Ellátmány – ha idegenen állsz, külön zsákmány.","effect":"none","loot":true},{"id":"sm11","title":"Orbital Vox","text":"Kommunikációs zavar.","effect":"none","loot":false,"statMods":{"RES":-1}},{"id":"sm12","title":"Target Drill","text":"Célzás gyakorlása.","effect":"none","loot":false,"statMods":{"ATK":1}},{"id":"sm13","title":"Armor Test","text":"Páncélteszt.","effect":"none","loot":false,"statMods":{"DEF":1}},{"id":"sm14","title":"Purging Fire","text":"Ellenség felbukkan – idegen területen ütközet.","effect":"battle","loot":true},{"id":"sm15","title":"Servo Malfunction","text":"Szervó meghibásodás.","effect":"none","loot":false,"statMods":{"DEF":-1}},{"id":"sm16","title":"Astartes Resolve","text":"Állóképesség.","effect":"none","loot":false,"hpDelta":2},{"id":"sm17","title":"Forward Patrol","text":"Felderítés – idegen területen zsákmány.","effect":"none","loot":true},{"id":"sm18","title":"Battle Hymn","text":"Csatadal.","effect":"none","loot":false,"statMods":{"ATK":1}},{"id":"sm19","title":"Harsh Conditions","text":"Zord körülmények.","effect":"none","loot":false,"hpDelta":-1},{"id":"sm20","title":"Skirmish","text":"Összecsapás – idegen területen harc.","effect":"battle","loot":true}]
+[
+  {
+    "id": "sm1",
+    "faction": "Space Marines",
+    "name": "Macragge Rally",
+    "description": "Astartes összegyűlnek a csatatéren.",
+    "selfEffect": { "hpDelta": 2 },
+    "otherEffect": { "effect": "battle" }
+  },
+  {
+    "id": "sm2",
+    "faction": "Space Marines",
+    "name": "Tactical Deployment",
+    "description": "Harcászati pozíciók elfoglalása.",
+    "selfEffect": { "statMods": { "DEF": 2 } },
+    "otherEffect": { "loot": true }
+  },
+  {
+    "id": "sm3",
+    "faction": "Space Marines",
+    "name": "Honor Guard",
+    "description": "A becsület védelme inspirálja a katonákat.",
+    "selfEffect": { "statMods": { "ATK": 1, "DEF": 1 } },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "sm4",
+    "faction": "Space Marines",
+    "name": "Codex Reading",
+    "description": "Stratégiai utasítások a jövőre nézve.",
+    "selfEffect": { "statMods": { "PSY": 2 } },
+    "otherEffect": { "effect": "battle" }
+  },
+  {
+    "id": "sm5",
+    "faction": "Space Marines",
+    "name": "Bolter Volley",
+    "description": "Tűzerő zápor az ellenségre.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -3 }
+  },
+  {
+    "id": "sm6",
+    "faction": "Space Marines",
+    "name": "Purity of the Chapter",
+    "description": "A tisztaság emeli a morált.",
+    "selfEffect": { "hpDelta": 1, "statMods": { "RES": 1 } },
+    "otherEffect": { "statMods": { "DEF": -1 } }
+  },
+  {
+    "id": "sm7",
+    "faction": "Space Marines",
+    "name": "Strategic Advance",
+    "description": "Taktikai előny megszerzése.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "loot": true }
+  },
+  {
+    "id": "sm8",
+    "faction": "Space Marines",
+    "name": "Shield Wall",
+    "description": "Védelem a csapat védelmére.",
+    "selfEffect": { "statMods": { "DEF": 2 } },
+    "otherEffect": { "effect": "battle" }
+  },
+  {
+    "id": "sm9",
+    "faction": "Space Marines",
+    "name": "Morale Boost",
+    "description": "A bátorság mindenkit ösztönöz.",
+    "selfEffect": { "hpDelta": 2 },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "sm10",
+    "faction": "Space Marines",
+    "name": "Relic Discovery",
+    "description": "Ősi ereklye az erőt növeli.",
+    "selfEffect": { "loot": true },
+    "otherEffect": { "statMods": { "PSY": -1 } }
+  },
+  {
+    "id": "sm11",
+    "faction": "Space Marines",
+    "name": "Veteran Strike",
+    "description": "Tapasztalt harcos gyors csapása.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "sm12",
+    "faction": "Space Marines",
+    "name": "Chaplain’s Sermon",
+    "description": "A hitélet erősíti a csapatot.",
+    "selfEffect": { "statMods": { "PSY": 2 } },
+    "otherEffect": { "statMods": { "PSY": -1 } }
+  },
+  {
+    "id": "sm13",
+    "faction": "Space Marines",
+    "name": "Combat Drill",
+    "description": "Gyakorlás gyorsítja a reakciót.",
+    "selfEffect": { "statMods": { "ATK": 1, "DEF": 1 } },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "sm14",
+    "faction": "Space Marines",
+    "name": "Fortified Position",
+    "description": "Erődítmények növelik a védelmet.",
+    "selfEffect": { "statMods": { "DEF": 2 } },
+    "otherEffect": { "effect": "battle" }
+  },
+  {
+    "id": "sm15",
+    "faction": "Space Marines",
+    "name": "Suppressive Fire",
+    "description": "Az ellenség hátrálásra kényszerítése.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "sm16",
+    "faction": "Space Marines",
+    "name": "Inspiring Presence",
+    "description": "A vezető ösztönző hatása.",
+    "selfEffect": { "statMods": { "ATK": 1, "PSY": 1 } },
+    "otherEffect": { "statMods": { "ATK": -1 } }
+  },
+  {
+    "id": "sm17",
+    "faction": "Space Marines",
+    "name": "Medic Assistance",
+    "description": "Gyors sebellátás a fronton.",
+    "selfEffect": { "hpDelta": 2 },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "sm18",
+    "faction": "Space Marines",
+    "name": "Resupply",
+    "description": "Fegyver és felszerelés pótlása.",
+    "selfEffect": { "loot": true },
+    "otherEffect": { "statMods": { "DEF": -1 } }
+  },
+  {
+    "id": "sm19",
+    "faction": "Space Marines",
+    "name": "Determined Advance",
+    "description": "Határozott előretörés.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "effect": "battle" }
+  },
+  {
+    "id": "sm20",
+    "faction": "Space Marines",
+    "name": "Sacred Duty",
+    "description": "A szent kötelesség erőt ad.",
+    "selfEffect": { "hpDelta": 3 },
+    "otherEffect": { "statMods": { "PSY": -1 } }
+  }
+]

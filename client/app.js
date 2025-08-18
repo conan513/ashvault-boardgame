@@ -4,7 +4,12 @@ let MY_ID = null;
 window.GAME = null;
 let LAST_DICE = null;
 let LAST_TARGETS = [];
-let canRoll = true; // Hozzáadva a dobás engedélyezésének ellenőrzéséhez
+let canRoll = true; // dobás engedélyezésének ellenőrzéséhez
+
+// reconnect adatok megőrzése
+let LAST_ROOM = null;
+let LAST_NAME = null;
+let LAST_CHAR = null;
 
 const $ = sel => document.querySelector(sel);
 
@@ -14,6 +19,14 @@ const diceOut = $("#diceOut");
 
 socket.on("connect", () => {
   MY_ID = socket.id;
+
+  // ha újracsatlakoztunk és volt szoba/név
+  if (LAST_ROOM && LAST_NAME && LAST_CHAR) {
+    socket.emit("createOrJoinRoom", { roomName: LAST_ROOM });
+    setTimeout(() => {
+      socket.emit("joinGame", { playerName: LAST_NAME, characterId: LAST_CHAR });
+    }, 500);
+  }
 });
 
 // a szoba kiválasztás után jön a hello
@@ -35,16 +48,13 @@ socket.on("turnChanged", (playerId) => {
   ? `<span class="badge turn">A te köröd</span>`
   : `Most: <b>${shortName(playerId) || "-"}</b>`;
 
-  // Ellenőrizzük, hogy dobhatok-e (csak az aktuális játékosnak)
   rollBtn.disabled = !mine || !canRoll;
   endTurnBtn.disabled = !mine;
 
-  // Reset the roll button state after the turn changes
   if (mine) {
-    canRoll = true;  // Ha én következem, akkor újra dobhatok
+    canRoll = true;
   }
 });
-
 
 socket.on("diceResult", ({ dice, targets, playerId }) => {
   LAST_DICE = dice;
@@ -57,16 +67,13 @@ socket.on("diceResult", ({ dice, targets, playerId }) => {
     if (!myCell) return;
 
     const myRing = myCell.ring;
-    // összes mező ebben a gyűrűben, sorrendben ID szerint
     const ringCells = GAME.board
     .filter(c => c.ring === myRing)
     .sort((a,b) => a.id - b.id);
 
-    // pozícióm indexe a gyűrűn belül
     const myIdx = ringCells.findIndex(c => c.id === myCell.id);
     const size = ringCells.length;
 
-    // két irányban a 'dice' lépésnyire lévő mezők
     const target1 = ringCells[(myIdx + dice) % size].id;
     const target2 = ringCells[(myIdx - dice + size) % size].id;
 
@@ -79,12 +86,25 @@ socket.on("diceResult", ({ dice, targets, playerId }) => {
   }
 });
 
-socket.on("cardDrawn", (payload) => { renderCard(payload); });
+socket.on("cardDrawn", ({ playerId, card, type }) => {
+  if (type === "FACTION") {
+    showToast(`🃏 ${shortName(playerId)} húzott egy frakció lapot: ${card.name}`);
+  }
+
+  const view = document.getElementById("cardView");
+  view.innerHTML = `
+  <div class="card">
+  <div class="title">${card.name}</div>
+  <p>${card.description || ""}</p>
+  ${card.image ? `<img src="${card.image}" alt="${card.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />` : ""}
+  </div>
+  `;
+});
+
 socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); });
 socket.on("battleResult", (data) => { renderBattle(data); });
 socket.on("itemLooted", ({ playerId, item }) => {
   showToast(`🎁 ${shortName(playerId)} kapta: ${item.name}`);
-
   const view = document.getElementById("cardView");
   view.innerHTML = `
   <div class="card">
@@ -111,12 +131,14 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     const name = $("#roomName").value.trim();
     if (!name) return;
+    LAST_ROOM = name; // elmentjük reconnecthez
     socket.emit("createOrJoinRoom", { roomName: name });
   });
 
   socket.on("roomJoined", ({ roomName }) => {
-    $("#roomPanel").style.display = "none";   // szoba panel eltűnik
-    $("#joinPanel").style.display = "block";  // karakterválasztó megjelenik
+    $("#roomPanel").style.display = "none";
+    $("#joinPanel").style.display = "block";
+    showToast(`✅ Beléptél a "${roomName}" szobába`);
   });
 
   // karakter választó
@@ -125,20 +147,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = $("#playerName").value.trim();
     const sel = document.querySelector("input[name='charPick']:checked");
     if (!sel) return alert("Válassz karaktert!");
+    LAST_NAME = name;       // reconnecthez mentjük
+    LAST_CHAR = sel.value;
     socket.emit("joinGame", { playerName: name, characterId: sel.value });
     $("#joinPanel").style.display = "none";
   });
 
   rollBtn.addEventListener("click", () => {
-    if (canRoll) { // Csak akkor engedélyezett, ha nem dobtam még
+    if (canRoll) {
       socket.emit("rollDice");
-      canRoll = false; // Lezárjuk a dobást a kör végéig
+      canRoll = false;
     }
   });
 
   endTurnBtn.addEventListener("click", () => {
     socket.emit("endTurn");
-    canRoll = true; // Újra engedélyezzük a dobást, amikor a kör véget ér
+    canRoll = true;
   });
 });
 
@@ -149,6 +173,6 @@ function updateTurnUI() {
   $("#turnInfo").innerHTML = mine
   ? `<span class="badge turn">A te köröd</span>`
   : `Most: <b>${shortName(current) || "-"}</b>`;
-  rollBtn.disabled = !mine || !canRoll; // Ha nem az én köröm, vagy már dobtam, akkor letiltva
+  rollBtn.disabled = !mine || !canRoll;
   endTurnBtn.disabled = !mine;
 }

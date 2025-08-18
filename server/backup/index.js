@@ -35,7 +35,8 @@ function makeGameState() {
     turnOrder: [],
     currentTurnIndex: 0,
     lastDrawn: null,
-    pvpPending: null
+    pvpPending: null,
+    decks: resetDecksState() // minden szobának saját paklik
   };
 }
 
@@ -54,14 +55,10 @@ function advanceTurn(roomName) {
   const state = rooms[roomName];
   if (!state || state.turnOrder.length === 0) return;
 
-  // Először is, növeljük a turnIndex-et
   state.currentTurnIndex = (state.currentTurnIndex + 1) % state.turnOrder.length;
   const newCurrentPlayerId = getCurrentPlayerId(state);
 
-  // Küldjük ki minden játékosnak, hogy változott a kör
   io.to(roomName).emit("turnChanged", newCurrentPlayerId);
-
-  // Új kör frissítése minden kliensnél
   io.to(roomName).emit("updateGame", sanitizeGameStateForClients(state));
 }
 
@@ -98,7 +95,6 @@ io.on("connection", (socket) => {
   socket.on("createOrJoinRoom", ({ roomName }) => {
     if (!rooms[roomName]) {
       rooms[roomName] = makeGameState();
-      resetDecksState();
     }
     socket.join(roomName);
     socket.currentRoom = roomName;
@@ -162,14 +158,10 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "Nem a te köröd!");
     }
 
-    advanceTurn(socket.currentRoom);  // Küldjük az új kör állapotát mindenkinek
-
-    // Ha vége a körnek, frissítsük a gombok állapotát
+    advanceTurn(socket.currentRoom);
     io.to(socket.currentRoom).emit("turnChanged", getCurrentPlayerId(gameState));
   });
 
-  // confirmMove, resolvePVP, disconnect -> marad a múltkori több szobás logika
-  // (nincs változtatás, mert már minden io.emit szobára ment)
   socket.on("confirmMove", ({ dice, targetCellId }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
@@ -191,40 +183,47 @@ io.on("connection", (socket) => {
     const cell = cellById(gameState.board, targetCellId);
 
     if (differentFaction) {
-      // Ha más frakcióval rendelkező játékos lépett a cellára, PVP-t indítunk
       gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
       io.to(socket.currentRoom).emit("pvpStarted", { aId: player.id, bId: differentFaction.id, cellName: cell.name });
     } else {
-      // Ha saját frakció vagy semmi nincs a cellán
       if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
-        const card = drawFactionCard(cell.faction);
-        gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
-        io.to(socket.currentRoom).emit("cardDrawn", gameState.lastDrawn);
+        const card = drawFactionCard(cell.faction, gameState.decks);
+        if (card) {
+          const sameFaction = (player.faction === cell.faction);
+          const effect = sameFaction ? card.selfEffect : card.otherEffect;
 
-        const sameFaction = (player.faction === cell.faction);
-        const effect = sameFaction ? card.selfEffect : card.otherEffect;
+          gameState.lastDrawn = {
+            type: "FACTION",
+            faction: cell.faction,
+            cardId: card.id,
+            name: card.name,
+            description: card.description,
+            effectType: sameFaction ? "self" : "other"
+          };
+          io.to(socket.currentRoom).emit("cardDrawn", gameState.lastDrawn);
 
-        // Kártya hatásának alkalmazása
-        if (effect.effect === "battle") {
-          const enemy = drawEnemyCard();
-          io.to(socket.currentRoom).emit("enemyDrawn", enemy);
-          const result = battlePVE(player, enemy, io, socket.id);
-          io.to(socket.currentRoom).emit("battleResult", { type: "PVE", result, playerId: player.id, enemy });
-          if (result.winner === "enemy") {
-            if (player.stats.HP <= 0) {
-              player.alive = false;
-              io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
-            }
-          } else {
-            if (!sameFaction || card.loot) {
-              const item = drawEquipmentCard();
-              applyItemToPlayer(player, item);
-              io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+          // Effect feldolgozás
+          if (effect.effect === "battle") {
+            const enemy = drawEnemyCard(gameState.decks);
+            io.to(socket.currentRoom).emit("enemyDrawn", enemy);
+            const result = battlePVE(player, enemy, io, socket.id);
+            io.to(socket.currentRoom).emit("battleResult", { type: "PVE", result, playerId: player.id, enemy });
+            if (result.winner === "enemy") {
+              if (player.stats.HP <= 0) {
+                player.alive = false;
+                io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
+              }
+            } else {
+              if (effect.loot) {
+                const item = drawEquipmentCard(gameState.decks);
+                applyItemToPlayer(player, item);
+                io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+              }
             }
           }
-        } else {
+
           if (effect.loot) {
-            const item = drawEquipmentCard();
+            const item = drawEquipmentCard(gameState.decks);
             applyItemToPlayer(player, item);
             io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
           }
@@ -248,7 +247,6 @@ io.on("connection", (socket) => {
     broadcast(socket.currentRoom);
     if (!gameState.pvpPending) advanceTurn(socket.currentRoom);
   });
-
 
     socket.on("resolvePVP", () => {
       const gameState = rooms[socket.currentRoom];
@@ -275,7 +273,8 @@ io.on("connection", (socket) => {
 
       const winner = result.winner === "A" ? A : B;
       if (loser.inventory.length > 0) {
-        const stolen = loser.inventory.pop();
+        const stolenIndex = Math.floor(Math.random() * loser.inventory.length);
+        const [stolen] = loser.inventory.splice(stolenIndex, 1);
         applyItemToPlayer(winner, stolen);
         io.to(socket.currentRoom).emit("itemStolen", { from: loser.id, to: winner.id, item: stolen });
       }
@@ -295,7 +294,7 @@ io.on("connection", (socket) => {
         gameState.currentTurnIndex = 0;
       }
       broadcast(socket.currentRoom);
-      if (wasCurrent) io.to(socket.currentRoom).emit("turnChanged", getCurrentPlayerId(gameState));
+      if (wasCurrent) advanceTurn(socket.currentRoom);
     });
 });
 

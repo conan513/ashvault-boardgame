@@ -1,1 +1,162 @@
-[{"id":"ok1","title":"Waaagh! Rush","text":"Őrült roham – sérülés.","effect":"none","loot":false,"hpDelta":-1},{"id":"ok2","title":"Teef Squabble","text":"Verekedés a fogakon.","effect":"none","loot":false,"hpDelta":-2},{"id":"ok3","title":"Mek Tinkering","text":"Mek bogarászik – néha jobb lesz!","effect":"none","loot":false,"statMods":{"ATK":1}},{"id":"ok4","title":"Dakka Jam","text":"Beragad a dakka.","effect":"none","loot":false,"statMods":{"ATK":-1}},{"id":"ok5","title":"Thick Hide","text":"Vastag bőr.","effect":"none","loot":false,"statMods":{"DEF":1}},{"id":"ok6","title":"Weirdboy Zap","text":"Pszi robbanás.","effect":"none","loot":false,"hpDelta":-1,"statMods":{"PSY":1}},{"id":"ok7","title":"Loot It!","text":"Ha idegen területen vagy: zsákmány.","effect":"none","loot":true},{"id":"ok8","title":"Skrap Hunt","text":"Szemétből kincs.","effect":"none","loot":true},{"id":"ok9","title":"Brawl","text":"Ökölharc – idegen mezőn csata.","effect":"battle","loot":true},{"id":"ok10","title":"Stompa Steps","text":"Földrengés – sérülés.","effect":"none","loot":false,"hpDelta":-1},{"id":"ok11","title":"Painboy Patch","text":"Gyors foltozás.","effect":"none","loot":false,"hpDelta":2},{"id":"ok12","title":"Squig Snack","text":"Kaja – néha segít.","effect":"none","loot":false,"hpDelta":1},{"id":"ok13","title":"Ammo Rain","text":"Lőszerhullás.","effect":"none","loot":true},{"id":"ok14","title":"Fighta-Bomma","text":"Bombázás – idegen mezőn csata.","effect":"battle","loot":true},{"id":"ok15","title":"Choppa Sharpen","text":"Élezés.","effect":"none","loot":false,"statMods":{"ATK":1}},{"id":"ok16","title":"Rusty Plates","text":"Rozsdás páncél.","effect":"none","loot":false,"statMods":{"DEF":-1}},{"id":"ok17","title":"Big Waaagh!","text":"Felspannolva.","effect":"none","loot":false,"statMods":{"ATK":1,"RES":1}},{"id":"ok18","title":"Grot Sabotage","text":"Grot balhé.","effect":"none","loot":false,"hpDelta":-1},{"id":"ok19","title":"Kunnin’ Attack","text":"Ravasz csapás – harc idegenen.","effect":"battle","loot":true},{"id":"ok20","title":"Rummage","text":"Kotorászás – loot.","effect":"none","loot":true}]
+[
+  {
+    "id": "ok1",
+    "faction": "Orks",
+    "name": "Waaagh! Charge",
+    "description": "Orkok rohamra indulnak, mindenkit eltapossanak.",
+    "selfEffect": { "statMods": { "ATK": 2 } },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "ok2",
+    "faction": "Orks",
+    "name": "Squig Frenzy",
+    "description": "A szörnyek kitörnek a falakból.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "ok3",
+    "faction": "Orks",
+    "name": "Big Mek Workshop",
+    "description": "Konstruktív zseni, fegyvereket hoz létre.",
+    "selfEffect": { "statMods": { "DEF": 1 } },
+    "otherEffect": { "loot": true }
+  },
+  {
+    "id": "ok4",
+    "faction": "Orks",
+    "name": "Grot Ambush",
+    "description": "Alacsony szintű harcosok meglepetésszerű támadása.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "ok5",
+    "faction": "Orks",
+    "name": "Warped Contraption",
+    "description": "Őrült találmány növeli a sebzést.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "effect": "battle" }
+  },
+  {
+    "id": "ok6",
+    "faction": "Orks",
+    "name": "Looting Spree",
+    "description": "Zsákmányolás mindenhol.",
+    "selfEffect": { "loot": true },
+    "otherEffect": { "statMods": { "DEF": -1 } }
+  },
+  {
+    "id": "ok7",
+    "faction": "Orks",
+    "name": "Warboss Rally",
+    "description": "A vezető ösztönzi a harcosokat.",
+    "selfEffect": { "statMods": { "ATK": 1, "HP": 2 } },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "ok8",
+    "faction": "Orks",
+    "name": "Ork Boomboy",
+    "description": "Robbanó szerkezet pusztít az ellenségen.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "ok9",
+    "faction": "Orks",
+    "name": "Squiggoth Stampede",
+    "description": "Óriás szörnyek tapossák el a terepet.",
+    "selfEffect": { "statMods": { "ATK": 2 } },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "ok10",
+    "faction": "Orks",
+    "name": "Rokkit Launcher",
+    "description": "Távolsági robbanó fegyverek.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "loot": true }
+  },
+  {
+    "id": "ok11",
+    "faction": "Orks",
+    "name": "Choppa Frenzy",
+    "description": "Közelharci őrület, mindenkit megsebez.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "ok12",
+    "faction": "Orks",
+    "name": "Ork Shout",
+    "description": "Háborús kiáltás növeli a támadást.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "statMods": { "DEF": -1 } }
+  },
+  {
+    "id": "ok13",
+    "faction": "Orks",
+    "name": "Grot Mischief",
+    "description": "Alacsony szintű harcosok káoszt okoznak.",
+    "selfEffect": { "loot": true },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "ok14",
+    "faction": "Orks",
+    "name": "Waaagh! Banner",
+    "description": "A zászló ösztönzi a harcosokat.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "statMods": { "RES": -1 } }
+  },
+  {
+    "id": "ok15",
+    "faction": "Orks",
+    "name": "Ramshackle Armor",
+    "description": "Csapatszinten növeli a védekezést, de törékeny.",
+    "selfEffect": { "statMods": { "DEF": 2 } },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "ok16",
+    "faction": "Orks",
+    "name": "Rokkit Barrage",
+    "description": "Célzott rakétatámadás az ellenségre.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "ok17",
+    "faction": "Orks",
+    "name": "Greenskin Charge",
+    "description": "Tömegrohammal sebez mindenkit.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -1 }
+  },
+  {
+    "id": "ok18",
+    "faction": "Orks",
+    "name": "Loot Raid",
+    "description": "Zsákmányolás és rombolás.",
+    "selfEffect": { "loot": true },
+    "otherEffect": { "effect": "battle" }
+  },
+  {
+    "id": "ok19",
+    "faction": "Orks",
+    "name": "Stomping Ground",
+    "description": "Tereptaposás az ellenség ellen.",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "hpDelta": -2 }
+  },
+  {
+    "id": "ok20",
+    "faction": "Orks",
+    "name": "Big Choppa",
+    "description": "Óriási fegyverrel sebez mindenkit.",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "hpDelta": -2 }
+  }
+]
