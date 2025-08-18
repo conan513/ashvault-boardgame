@@ -1,3 +1,5 @@
+![Warhammer 40K: Omega Vault](w40k.jpeg)
+
 # 🌌 Warhammer 40K: Omega Vault
 
 **Warhammer 40K: Omega Vault** is a web-based, multiplayer online board game set in the grimdark universe of Warhammer 40,000. Choose iconic characters from legendary factions and battle for galactic supremacy — or race to unlock the mysterious Omega Vault at the center of the board.
@@ -25,9 +27,6 @@
 - **Unique Tile Names**: Each tile has a distinct name for immersion and strategy.
 
 ---
-
-![Warhammer 40K: Omega Vault](w40k.jpeg)
-
 
 ## 👥 Multiplayer & Character Selection
 
