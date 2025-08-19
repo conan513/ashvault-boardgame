@@ -547,3 +547,30 @@ color: white;
   pointer-events: none;
   user-select: none;
 }
+
+#tileTooltip {
+position: fixed;
+pointer-events: none;
+background: rgba(20, 26, 38, 0.95);
+border: 1px solid var(--border);
+border-radius: 10px;
+padding: 10px 14px;
+box-shadow: var(--shadow);
+display: none;
+z-index: 9999;
+text-align: center;
+max-width: 240px;
+}
+
+#tileTooltip img {
+width: 60px;
+height: 60px;
+display: block;
+margin: 0 auto 6px;
+}
+
+#tileTooltipLabel {
+font-size: 0.9rem;
+color: var(--fg);
+font-weight: normal;
+}

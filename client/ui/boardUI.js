@@ -118,6 +118,9 @@ function renderBoard(state) {
     const sel = svg.querySelector(`.cell[data-id="${cid}"]`);
     if (sel) sel.classList.add("current");
   }
+
+  // --- cursor melletti tooltip bekapcsolása ---
+  enableTileHoverPopup();
 }
 
 function animateMove(player, path, callback) {
@@ -236,6 +239,69 @@ function showToast(msg) {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
+
+// --- tooltip logó + név az egér mellett ---
+function enableTileHoverPopup() {
+  const svg = document.getElementById("boardSVG");
+  const tooltip = document.getElementById("tileTooltip");
+  const tooltipImg = tooltip.querySelector("img");
+  const tooltipLabel = document.getElementById("tileTooltipLabel");
+
+  svg.querySelectorAll(".cell").forEach(cell => {
+    cell.addEventListener("mouseenter", () => {
+      const icon = cell.querySelector("image");
+      const label = cell.querySelector("text");
+
+      if (icon) {
+        tooltipImg.setAttribute("src", icon.getAttribute("href"));
+      } else {
+        tooltipImg.setAttribute("src", "");
+      }
+
+      tooltipLabel.innerHTML = label ? `<strong>${label.textContent}</strong>` : "";
+
+      // ha vannak playerek a cellán
+      const players = cell.querySelectorAll(".player");
+      players.forEach(player => {
+        const playerName = player.getAttribute("data-name");
+        const playerImg = player.getAttribute("data-img");
+        const playerFaction = player.getAttribute("data-faction");
+        const playerHP = player.getAttribute("data-hp");
+        const playerATK = player.getAttribute("data-atk");
+        const playerDEF = player.getAttribute("data-def");
+        const playerPSY = player.getAttribute("data-psy");
+        const playerRES = player.getAttribute("data-res");
+
+        tooltipLabel.innerHTML += `
+        <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:6px; text-align:center;">
+        <img src="${playerImg}" alt="${playerName}" style="width:70px; height:70px; border-radius:8px; margin-bottom:6px;"/>
+        <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+        <img src="${factionIcons[playerFaction] || ""}" alt="${playerFaction}" style="width:20px; height:20px;"/>
+        <strong>${playerName}</strong>
+        </div>
+        <div>❤️ HP: ${playerHP}</div>
+        <div>⚔️ ATK: ${playerATK}</div>
+        <div>🛡️ DEF: ${playerDEF}</div>
+        <div>🔮 PSY: ${playerPSY}</div>
+        <div>💎 RES: ${playerRES}</div>
+        </div>
+        `;
+      });
+
+      tooltip.style.display = "block";
+    });
+
+    cell.addEventListener("mousemove", e => {
+      tooltip.style.left = e.clientX + 15 + "px";
+      tooltip.style.top = e.clientY + 15 + "px";
+    });
+
+    cell.addEventListener("mouseleave", () => {
+      tooltip.style.display = "none";
+    });
+  });
+}
+
 
 window.renderBoard = renderBoard;
 window.highlightTargets = highlightTargets;
