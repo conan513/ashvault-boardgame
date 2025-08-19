@@ -61,7 +61,7 @@ socket.on("diceResult", ({ dice, targets, playerId }) => {
   LAST_TARGETS = targets;
 
   if (playerId === MY_ID) {
-    diceOut.textContent = `Dobás: ${dice}`;
+    //diceOut.textContent = `Dobás: ${dice}`;
 
     const myCell = GAME.board.find(c => c.id === GAME.players[MY_ID].position);
     if (!myCell) return;
@@ -84,6 +84,14 @@ socket.on("diceResult", ({ dice, targets, playerId }) => {
   } else {
     showToast(`🎲 ${shortName(playerId)} dobott: ${dice}`);
   }
+});
+
+socket.on("diceResult", ({ dice }) => {
+  const diceIcon = $("#diceIcon");
+  const diceNumber = $("#diceNumber");
+
+  diceIcon.classList.remove("rolling");
+  diceNumber.textContent = dice;
 });
 
 socket.on("cardDrawn", ({ playerId, card, type }) => {
@@ -188,16 +196,30 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   rollBtn.addEventListener("click", () => {
-    if (canRoll) {
+    if (!canRoll) return;
+
+    canRoll = false;
+
+    const icon = $("#diceIcon");
+    const number = $("#diceNumber");
+    icon.classList.add("rolling");
+
+    let animInterval = setInterval(() => {
+      number.textContent = Math.floor(Math.random() * 6) + 1;
+    }, 100);
+
+    setTimeout(() => {
+      clearInterval(animInterval);
+      icon.classList.remove("rolling");
       socket.emit("rollDice");
-      canRoll = false;
-    }
+    }, 1000);
   });
 
   endTurnBtn.addEventListener("click", () => {
     socket.emit("endTurn");
     canRoll = true;
   });
+
 });
 
 function updateTurnUI() {
