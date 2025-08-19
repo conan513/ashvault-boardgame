@@ -171,9 +171,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("roomJoined", ({ roomName }) => {
-    $("#roomPanel").style.display = "none";
-    $("#joinPanel").style.display = "block";
-    showToast(`✅ Beléptél a "${roomName}" szobába`);
+    document.getElementById("roomPanel").style.display = "none";
+    document.getElementById("charOverlay").style.display = "flex"; // overlay megnyit
   });
 
   // karakter választó

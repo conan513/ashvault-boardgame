@@ -5,26 +5,18 @@ function renderCharacterSelect(characters) {
   ALL_CHARS = characters;
   const wrap = document.getElementById("charSelect");
   wrap.innerHTML = "";
-  const byFaction = {};
-  for (const c of characters) (byFaction[c.faction] ||= []).push(c);
 
-  for (const [faction, list] of Object.entries(byFaction)) {
-    const box = document.createElement("div");
-    box.className = "panel";
-    box.innerHTML = `<h3>${faction}</h3>`;
-    for (const c of list) {
-      const id = `pick_${c.id}`;
-      const row = document.createElement("label");
-      row.style.display = "block";
-      row.style.margin = "6px 0";
-      row.innerHTML = `
-        <input type="radio" name="charPick" id="${id}" value="${c.id}" />
-        <b>${c.name}</b> — HP:${c.HP} ATK:${c.ATK} DEF:${c.DEF} PSY:${c.PSY} RES:${c.RES}
-        <small> (Spawn: ${c.spawn})</small>
-      `;
-      box.appendChild(row);
-    }
-    wrap.appendChild(box);
+  for (const c of characters) {
+    const id = `pick_${c.id}`;
+    const card = document.createElement("label");
+    card.className = "char-card";
+    card.innerHTML = `
+    <input type="radio" name="charPick" id="${id}" value="${c.id}" />
+    <img src="${c.img}" alt="${c.name}" />
+    <div><b>${c.name}</b></div>
+    <small>HP:${c.HP} ATK:${c.ATK} DEF:${c.DEF} PSY:${c.PSY} RES:${c.RES}</small>
+    `;
+    wrap.appendChild(card);
   }
 }
 
@@ -54,6 +46,25 @@ function renderPlayers(state) {
     list.appendChild(li);
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const joinForm = document.getElementById("joinForm");
+  if (joinForm) {
+    joinForm.addEventListener("submit", (e) => {
+      // ha van kiválasztott karakter
+      const pick = document.querySelector("input[name='charPick']:checked");
+      if (!pick) {
+        e.preventDefault();
+        alert("Válassz egy karaktert!");
+        return;
+      }
+
+      // overlay eltüntetése
+      const overlay = document.getElementById("charOverlay");
+      overlay.style.display = "none";
+    });
+  }
+});
 
 window.renderCharacterSelect = renderCharacterSelect;
 window.renderPlayers = renderPlayers;

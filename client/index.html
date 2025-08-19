@@ -40,15 +40,6 @@
         </form>
       </div>
 
-      <div id="joinPanel" class="panel" style="display:none">
-        <h2>Join</h2>
-        <form id="joinForm">
-          <label>Name: <input id="playerName" required maxlength="16" /></label>
-          <div id="charSelect"></div>
-          <button type="submit">Enter</button>
-        </form>
-      </div>
-
       <div id="playersPanel" class="panel">
         <h2>Players</h2>
         <ul id="playersList"></ul>
@@ -81,6 +72,17 @@
   <div id="chatLog" style="max-height: 300px; overflow-y: auto; margin-bottom: 10px;"></div>
   <textarea id="chatInput" placeholder="Type a message..." rows="3"></textarea>
   <button id="sendChatBtn">Send</button>
+</div>
+<!-- Karakterválasztó overlay -->
+<div id="charOverlay" class="overlay" style="display:none;">
+  <div class="overlay-content">
+    <h2>Válassz karaktert</h2>
+    <form id="joinForm">
+      <label>Név: <input id="playerName" required maxlength="16" /></label>
+      <div id="charSelect" class="char-grid"></div>
+      <button type="submit">Belépés</button>
+    </form>
+  </div>
 </div>
 </body>
 </html>

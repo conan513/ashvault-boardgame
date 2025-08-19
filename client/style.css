@@ -303,3 +303,58 @@ background-color: #ff4b4b; /* piros jelzés */
 color: white;
 border-radius: 6px;
 }
+/* Overlay háttér */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Overlay tartalom */
+.overlay-content {
+  background: #222;
+  color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 1000px;
+  width: 90%;
+  text-align: center;
+}
+
+/* Karakter grid */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+
+/* Glow effekt a kiválasztott karakterre */
+.char-card {
+  background: #333;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  color: #fff;
+}
+
+.char-card:hover {
+  border-color: gold;
+}
+
+/* ha a belső input radio kiválasztott */
+.char-card input:checked + img {
+  box-shadow: 0 0 15px 5px gold;
+  border-radius: 6px;
+}
+
+.char-card img {
+  width: 100%;
+  border-radius: 6px;
+}
