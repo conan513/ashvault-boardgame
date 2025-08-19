@@ -90,6 +90,7 @@ function renderBoard(state) {
     svg.appendChild(g);
   }
 
+  // ---- player tokenek rajzolása transform alapon ----
   for (const p of Object.values(state.players)) {
     if (!p.alive) continue;
     const cell = state.board.find(c => c.id === p.position);
@@ -97,18 +98,26 @@ function renderBoard(state) {
     const { x, y } = posFor(cell);
     const token = document.createElementNS("http://www.w3.org/2000/svg", "g");
     token.classList.add("playerToken");
+    token.setAttribute("transform", `translate(${x}, ${y})`);
     const color = ({ "Space Marines": "#2a7fff", "Eldar": "#32d1a0", "Orks": "#70d13e", "Chaos": "#c04ff0" })[p.faction] || "#fff";
+
     const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    disk.setAttribute("cx", x); disk.setAttribute("cy", y);
-    disk.setAttribute("r", 12); disk.setAttribute("fill", color);
-    disk.setAttribute("stroke", "#000"); disk.setAttribute("stroke-width", "2");
+    disk.setAttribute("cx", 0);
+    disk.setAttribute("cy", 0);
+    disk.setAttribute("r", 12);
+    disk.setAttribute("fill", color);
+    disk.setAttribute("stroke", "#000");
+    disk.setAttribute("stroke-width", "2");
     disk.setAttribute("filter", "url(#shadow)");
+
     const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    txt.setAttribute("x", x); txt.setAttribute("y", y + 4);
+    txt.setAttribute("x", 0);
+    txt.setAttribute("y", 4);
     txt.setAttribute("text-anchor", "middle");
     txt.textContent = p.name.slice(0, 2).toUpperCase();
 
-    token.appendChild(disk); token.appendChild(txt);
+    token.appendChild(disk);
+    token.appendChild(txt);
     svg.appendChild(token);
   }
 
@@ -132,9 +141,6 @@ function animateMove(player, path, callback) {
     return;
   }
 
-  const disk = token.querySelector("circle");
-  const txt = token.querySelector("text");
-
   let step = 0;
   function moveNext() {
     if (step >= path.length) {
@@ -156,20 +162,20 @@ function animateMove(player, path, callback) {
       }
     })(cell);
 
-    // animált mozgatás
-    disk.animate([
-      { cx: disk.getAttribute("cx"), cy: disk.getAttribute("cy") },
-                 { cx: x, cy: y }
-    ], { duration: 400, fill: "forwards" });
-    txt.animate([
-      { x: txt.getAttribute("x"), y: txt.getAttribute("y") },
-                { x: x, y: y + 4 }
+    const oldTransform = token.getAttribute("transform") || "translate(0,0)";
+    const match = oldTransform.match(/translate\(([^,]+),([^)]+)\)/);
+    let oldX = 0, oldY = 0;
+    if (match) {
+      oldX = parseFloat(match[1]);
+      oldY = parseFloat(match[2]);
+    }
+
+    token.animate([
+      { transform: `translate(${oldX}px, ${oldY}px)` },
+                  { transform: `translate(${x}px, ${y}px)` }
     ], { duration: 400, fill: "forwards" });
 
-    disk.setAttribute("cx", x);
-    disk.setAttribute("cy", y);
-    txt.setAttribute("x", x);
-    txt.setAttribute("y", y + 4);
+    token.setAttribute("transform", `translate(${x}, ${y})`);
 
     step++;
     setTimeout(moveNext, 400);
