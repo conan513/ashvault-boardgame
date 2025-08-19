@@ -559,12 +559,12 @@ box-shadow: var(--shadow);
 display: none;
 z-index: 9999;
 text-align: center;
-max-width: 240px;
+max-width: 360px;
 }
 
 #tileTooltip img {
-width: 60px;
-height: 60px;
+width: 240px;
+height: 240px;
 display: block;
 margin: 0 auto 6px;
 }
