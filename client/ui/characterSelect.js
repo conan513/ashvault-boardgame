@@ -6,17 +6,44 @@ function renderCharacterSelect(characters) {
   const wrap = document.getElementById("charSelect");
   wrap.innerHTML = "";
 
+  const factions = {
+    "Space Marines": [],
+    "Eldar": [],
+    "Orks": [],
+    "Chaos": []
+  };
+
+  // Szétosztás
   for (const c of characters) {
-    const id = `pick_${c.id}`;
-    const card = document.createElement("label");
-    card.className = "char-card";
-    card.innerHTML = `
-    <input type="radio" name="charPick" id="${id}" value="${c.id}" />
-    <img src="${c.img}" alt="${c.name}" />
-    <div><b>${c.name}</b></div>
-    <small>HP:${c.HP} ATK:${c.ATK} DEF:${c.DEF} PSY:${c.PSY} RES:${c.RES}</small>
-    `;
-    wrap.appendChild(card);
+    factions[c.faction].push(c);
+  }
+
+  // Konténerek létrehozása
+  for (const [faction, chars] of Object.entries(factions)) {
+    const col = document.createElement("div");
+    col.className = "faction-col";
+    col.innerHTML = `<h3 class="faction-title">${faction}</h3>`;
+
+    for (const c of chars) {
+      const id = `pick_${c.id}`;
+      const factionClass =
+      c.faction === "Space Marines" ? "faction-sm"
+      : c.faction === "Eldar" ? "faction-el"
+      : c.faction === "Orks" ? "faction-ok"
+      : "faction-ch";
+
+      const card = document.createElement("label");
+      card.className = `char-card ${factionClass}`;
+      card.innerHTML = `
+      <input type="radio" name="charPick" id="${id}" value="${c.id}" />
+      <img src="${c.img}" alt="${c.name}" />
+      <div><b>${c.name}</b></div>
+      <small>HP:${c.HP} ATK:${c.ATK} DEF:${c.DEF} PSY:${c.PSY} RES:${c.RES}</small>
+      `;
+      col.appendChild(card);
+    }
+
+    wrap.appendChild(col);
   }
 }
 

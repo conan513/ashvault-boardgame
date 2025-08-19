@@ -77,14 +77,14 @@
   <textarea id="chatInput" placeholder="Type a message..." rows="3"></textarea>
   <button id="sendChatBtn">Send</button>
 </div>
-<!-- Karakterválasztó overlay -->
+<!-- Character selection overlay -->
 <div id="charOverlay" class="overlay" style="display:none;">
   <div class="overlay-content">
-    <h2>Válassz karaktert</h2>
+    <h2>Select a Character</h2>
     <form id="joinForm">
-      <label>Név: <input id="playerName" required maxlength="16" /></label>
+      <label>Name: <input id="playerName" required maxlength="16" /></label>
+      <button type="submit">Join</button>
       <div id="charSelect" class="char-grid"></div>
-      <button type="submit">Belépés</button>
     </form>
   </div>
 </div>

@@ -343,16 +343,10 @@ border-radius: 6px;
   cursor: pointer;
   transition: 0.2s;
   color: #fff;
-}
-
-.char-card:hover {
-  border-color: gold;
-}
-
-/* ha a belső input radio kiválasztott */
-.char-card input:checked + img {
-  box-shadow: 0 0 15px 5px gold;
-  border-radius: 6px;
+  min-height: 220px;   /* vagy akkora, hogy a leghosszabb név is kiférjen */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .char-card img {
@@ -386,4 +380,112 @@ animation: diceRoll 0.6s ease-in-out infinite;
 
 #diceNumber {
 font-weight: bold;
+}
+
+.char-card.faction-sm:hover,
+.char-card.faction-sm input:checked + img { box-shadow: 0 0 10px var(--sm); }
+
+.char-card.faction-el:hover,
+.char-card.faction-el input:checked + img { box-shadow: 0 0 10px var(--el); }
+
+.char-card.faction-ok:hover,
+.char-card.faction-ok input:checked + img { box-shadow: 0 0 10px var(--ok); }
+
+.char-card.faction-ch:hover,
+.char-card.faction-ch input:checked + img { box-shadow: 0 0 10px var(--ch); }
+
+.char-card.faction-sm {
+  background: rgba(42,127,255,0.15); /* kékes */
+  border: 2px solid var(--sm);
+}
+
+.char-card.faction-el {
+  background: rgba(50,209,160,0.15); /* zöldeskék */
+  border: 2px solid var(--el);
+}
+
+.char-card.faction-ok {
+  background: rgba(112,209,62,0.15); /* zöldes */
+  border: 2px solid var(--ok);
+}
+
+.char-card.faction-ch {
+  background: rgba(192,79,240,0.15); /* lilás */
+  border: 2px solid var(--ch);
+}
+
+
+.faction-col {
+  display: table-cell;
+  vertical-align: top;
+  padding: 0 10px;
+}
+
+.faction-title {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+
+.char-card {
+  position: relative;
+}
+
+.char-card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* nagyító gomb jobb alsó sarokban */
+.zoom-btn {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  display: none;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* csak hoverkor látszik */
+.char-card:hover .zoom-btn {
+  display: block;
+}
+
+/* Overlay nagyított képhez */
+#imageOverlay {
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+background: rgba(0,0,0,0.8);
+display: none;
+justify-content: center;
+align-items: center;
+z-index: 10000;
+}
+
+#imageOverlay .overlay-content {
+position: relative;
+max-width: 90%;
+max-height: 90%;
+}
+
+#imageOverlay img {
+width: auto;
+height: auto;
+max-width: 90vw;
+max-height: 90vh;
+}
+
+#closeOverlay {
+position: absolute;
+top: 5px;
+right: 5px;
+cursor: pointer;
+font-size: 24px;
+color: white;
 }
