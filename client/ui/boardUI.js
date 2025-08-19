@@ -90,35 +90,54 @@ function renderBoard(state) {
     svg.appendChild(g);
   }
 
-  // ---- player tokenek rajzolása transform alapon ----
+  // ---- player tokenek rajzolása (csoportosan, körívben elosztva) ----
+  const playersByCell = {};
   for (const p of Object.values(state.players)) {
     if (!p.alive) continue;
-    const cell = state.board.find(c => c.id === p.position);
+    playersByCell[p.position] = playersByCell[p.position] || [];
+    playersByCell[p.position].push(p);
+  }
+
+  for (const [cellId, players] of Object.entries(playersByCell)) {
+    const cell = state.board.find(c => c.id == cellId);
     if (!cell) continue;
     const { x, y } = posFor(cell);
-    const token = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    token.classList.add("playerToken");
-    token.setAttribute("transform", `translate(${x}, ${y})`);
-    const color = ({ "Space Marines": "#2a7fff", "Eldar": "#32d1a0", "Orks": "#70d13e", "Chaos": "#c04ff0" })[p.faction] || "#fff";
 
-    const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    disk.setAttribute("cx", 0);
-    disk.setAttribute("cy", 0);
-    disk.setAttribute("r", 12);
-    disk.setAttribute("fill", color);
-    disk.setAttribute("stroke", "#000");
-    disk.setAttribute("stroke-width", "2");
-    disk.setAttribute("filter", "url(#shadow)");
+    const count = players.length;
+    const radius = count > 1 ? 16 : 0;
 
-    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    txt.setAttribute("x", 0);
-    txt.setAttribute("y", 4);
-    txt.setAttribute("text-anchor", "middle");
-    txt.textContent = p.name.slice(0, 2).toUpperCase();
+    players.forEach((p, idx) => {
+      const angle = (idx / count) * 2 * Math.PI;
+      const offsetX = radius * Math.cos(angle);
+      const offsetY = radius * Math.sin(angle);
 
-    token.appendChild(disk);
-    token.appendChild(txt);
-    svg.appendChild(token);
+      const token = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      token.classList.add("playerToken");
+      token.style.pointerEvents = "none"; // ne blokkolja a kattintást
+      token.setAttribute("data-player", p.name);
+      token.setAttribute("transform", `translate(${x + offsetX}, ${y + offsetY})`);
+
+      const color = ({ "Space Marines": "#2a7fff", "Eldar": "#32d1a0", "Orks": "#70d13e", "Chaos": "#c04ff0" })[p.faction] || "#fff";
+
+      const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      disk.setAttribute("cx", 0);
+      disk.setAttribute("cy", 0);
+      disk.setAttribute("r", 12);
+      disk.setAttribute("fill", color);
+      disk.setAttribute("stroke", "#000");
+      disk.setAttribute("stroke-width", "2");
+      disk.setAttribute("filter", "url(#shadow)");
+
+      const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      txt.setAttribute("x", 0);
+      txt.setAttribute("y", 4);
+      txt.setAttribute("text-anchor", "middle");
+      txt.textContent = p.name.slice(0, 2).toUpperCase();
+
+      token.appendChild(disk);
+      token.appendChild(txt);
+      svg.appendChild(token);
+    });
   }
 
   const current = state.currentPlayer;
@@ -307,7 +326,6 @@ function enableTileHoverPopup() {
     });
   });
 }
-
 
 window.renderBoard = renderBoard;
 window.highlightTargets = highlightTargets;
