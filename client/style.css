@@ -489,3 +489,61 @@ cursor: pointer;
 font-size: 24px;
 color: white;
 }
+
+/* --- Hex cellák stílus --- */
+.cell polygon {
+  stroke: #233046;
+  stroke-width: 2px;
+  fill: #0f1521;
+  transition: all 0.3s ease;
+}
+
+.cell.sm polygon { stroke: var(--sm); }
+.cell.el polygon { stroke: var(--el); }
+.cell.ok polygon { stroke: var(--ok); }
+.cell.ch polygon { stroke: var(--ch); }
+.cell.ne polygon { stroke: var(--neutral); }
+
+.cell.highlight polygon {
+  fill: #1e2a3f;
+  animation: pulseHex 1.5s infinite;
+  cursor: pointer;
+}
+
+@keyframes pulseHex {
+  0%   { filter: drop-shadow(0 0 0 rgba(80,209,255,0)); }
+  50%  { filter: drop-shadow(0 0 12px rgba(80,209,255,0.8)); }
+  100% { filter: drop-shadow(0 0 0 rgba(80,209,255,0)); }
+}
+
+/* --- Player tokenek --- */
+.playerToken {
+  stroke: #fff;
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,0.8));
+  transition: transform 0.3s ease;
+}
+
+.playerToken text {
+  fill: #fff;
+  font-size: 1.2vw;
+  font-weight: bold;
+}
+
+/* --- Token lépés animáció --- */
+@keyframes moveToken {
+  from { transform: translate(0,0); }
+  to   { transform: translate(var(--dx,0), var(--dy,0)); }
+}
+
+.playerToken.moving {
+  animation: moveToken 0.4s ease forwards;
+}
+
+/* --- Frakció ikonok --- */
+.factionIcon {
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  user-select: none;
+}

@@ -10,6 +10,15 @@ function renderBoard(state) {
   const rOuter = 360;
   const rInner = 240;
 
+  // defs - árnyék és highlight animációhoz
+  svg.insertAdjacentHTML("beforeend", `
+  <defs>
+  <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+  <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="black"/>
+  </filter>
+  </defs>
+  `);
+
   function posFor(cell) {
     if (cell.ring === "CENTER") return { x: cx, y: cy };
     if (cell.ring === "OUTER") {
@@ -23,28 +32,61 @@ function renderBoard(state) {
     }
   }
 
+  // sugaras háttér
+  for (let i = 0; i < 24; i++) {
+    const angle = (i / 24) * Math.PI * 2;
+    const x2 = cx + Math.cos(angle) * rOuter;
+    const y2 = cy + Math.sin(angle) * rOuter;
+    svg.insertAdjacentHTML("beforeend",
+                           `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#1a2535" stroke-width="2"/>`
+    );
+  }
+
   const ringStyle = "stroke:#2a3d5b; stroke-width:3; fill:none";
   svg.insertAdjacentHTML("beforeend",
                          `<circle cx="${cx}" cy="${cy}" r="${rInner}" style="${ringStyle}" />` +
                          `<circle cx="${cx}" cy="${cy}" r="${rOuter}" style="${ringStyle}" />`
   );
 
+  function hexPath(x, y, r) {
+    return Array.from({ length: 6 }, (_, i) => {
+      const angle = (Math.PI / 3) * i - Math.PI / 6;
+      return [x + Math.cos(angle) * r, y + Math.sin(angle) * r].join(",");
+    }).join(" ");
+  }
+
   for (const cell of state.board) {
     const { x, y } = posFor(cell);
-    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     g.classList.add("cell");
-    const fcls = ({"Space Marines":"sm","Eldar":"el","Orks":"ok","Chaos":"ch","NEUTRAL":"ne"})[cell.faction] || "ne";
+    const fcls = ({ "Space Marines": "sm", "Eldar": "el", "Orks": "ok", "Chaos": "ch", "NEUTRAL": "ne" })[cell.faction] || "ne";
     g.classList.add(fcls);
     g.dataset.id = cell.id;
 
-    const circ = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    circ.setAttribute("cx", x); circ.setAttribute("cy", y); circ.setAttribute("r", 20);
+    // hexagon háttér
+    const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    poly.setAttribute("points", hexPath(x, y, 22));
+    poly.setAttribute("fill", "rgba(30,30,40,0.8)");
+    poly.setAttribute("stroke", "#555");
+    g.appendChild(poly);
 
-    const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-    label.setAttribute("x", x); label.setAttribute("y", y - 28);
+    // frakció ikon
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    icon.setAttribute("href", `/icons/${fcls}.png`);
+    icon.setAttribute("x", x - 15);
+    icon.setAttribute("y", y - 15);
+    icon.setAttribute("width", 30);
+    icon.setAttribute("height", 30);
+    g.appendChild(icon);
+
+    // név
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", x);
+    label.setAttribute("y", y - 28);
+    label.setAttribute("text-anchor", "middle");
     label.textContent = cell.name;
+    g.appendChild(label);
 
-    g.appendChild(circ); g.appendChild(label);
     svg.appendChild(g);
   }
 
@@ -53,16 +95,18 @@ function renderBoard(state) {
     const cell = state.board.find(c => c.id === p.position);
     if (!cell) continue;
     const { x, y } = posFor(cell);
-    const token = document.createElementNS("http://www.w3.org/2000/svg","g");
+    const token = document.createElementNS("http://www.w3.org/2000/svg", "g");
     token.classList.add("playerToken");
-    const color = ({"Space Marines":"#2a7fff","Eldar":"#32d1a0","Orks":"#70d13e","Chaos":"#c04ff0"})[p.faction] || "#fff";
-    const disk = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    const color = ({ "Space Marines": "#2a7fff", "Eldar": "#32d1a0", "Orks": "#70d13e", "Chaos": "#c04ff0" })[p.faction] || "#fff";
+    const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     disk.setAttribute("cx", x); disk.setAttribute("cy", y);
     disk.setAttribute("r", 12); disk.setAttribute("fill", color);
-    const txt = document.createElementNS("http://www.w3.org/2000/svg","text");
+    disk.setAttribute("stroke", "#000"); disk.setAttribute("stroke-width", "2");
+    disk.setAttribute("filter", "url(#shadow)");
+    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
     txt.setAttribute("x", x); txt.setAttribute("y", y + 4);
     txt.setAttribute("text-anchor", "middle");
-    txt.textContent = p.name.slice(0,2).toUpperCase();
+    txt.textContent = p.name.slice(0, 2).toUpperCase();
 
     token.appendChild(disk); token.appendChild(txt);
     svg.appendChild(token);
@@ -79,7 +123,7 @@ function renderBoard(state) {
 function animateMove(player, path, callback) {
   const svg = document.getElementById("boardSVG");
   const token = [...svg.querySelectorAll(".playerToken")]
-  .find(t => t.querySelector("text").textContent === player.name.slice(0,2).toUpperCase());
+  .find(t => t.querySelector("text").textContent === player.name.slice(0, 2).toUpperCase());
   if (!token) {
     if (callback) callback();
     return;
@@ -109,14 +153,23 @@ function animateMove(player, path, callback) {
       }
     })(cell);
 
-    // pozíció frissítés
+    // animált mozgatás
+    disk.animate([
+      { cx: disk.getAttribute("cx"), cy: disk.getAttribute("cy") },
+                 { cx: x, cy: y }
+    ], { duration: 400, fill: "forwards" });
+    txt.animate([
+      { x: txt.getAttribute("x"), y: txt.getAttribute("y") },
+                { x: x, y: y + 4 }
+    ], { duration: 400, fill: "forwards" });
+
     disk.setAttribute("cx", x);
     disk.setAttribute("cy", y);
     txt.setAttribute("x", x);
     txt.setAttribute("y", y + 4);
 
     step++;
-    setTimeout(moveNext, 400); // 400ms lépésenként
+    setTimeout(moveNext, 400);
   }
 
   moveNext();
@@ -132,24 +185,21 @@ function highlightTargets(targetIds, onPick) {
     const handler = () => {
       const me = GAME.players[MY_ID];
       const myCell = GAME.board.find(c => c.id === me.position);
-      const ringCells = GAME.board.filter(c => c.ring === myCell.ring).sort((a,b) => a.id - b.id);
+      const ringCells = GAME.board.filter(c => c.ring === myCell.ring).sort((a, b) => a.id - b.id);
       const myIdx = ringCells.findIndex(c => c.id === myCell.id);
       const targetIdx = ringCells.findIndex(c => c.id === id);
       const N = ringCells.length;
 
-      // jobbra haladás
       let pathRight = [];
       for (let step = 1; step <= LAST_DICE; step++) {
         pathRight.push(ringCells[(myIdx + step) % N].id);
       }
 
-      // balra haladás
       let pathLeft = [];
       for (let step = 1; step <= LAST_DICE; step++) {
         pathLeft.push(ringCells[(myIdx - step + N) % N].id);
       }
 
-      // válasszuk ki amelyik ténylegesen a targethez vezet
       let chosenPath = pathRight;
       if (pathLeft[pathLeft.length - 1] === id) {
         chosenPath = pathLeft;
@@ -164,7 +214,6 @@ function highlightTargets(targetIds, onPick) {
     HIGHLIGHTS.push({ g, handler });
   }
 }
-
 
 function clearHighlights() {
   for (const h of HIGHLIGHTS) {
