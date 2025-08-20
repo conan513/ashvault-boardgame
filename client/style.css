@@ -230,6 +230,13 @@ footer {
   }
 }
 
+/* Tablet / mobilon függőleges (1 oszlop) */
+@media (max-width: 600px) {
+  .char-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* --- Chat Panel --- */
 #chatPanel {
 display: flex;
@@ -321,17 +328,23 @@ border-radius: 6px;
   color: #fff;
   padding: 20px;
   border-radius: 12px;
-  max-width: 1000px;
-  width: 90%;
+  max-width: 90vw;      /* soha nem szélesebb a viewportnál */
+  max-height: 90vh;     /* soha nem magasabb a viewportnál */
+  overflow: auto;        /* ha a tartalom nagyobb, scroll jelenik meg */
+  width: auto;          /* alapméret */
+  height: auto;
   text-align: center;
+  transform-origin: top center;
+  transition: transform 0.2s ease;
 }
 
 /* Karakter grid */
 .char-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin: 20px 0;
+  width: 100%;
 }
 
 /* Glow effekt a kiválasztott karakterre */
@@ -596,4 +609,17 @@ font-weight: normal;
   margin-left: 4px;
   font-weight: bold;
   cursor: help; /* tooltip miatt */
+}
+
+.stats-horizontal {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.stat-item {
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
 }

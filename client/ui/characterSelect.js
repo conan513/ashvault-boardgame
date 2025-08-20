@@ -18,6 +18,14 @@ function renderCharacterSelect(characters) {
     factions[c.faction].push(c);
   }
 
+  const statIcons = {
+    HP: "❤️",
+    ATK: "⚔️",
+    DEF: "🛡️",
+    PSY: "🔮",
+    RES: "✨"
+  };
+
   // Konténerek létrehozása
   for (const [faction, chars] of Object.entries(factions)) {
     const col = document.createElement("div");
@@ -38,14 +46,27 @@ function renderCharacterSelect(characters) {
       <input type="radio" name="charPick" id="${id}" value="${c.id}" />
       <img src="${c.img}" alt="${c.name}" />
       <div><b>${c.name}</b></div>
-      <small>HP:${c.HP} ATK:${c.ATK} DEF:${c.DEF} PSY:${c.PSY} RES:${c.RES}</small>
       `;
+
+      // --- stat ikonok vízszintesen
+      const statsRow = document.createElement("div");
+      statsRow.className = "stats-horizontal";
+
+      ["HP", "ATK", "DEF", "PSY", "RES"].forEach(stat => {
+        const span = document.createElement("span");
+        span.className = "stat-item";
+        span.textContent = `${statIcons[stat]} ${c[stat]}`;
+        statsRow.appendChild(span);
+      });
+
+      card.appendChild(statsRow);
       col.appendChild(card);
     }
 
     wrap.appendChild(col);
   }
 }
+
 
 function renderPlayers(state) {
   const list = document.getElementById("playersList");
@@ -85,12 +106,10 @@ function renderPlayers(state) {
       const row = document.createElement("div");
       row.className = "stat-row";
 
-      // ikon + érték
       const left = document.createElement("span");
       left.textContent = `${statIcons[stat]} ${val}`;
       row.appendChild(left);
 
-      // buff/debuff nyilak jobbra
       const right = document.createElement("span");
       right.className = "modifiers";
 
@@ -118,28 +137,24 @@ function renderPlayers(state) {
     <div>
     <div><b class="${factionClass}">${p.name}</b> — <i>${p.characterName}</i> ${alive}</div>
     </div>
-    <div>${state.currentPlayer === p.id ? '<span class="badge turn">Kör</span>': ''}</div>
+    <div>${state.currentPlayer === p.id ? '<span class="badge turn">Kör</span>' : ''}</div>
     `;
 
-    // stat blokk beszúrása
     li.querySelector("div").appendChild(statsCol);
 
-    // inventory sor
     const invRow = document.createElement("div");
     invRow.className = "stats";
-    invRow.textContent = `Tárgyak: ${p.inventory.map(i=>i.name).join(", ") || "-"}`;
+    invRow.textContent = `Tárgyak: ${p.inventory.map(i => i.name).join(", ") || "-"}`;
     li.querySelector("div").appendChild(invRow);
 
     list.appendChild(li);
   }
 }
 
-
 document.addEventListener("DOMContentLoaded", () => {
   const joinForm = document.getElementById("joinForm");
   if (joinForm) {
     joinForm.addEventListener("submit", (e) => {
-      // ha van kiválasztott karakter
       const pick = document.querySelector("input[name='charPick']:checked");
       if (!pick) {
         e.preventDefault();
@@ -147,12 +162,27 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // overlay eltüntetése
       const overlay = document.getElementById("charOverlay");
       overlay.style.display = "none";
     });
   }
 });
+
+function scaleOverlay() {
+  const overlay = document.querySelector('.overlay-content');
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // alapméret: 800x600
+  const scaleX = vw / 800;
+  const scaleY = vh / 600;
+  const scale = Math.min(scaleX, scaleY, 1); // max 1, kisebb viewportnál scale
+
+  overlay.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', scaleOverlay);
+window.addEventListener('load', scaleOverlay);
 
 window.renderCharacterSelect = renderCharacterSelect;
 window.renderPlayers = renderPlayers;
