@@ -273,9 +273,7 @@ io.on("connection", (socket) => {
 
   // Chat
   socket.on("sendChat", ({ message, playerId }) => {
-    const player = rooms[socket.currentRoom]?.players[playerId] || { name: "Névtelen" };
-    const chatMessage = `${player.name}: ${message}`;
-    io.to(socket.currentRoom).emit("receiveChat", { playerId, message: chatMessage });
+    io.to(socket.currentRoom).emit("receiveChat", { playerId, message });
   });
 
   // Kör vége

@@ -252,6 +252,7 @@ border-radius: var(--radius);
 font-size: 0.9rem;
 max-height: 300px;
 overflow-y: auto;
+white-space: pre-line;
 }
 
 #chatInput {
@@ -279,7 +280,7 @@ button#sendChatBtn:hover {
   position: fixed;
   top: 70px; /* fejléc alatt */
   right: -320px; /* induljon a képernyőn kívülről */
-  width: 300px;
+  width: 500px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
