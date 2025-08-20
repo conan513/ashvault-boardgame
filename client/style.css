@@ -574,3 +574,26 @@ font-size: 0.9rem;
 color: var(--fg);
 font-weight: normal;
 }
+
+.stats-vertical {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+  gap: 2px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-row span {
+  font-size: 14px;
+}
+
+.stat-row .modifiers span {
+  margin-left: 4px;
+  font-weight: bold;
+  cursor: help; /* tooltip miatt */
+}

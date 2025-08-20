@@ -28,6 +28,45 @@ const io = new Server(server, { cors: { origin: "*" } });
 /** ---- TÖBB SZOBÁS JÁTÉK ---- **/
 let rooms = {}; // roomName -> gameState
 
+// ---- TEMP BUFF/DEBUFF RENDSZER ----
+function applyTempEffect(unit, effect, isBuff) {
+  if (!effect) return;
+
+  if (isBuff) {
+    effect.stats.forEach(stat => {
+      unit.stats[stat] = (unit.stats[stat] || 0) + effect.amount;
+    });
+    unit.activeBuffs.push({ ...effect, type: "buff" });
+  } else {
+    unit.stats[effect.stat] = (unit.stats[effect.stat] || 0) + effect.amount;
+    unit.activeDebuffs.push({ ...effect, type: "debuff" });
+  }
+}
+
+function processEndOfTurnEffects(unit) {
+  // Buffok
+  unit.activeBuffs = unit.activeBuffs.filter(buff => {
+    buff.duration -= 1;
+    if (buff.duration <= 0) {
+      buff.stats.forEach(stat => {
+        unit.stats[stat] -= buff.amount; // visszaállítjuk az eredeti értéket
+      });
+      return false;
+    }
+    return true;
+  });
+
+  // Debuffok
+  unit.activeDebuffs = unit.activeDebuffs.filter(debuff => {
+    debuff.duration -= 1;
+    if (debuff.duration <= 0) {
+      unit.stats[debuff.stat] -= debuff.amount;
+      return false;
+    }
+    return true;
+  });
+}
+
 // Játék állapot létrehozása
 function makeGameState() {
   return {
@@ -61,6 +100,14 @@ function broadcast(roomName) {
 function advanceTurn(roomName) {
   const state = rooms[roomName];
   if (!state || state.turnOrder.length === 0) return;
+
+  // Előző játékos hatásainak kezelése
+  const prevPlayerId = getCurrentPlayerId(state);
+  const prevPlayer = state.players[prevPlayerId];
+  if (prevPlayer) {
+    processEndOfTurnEffects(prevPlayer);
+    io.to(roomName).emit("statsChanged", { playerId: prevPlayer.id, stats: prevPlayer.stats });
+  }
 
   // Először is, növeljük a turnIndex-et
   state.currentTurnIndex = (state.currentTurnIndex + 1) % state.turnOrder.length;
@@ -137,7 +184,9 @@ io.on("connection", (socket) => {
       stats: { HP: c.HP, ATK: c.ATK, DEF: c.DEF, PSY: c.PSY, RES: c.RES },
       position: c.spawn,
       inventory: [],
-      alive: true
+      alive: true,
+      activeBuffs: [],   // <<< új
+      activeDebuffs: []  // <<< új
     };
 
     gameState.turnOrder.push(socket.id);
@@ -259,6 +308,14 @@ io.on("connection", (socket) => {
             for (const [k, v] of Object.entries(effect.statMods)) {
               player.stats[k] = Math.max(0, player.stats[k] + v);
             }
+            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+          }
+          if (effect.tempBuff) {
+            applyTempEffect(player, effect.tempBuff, true);
+            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+          }
+          if (effect.tempDebuff) {
+            applyTempEffect(player, effect.tempDebuff, false);
             io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
           }
         }

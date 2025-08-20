@@ -54,25 +54,86 @@ function renderPlayers(state) {
   for (const input of document.querySelectorAll("input[name='charPick']")) {
     input.disabled = pickedIds.has(input.value);
   }
+
   for (const p of Object.values(state.players)) {
     const li = document.createElement("li");
     li.className = "playerRow";
+
     const factionClass = p.faction === "Space Marines" ? "faction-sm"
-                       : p.faction === "Eldar" ? "faction-el"
-                       : p.faction === "Orks" ? "faction-ok"
-                       : "faction-ch";
+    : p.faction === "Eldar" ? "faction-el"
+    : p.faction === "Orks" ? "faction-ok"
+    : "faction-ch";
     const alive = p.alive ? "" : `<span class="dead">[ELHUNYT]</span>`;
+
+    // --- stat ikonok
+    const statIcons = {
+      HP: "❤️",
+      ATK: "⚔️",
+      DEF: "🛡️",
+      PSY: "🔮",
+      RES: "✨"
+    };
+
+    const statsCol = document.createElement("div");
+    statsCol.className = "stats-vertical";
+
+    ["HP", "ATK", "DEF", "PSY", "RES"].forEach(stat => {
+      let val = p.stats[stat];
+      let buffs = p.activeBuffs?.filter(b => b.stats?.includes(stat)) || [];
+      let debuffs = p.activeDebuffs?.filter(d => d.stat === stat) || [];
+
+      const row = document.createElement("div");
+      row.className = "stat-row";
+
+      // ikon + érték
+      const left = document.createElement("span");
+      left.textContent = `${statIcons[stat]} ${val}`;
+      row.appendChild(left);
+
+      // buff/debuff nyilak jobbra
+      const right = document.createElement("span");
+      right.className = "modifiers";
+
+      buffs.forEach(buff => {
+        const up = document.createElement("span");
+        up.textContent = "⬆";
+        up.style.color = "green";
+        up.title = `Buff: ${buff.name || 'Ismeretlen'}`;
+        right.appendChild(up);
+      });
+
+      debuffs.forEach(debuff => {
+        const down = document.createElement("span");
+        down.textContent = "⬇";
+        down.style.color = "red";
+        down.title = `Debuff: ${debuff.name || 'Ismeretlen'}`;
+        right.appendChild(down);
+      });
+
+      row.appendChild(right);
+      statsCol.appendChild(row);
+    });
+
     li.innerHTML = `
-      <div>
-        <div><b class="${factionClass}">${p.name}</b> — <i>${p.characterName}</i> ${alive}</div>
-        <div class="stats">HP:${p.stats.HP} ATK:${p.stats.ATK} DEF:${p.stats.DEF} PSY:${p.stats.PSY} RES:${p.stats.RES}</div>
-        <div class="stats">Tárgyak: ${p.inventory.map(i=>i.name).join(", ") || "-"}</div>
-      </div>
-      <div>${state.currentPlayer === p.id ? '<span class="badge turn">Kör</span>': ''}</div>
+    <div>
+    <div><b class="${factionClass}">${p.name}</b> — <i>${p.characterName}</i> ${alive}</div>
+    </div>
+    <div>${state.currentPlayer === p.id ? '<span class="badge turn">Kör</span>': ''}</div>
     `;
+
+    // stat blokk beszúrása
+    li.querySelector("div").appendChild(statsCol);
+
+    // inventory sor
+    const invRow = document.createElement("div");
+    invRow.className = "stats";
+    invRow.textContent = `Tárgyak: ${p.inventory.map(i=>i.name).join(", ") || "-"}`;
+    li.querySelector("div").appendChild(invRow);
+
     list.appendChild(li);
   }
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const joinForm = document.getElementById("joinForm");
