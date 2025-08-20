@@ -70,12 +70,11 @@ function renderCharacterSelect(characters) {
 function renderPlayers(state) {
   const list = document.getElementById("playersList");
   list.innerHTML = "";
-  const pickedIds = new Set(Object.values(state.players).map(p => p.characterId));
-  for (const input of document.querySelectorAll("input[name='charPick']")) {
-    input.disabled = pickedIds.has(input.value);
-  }
 
-  for (const p of Object.values(state.players)) {
+  const players = Object.values(state.players);
+
+  // === játékos renderelés ===
+  players.forEach(p => {
     const li = document.createElement("li");
     li.className = "playerRow";
     li.style.display = "flex";
@@ -86,6 +85,10 @@ function renderPlayers(state) {
     : p.faction === "Eldar" ? "faction-el"
     : p.faction === "Orks" ? "faction-ok"
     : "faction-ch";
+
+    // 👉 frakció class hozzáadása a háttérhez
+    li.classList.add(factionClass);
+
     const alive = p.alive ? "" : `<span class="dead">[ELHUNYT]</span>`;
 
     // === karakter kép teljes szélességben ===
@@ -102,7 +105,9 @@ function renderPlayers(state) {
       img.className = "player-char-img";
       img.style.width = "100%";
       img.style.height = "auto";
+      img.style.maxHeight = "180px"; // összenyomva 1080p-hez
       img.style.borderRadius = "10px";
+      img.style.objectFit = "cover";
       imgWrap.appendChild(img);
 
       // név overlay
@@ -117,7 +122,7 @@ function renderPlayers(state) {
       nameOverlay.style.color = "white";
       nameOverlay.style.padding = "2px 6px";
       nameOverlay.style.borderRadius = "6px";
-      nameOverlay.style.fontSize = "0.9rem";
+      nameOverlay.style.fontSize = "0.8rem";
       nameOverlay.style.whiteSpace = "nowrap";
       imgWrap.appendChild(nameOverlay);
 
@@ -134,7 +139,7 @@ function renderPlayers(state) {
       li.appendChild(imgWrap);
     }
 
-    // === stat ikonok kép alatt ===
+    // === stat ikonok vízszintesen ===
     const statIcons = {
       HP: "❤️",
       ATK: "⚔️",
@@ -143,13 +148,13 @@ function renderPlayers(state) {
       RES: "✨"
     };
 
-    const statsCol = document.createElement("div");
-    statsCol.className = "stats-vertical";
-    statsCol.style.marginTop = "8px";
-    statsCol.style.width = "100%";
-    statsCol.style.display = "flex";
-    statsCol.style.flexDirection = "column";
-    statsCol.style.alignItems = "flex-start";
+    const statsRow = document.createElement("div");
+    statsRow.className = "stats-horizontal";
+    statsRow.style.marginTop = "6px";
+    statsRow.style.width = "100%";
+    statsRow.style.display = "flex";
+    statsRow.style.flexDirection = "row";
+    statsRow.style.alignItems = "center";
 
     ["HP", "ATK", "DEF", "PSY", "RES"].forEach(stat => {
       let val = p.stats[stat];
@@ -162,11 +167,11 @@ function renderPlayers(state) {
         d => typeof d.stat === "string" && d.stat.toUpperCase() === stat.toUpperCase()
       ) || [];
 
-      const row = document.createElement("div");
-      row.className = "stat-row";
-
-      const statValueContainer = document.createElement("span");
+      const statValueContainer = document.createElement("div");
       statValueContainer.className = "stat-value";
+      statValueContainer.style.flex = "1";   // fix oszlop szélesség
+      statValueContainer.style.textAlign = "center";
+      statValueContainer.style.fontSize = "0.75rem";
       statValueContainer.textContent = `${statIcons[stat]} ${val}`;
 
       buffs.forEach(buff => {
@@ -187,22 +192,30 @@ function renderPlayers(state) {
         statValueContainer.appendChild(down);
       });
 
-      row.appendChild(statValueContainer);
-      statsCol.appendChild(row);
+      statsRow.appendChild(statValueContainer);
     });
 
-    li.appendChild(statsCol);
+    li.appendChild(statsRow);
 
     // === inventory ===
     const invRow = document.createElement("div");
     invRow.className = "stats";
-    invRow.style.marginTop = "5px";
+    invRow.style.marginTop = "4px";
+    invRow.style.fontSize = "0.75rem";
     invRow.textContent = `Tárgyak: ${p.inventory.map(i => i.name).join(", ") || "-"}`;
     li.appendChild(invRow);
 
     list.appendChild(li);
+  });
+
+  // === ha kevesebb mint 4 játékos, üres cellák a 2×2 rács kitöltéséhez ===
+  for (let i = players.length; i < 4; i++) {
+    const li = document.createElement("li");
+    li.className = "playerRow empty-slot";
+    list.appendChild(li);
   }
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const charOverlay = document.getElementById("charOverlay");

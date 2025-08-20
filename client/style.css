@@ -696,3 +696,32 @@ button.btn-back:hover {
   align-items: center;
   gap: 5px;
 }
+
+.player-char-img {
+  width: 100%;
+  height: auto;
+  max-height: 180px; /* <-- ne legyen 300-400px magas */
+  object-fit: cover;
+}
+
+.stats-horizontal .stat-value {
+  font-size: 0.75rem;  /* kisebb */
+  margin: 0;
+  padding: 0;
+}
+
+.playerRow.faction-sm {
+  background: rgba(80, 129, 255, 0.15); /* kékes */
+}
+
+.playerRow.faction-el {
+  background: rgba(192, 79, 240, 0.15); /* lila */
+}
+
+.playerRow.faction-ok {
+  background: rgba(112, 209, 62, 0.15); /* zöld */
+}
+
+.playerRow.faction-ch {
+  background: rgba(224, 50, 50, 0.15); /* vörös */
+}
