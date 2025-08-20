@@ -44,19 +44,17 @@ function applyTempEffect(unit, effect, isBuff) {
 }
 
 function processEndOfTurnEffects(unit) {
-  // Buffok
   unit.activeBuffs = unit.activeBuffs.filter(buff => {
     buff.duration -= 1;
     if (buff.duration <= 0) {
       buff.stats.forEach(stat => {
-        unit.stats[stat] -= buff.amount; // visszaállítjuk az eredeti értéket
+        unit.stats[stat] -= buff.amount;
       });
       return false;
     }
     return true;
   });
 
-  // Debuffok
   unit.activeDebuffs = unit.activeDebuffs.filter(debuff => {
     debuff.duration -= 1;
     if (debuff.duration <= 0) {
@@ -75,7 +73,8 @@ function makeGameState() {
     turnOrder: [],
     currentTurnIndex: 0,
     lastDrawn: null,
-    pvpPending: null
+    pvpPending: null,
+    waitingForCharacters: {} // karakterválasztón várakozók
   };
 }
 
@@ -101,7 +100,6 @@ function advanceTurn(roomName) {
   const state = rooms[roomName];
   if (!state || state.turnOrder.length === 0) return;
 
-  // Előző játékos hatásainak kezelése
   const prevPlayerId = getCurrentPlayerId(state);
   const prevPlayer = state.players[prevPlayerId];
   if (prevPlayer) {
@@ -109,14 +107,10 @@ function advanceTurn(roomName) {
     io.to(roomName).emit("statsChanged", { playerId: prevPlayer.id, stats: prevPlayer.stats });
   }
 
-  // Először is, növeljük a turnIndex-et
   state.currentTurnIndex = (state.currentTurnIndex + 1) % state.turnOrder.length;
   const newCurrentPlayerId = getCurrentPlayerId(state);
 
-  // Küldjük ki minden játékosnak, hogy változott a kör
   io.to(roomName).emit("turnChanged", newCurrentPlayerId);
-
-  // Új kör frissítése minden kliensnél
   io.to(roomName).emit("updateGame", sanitizeGameStateForClients(state));
 }
 
@@ -147,9 +141,34 @@ function sanitizeGameStateForClients(state) {
   };
 }
 
+/** ---- SZOBA TÖRLÉS SEGÉDFÜGGVÉNY ---- **/
+function tryDeleteRoom(roomName) {
+  if (!roomName) return;
+  const gameState = rooms[roomName];
+  if (!gameState) return;
+
+  const socketsInRoom = io.sockets.adapter.rooms.get(roomName);
+  const playersCount = Object.keys(gameState.players).length;
+  const waitingCount = Object.keys(gameState.waitingForCharacters || {}).length;
+
+  if ((!socketsInRoom || socketsInRoom.size === 0) && playersCount === 0 && waitingCount === 0) {
+    delete rooms[roomName];
+    console.log(`Szoba törölve: ${roomName}`);
+  }
+}
+
 /** ---- SOCKET.IO ---- **/
 io.on("connection", (socket) => {
   console.log("Kapcsolódott:", socket.id);
+
+  // Szobák listázása
+  socket.on("listRooms", () => {
+    const list = Object.entries(rooms).map(([name, state]) => ({
+      name,
+      players: Object.keys(state.players).length
+    }));
+    socket.emit("roomList", list);
+  });
 
   // Szoba létrehozása vagy csatlakozás
   socket.on("createOrJoinRoom", ({ roomName }) => {
@@ -157,22 +176,49 @@ io.on("connection", (socket) => {
       rooms[roomName] = makeGameState();
       resetDecksState();
     }
+
+    const gameState = rooms[roomName];
+
     socket.join(roomName);
     socket.currentRoom = roomName;
+    gameState.waitingForCharacters[socket.id] = true; // karakterválasztón vár
     socket.emit("roomJoined", { roomName });
     socket.emit("hello", { factions, characters });
   });
 
-  // Játékos csatlakozása a játékhoz
+  // Kilépés szobából
+  socket.on("leaveRoom", () => {
+    if (!socket.currentRoom) return;
+    const roomName = socket.currentRoom;
+    const gameState = rooms[roomName];
+
+    socket.leave(roomName);
+    delete socket.currentRoom;
+
+    if (gameState && gameState.waitingForCharacters[socket.id]) {
+      delete gameState.waitingForCharacters[socket.id];
+    }
+
+    tryDeleteRoom(roomName);
+  });
+
+  // Játékos csatlakozása a játékhoz (karakter választás)
   socket.on("joinGame", ({ playerName, characterId }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
 
+    if (Object.keys(gameState.players).length >= 4) {
+      return socket.emit("errorMsg", "Ez a szoba már tele van (max 4 játékos).");
+    }
+
     const c = characters.find(ch => ch.id === characterId);
     if (!c) return socket.emit("errorMsg", "Ismeretlen karakter.");
-
     if (Object.values(gameState.players).some(p => p.characterId === characterId)) {
       return socket.emit("errorMsg", "Ez a karakter már foglalt!");
+    }
+
+    if (gameState.waitingForCharacters[socket.id]) {
+      delete gameState.waitingForCharacters[socket.id];
     }
 
     gameState.players[socket.id] = {
@@ -185,8 +231,8 @@ io.on("connection", (socket) => {
       position: c.spawn,
       inventory: [],
       alive: true,
-      activeBuffs: [],   // <<< új
-      activeDebuffs: []  // <<< új
+      activeBuffs: [],
+      activeDebuffs: []
     };
 
     gameState.turnOrder.push(socket.id);
@@ -197,7 +243,7 @@ io.on("connection", (socket) => {
     broadcast(socket.currentRoom);
   });
 
-  // Dadozás
+  // Dobás
   socket.on("rollDice", () => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
@@ -215,7 +261,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  // Üzenet küldés
+  // Chat
   socket.on("sendChat", ({ message, playerId }) => {
     const player = rooms[socket.currentRoom]?.players[playerId] || { name: "Névtelen" };
     const chatMessage = `${player.name}: ${message}`;
@@ -253,7 +299,6 @@ io.on("connection", (socket) => {
     const othersHere = Object.values(gameState.players)
     .filter(p => p.id !== player.id && p.alive && p.position === targetCellId);
     const differentFaction = othersHere.find(p => p.faction !== player.faction);
-
     const cell = cellById(gameState.board, targetCellId);
 
     if (differentFaction) {
@@ -366,16 +411,31 @@ io.on("connection", (socket) => {
 
     // Leállás esetén
     socket.on("disconnect", () => {
-      const gameState = rooms[socket.currentRoom];
-      if (!gameState) return;
-      const wasCurrent = getCurrentPlayerId(gameState) === socket.id;
-      delete gameState.players[socket.id];
-      gameState.turnOrder = gameState.turnOrder.filter(id => id !== socket.id);
-      if (gameState.currentTurnIndex >= gameState.turnOrder.length) {
-        gameState.currentTurnIndex = 0;
+      const roomName = socket.currentRoom;
+      if (!roomName) return;
+      const gameState = rooms[roomName];
+
+      if (gameState) {
+        const wasCurrent = getCurrentPlayerId(gameState) === socket.id;
+
+        if (gameState.players[socket.id]) {
+          delete gameState.players[socket.id];
+          gameState.turnOrder = gameState.turnOrder.filter(id => id !== socket.id);
+          if (gameState.currentTurnIndex >= gameState.turnOrder.length) {
+            gameState.currentTurnIndex = 0;
+          }
+          broadcast(roomName);
+          if (wasCurrent) {
+            io.to(roomName).emit("turnChanged", getCurrentPlayerId(gameState));
+          }
+        }
+
+        if (gameState.waitingForCharacters[socket.id]) {
+          delete gameState.waitingForCharacters[socket.id];
+        }
       }
-      broadcast(socket.currentRoom);
-      if (wasCurrent) io.to(socket.currentRoom).emit("turnChanged", getCurrentPlayerId(gameState));
+
+      tryDeleteRoom(roomName);
     });
 });
 

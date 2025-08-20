@@ -152,8 +152,44 @@ function renderPlayers(state) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const charOverlay = document.getElementById("charOverlay");
   const joinForm = document.getElementById("joinForm");
   if (joinForm) {
+    const nameInput = document.getElementById("playerName");
+
+    // Flex konténer létrehozása
+    const flexWrap = document.createElement("div");
+    flexWrap.style.display = "flex";
+    flexWrap.style.alignItems = "center";
+    flexWrap.style.justifyContent = "center"; // középre rendezés
+    flexWrap.style.gap = "10px";
+    flexWrap.style.marginBottom = "1rem";
+
+    // Vissza gomb
+    const backBtn = document.createElement("button");
+    backBtn.textContent = "← Vissza";
+    backBtn.className = "btn-back"; // későbbi CSS-hez
+    backBtn.addEventListener("click", () => {
+      // UI: vissza a menübe
+      charOverlay.style.display = "none";
+      document.getElementById("menuOverlay").style.display = "flex";
+
+      // Szerver: jelezni hogy kilépett
+      if (window.socket) {
+        window.socket.emit("leaveRoom");
+      }
+    });
+
+    // Áthelyezzük a mezőt és a gombot a flexWrap-be
+    nameInput.parentNode.insertBefore(flexWrap, nameInput);
+    flexWrap.appendChild(backBtn);
+    flexWrap.appendChild(nameInput);
+
+    // Join gomb alá
+    const joinBtn = joinForm.querySelector("button[type='submit']");
+    joinBtn.style.display = "block";
+    joinBtn.style.margin = "0 auto"; // középre
+
     joinForm.addEventListener("submit", (e) => {
       const pick = document.querySelector("input[name='charPick']:checked");
       if (!pick) {
@@ -161,9 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Válassz egy karaktert!");
         return;
       }
-
-      const overlay = document.getElementById("charOverlay");
-      overlay.style.display = "none";
+      charOverlay.style.display = "none";
     });
   }
 });

@@ -13,6 +13,73 @@
   <script defer src="./ui/battleUI.js"></script>
 </head>
 <body>
+
+  <!-- MAIN MENU OVERLAY -->
+  <div id="menuOverlay" class="overlay" style="display:flex;">
+    <div class="overlay-content">
+      <h2>⚔️ Warhammer 40,000 Online Boardgame</h2>
+
+      <!-- Create Room -->
+      <form id="createRoomForm" style="margin-bottom:15px;">
+        <label>
+          New Room: <input id="createRoomName" required maxlength="16" />
+        </label>
+        <button type="submit">Create Room</button>
+      </form>
+
+      <!-- Join Room Button -->
+      <button id="openJoinOverlayBtn">🔎 Join Room</button>
+
+      <!-- Extra menu buttons -->
+      <div class="menu-buttons" style="margin-top:20px;">
+        <button id="howToBtn">📖 How to Play</button>
+        <button id="creditsBtn">👤 Credits</button>
+        <select id="menuLangSelect">
+          <option value="en">English</option>
+          <option value="hu">Magyar</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join Room overlay -->
+  <div id="joinOverlay" class="overlay" style="display:none;">
+    <div class="overlay-content">
+      <h2>🔎 Join a Room</h2>
+      <div id="roomList">
+        <p>Loading rooms...</p>
+      </div>
+      <button id="closeJoinOverlay">Close</button>
+    </div>
+  </div>
+
+  <!-- How to Play overlay -->
+  <div id="howToOverlay" class="overlay" style="display:none;">
+    <div class="overlay-content">
+      <h2>📖 How to Play</h2>
+      <div id="howToContent"></div>
+      <div class="howto-nav">
+        <button id="prevHowTo">⬅ Prev</button>
+        <button id="nextHowTo">Next ➡</button>
+        <button id="closeHowTo">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Credits overlay -->
+  <div id="creditsOverlay" class="overlay" style="display:none;">
+    <div class="overlay-content">
+      <h2>👤 Credits</h2>
+      <p>
+        Fan-made project by <b>Conan</b>.<br/>
+        Warhammer 40,000 © Games Workshop.<br/>
+        This is an unofficial, non-commercial fan game.
+      </p>
+      <button onclick="document.getElementById('creditsOverlay').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <!-- EXISTING HEADER -->
   <header>
     <h1>Warhammer 40,000 – Online Boardgame
       <small>(Fan-made by Conan)</small>
@@ -30,16 +97,9 @@
     </div>
   </header>
 
+  <!-- MAIN CONTENT -->
   <main>
     <section id="leftPanel">
-      <div id="roomPanel" class="panel">
-        <h2>Room</h2>
-        <form id="roomForm">
-          <label>Room name: <input id="roomName" required maxlength="16" /></label>
-          <button type="submit">Create / Join</button>
-        </form>
-      </div>
-
       <div id="playersPanel" class="panel">
         <h2>Players</h2>
         <ul id="playersList"></ul>
@@ -48,9 +108,9 @@
 
     <section id="boardPanel">
       <div id="diceOut">
-    <span id="diceIcon">🎲</span>
-    <span id="diceNumber">?</span>
-  </div>
+        <span id="diceIcon">🎲</span>
+        <span id="diceNumber">?</span>
+      </div>
       <svg id="boardSVG" viewBox="0 0 900 900"></svg>
     </section>
 
@@ -70,28 +130,32 @@
   <footer>
     Fan-made, unofficial – all rights belong to Games Workshop. Project by Conan.
   </footer>
+
   <!-- Chat Panel – popup -->
-<div id="chatPanel" class="panel chat-popup">
-  <h2>Chat</h2>
-  <div id="chatLog" style="max-height: 300px; overflow-y: auto; margin-bottom: 10px;"></div>
-  <textarea id="chatInput" placeholder="Type a message..." rows="3"></textarea>
-  <button id="sendChatBtn">Send</button>
-</div>
-<!-- Character selection overlay -->
-<div id="charOverlay" class="overlay" style="display:none;">
-  <div class="overlay-content">
-    <h2>Select a Character</h2>
-    <form id="joinForm">
-      <label>Name: <input id="playerName" required maxlength="16" /></label>
-      <button type="submit">Join</button>
-      <div id="charSelect" class="char-grid"></div>
-    </form>
+  <div id="chatPanel" class="panel chat-popup">
+    <h2>Chat</h2>
+    <div id="chatLog" style="max-height: 300px; overflow-y: auto; margin-bottom: 10px;"></div>
+    <textarea id="chatInput" placeholder="Type a message..." rows="3"></textarea>
+    <button id="sendChatBtn">Send</button>
   </div>
-</div>
-<div id="tileTooltip">
-  <img src="" alt="Faction Logo" />
-  <div id="tileTooltipLabel"></div>
-</div>
-<div id="playerTooltip" style="position: absolute; display: none; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px; border-radius: 5px;"></div>
+
+  <!-- Character selection overlay -->
+  <div id="charOverlay" class="overlay" style="display:none;">
+    <div class="overlay-content">
+      <h2>Select a Character</h2>
+      <form id="joinForm">
+        <label>Name: <input id="playerName" required maxlength="16" /></label>
+        <button type="submit">Join</button>
+        <div id="charSelect" class="char-grid"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="tileTooltip">
+    <img src="" alt="Faction Logo" />
+    <div id="tileTooltipLabel"></div>
+  </div>
+  <div id="playerTooltip" style="position: absolute; display: none; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px; border-radius: 5px;"></div>
+
 </body>
 </html>

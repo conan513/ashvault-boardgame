@@ -37,7 +37,7 @@ function nameForCell(i) {
   ];
   if (i < 24) return namesOuter[i];
   if (i >= 24 && i < 36) return namesInner[i - 24];
-  return "No Man’s Land";
+  return "The Omega Vault";
 }
 
 function initBoard() {
