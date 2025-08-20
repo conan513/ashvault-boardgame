@@ -76,14 +76,11 @@ function renderPlayers(state) {
   }
 
   for (const p of Object.values(state.players)) {
-    console.log(
-      "== Player ==",
-      p.name,
-      "Buffs:", JSON.stringify(p.activeBuffs),
-                "Debuffs:", JSON.stringify(p.activeDebuffs)
-    );
     const li = document.createElement("li");
     li.className = "playerRow";
+    li.style.display = "flex";
+    li.style.flexDirection = "column";
+    li.style.alignItems = "center";
 
     const factionClass = p.faction === "Space Marines" ? "faction-sm"
     : p.faction === "Eldar" ? "faction-el"
@@ -91,7 +88,53 @@ function renderPlayers(state) {
     : "faction-ch";
     const alive = p.alive ? "" : `<span class="dead">[ELHUNYT]</span>`;
 
-    // --- stat ikonok
+    // === karakter kép teljes szélességben ===
+    const char = ALL_CHARS.find(c => c.id == p.characterId);
+    if (char) {
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "player-img-wrap";
+      imgWrap.style.position = "relative";
+      imgWrap.style.width = "100%";
+
+      const img = document.createElement("img");
+      img.src = char.img;
+      img.alt = char.name;
+      img.className = "player-char-img";
+      img.style.width = "100%";
+      img.style.height = "auto";
+      img.style.borderRadius = "10px";
+      imgWrap.appendChild(img);
+
+      // név overlay
+      const nameOverlay = document.createElement("div");
+      nameOverlay.className = "player-name-overlay";
+      nameOverlay.innerHTML = `<b class="${factionClass}">${p.name}</b> ${alive}`;
+      nameOverlay.style.position = "absolute";
+      nameOverlay.style.bottom = "5px";
+      nameOverlay.style.left = "50%";
+      nameOverlay.style.transform = "translateX(-50%)";
+      nameOverlay.style.background = "rgba(0,0,0,0.6)";
+      nameOverlay.style.color = "white";
+      nameOverlay.style.padding = "2px 6px";
+      nameOverlay.style.borderRadius = "6px";
+      nameOverlay.style.fontSize = "0.9rem";
+      nameOverlay.style.whiteSpace = "nowrap";
+      imgWrap.appendChild(nameOverlay);
+
+      // "Kör" jelző overlay
+      if (state.currentPlayer === p.id) {
+        const turnBadge = document.createElement("div");
+        turnBadge.innerHTML = `<span class="badge turn">Kör</span>`;
+        turnBadge.style.position = "absolute";
+        turnBadge.style.top = "5px";
+        turnBadge.style.right = "5px";
+        imgWrap.appendChild(turnBadge);
+      }
+
+      li.appendChild(imgWrap);
+    }
+
+    // === stat ikonok kép alatt ===
     const statIcons = {
       HP: "❤️",
       ATK: "⚔️",
@@ -102,16 +145,19 @@ function renderPlayers(state) {
 
     const statsCol = document.createElement("div");
     statsCol.className = "stats-vertical";
+    statsCol.style.marginTop = "8px";
+    statsCol.style.width = "100%";
+    statsCol.style.display = "flex";
+    statsCol.style.flexDirection = "column";
+    statsCol.style.alignItems = "flex-start";
 
     ["HP", "ATK", "DEF", "PSY", "RES"].forEach(stat => {
       let val = p.stats[stat];
 
-      // BUFF-ok
       let buffs = p.activeBuffs?.filter(
         b => Array.isArray(b.stats) && b.stats.some(s => s.toUpperCase() === stat.toUpperCase())
       ) || [];
 
-      // DEBUFF-ok
       let debuffs = p.activeDebuffs?.filter(
         d => typeof d.stat === "string" && d.stat.toUpperCase() === stat.toUpperCase()
       ) || [];
@@ -119,12 +165,10 @@ function renderPlayers(state) {
       const row = document.createElement("div");
       row.className = "stat-row";
 
-      // --- stat érték + nyilak egyben ---
       const statValueContainer = document.createElement("span");
       statValueContainer.className = "stat-value";
       statValueContainer.textContent = `${statIcons[stat]} ${val}`;
 
-      // Jobbra a nyilak
       buffs.forEach(buff => {
         const up = document.createElement("span");
         up.textContent = "⬆";
@@ -147,19 +191,14 @@ function renderPlayers(state) {
       statsCol.appendChild(row);
     });
 
-    li.innerHTML = `
-    <div>
-    <div><b class="${factionClass}">${p.name}</b> — <i>${p.characterName}</i> ${alive}</div>
-    </div>
-    <div>${state.currentPlayer === p.id ? '<span class="badge turn">Kör</span>' : ''}</div>
-    `;
+    li.appendChild(statsCol);
 
-    li.querySelector("div").appendChild(statsCol);
-
+    // === inventory ===
     const invRow = document.createElement("div");
     invRow.className = "stats";
+    invRow.style.marginTop = "5px";
     invRow.textContent = `Tárgyak: ${p.inventory.map(i => i.name).join(", ") || "-"}`;
-    li.querySelector("div").appendChild(invRow);
+    li.appendChild(invRow);
 
     list.appendChild(li);
   }
