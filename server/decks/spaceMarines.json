@@ -1,162 +1,183 @@
 [
   {
     "id": "sm1",
-    "faction": "Space Marines",
-    "name": "Macragge Rally",
-    "description": "Astartes összegyűlnek a csatatéren.",
-    "selfEffect": { "hpDelta": 2 },
-    "otherEffect": { "effect": "battle" }
+    "faction": "space_marine",
+    "name": "Battle Doctrine",
+    "description": "Codex Astartes tactics sharpen both blade and shield for a decisive strike.",
+    "selfEffect": { "tempBuff": { "stats": ["ATK", "DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "RES", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm1.png"
   },
   {
     "id": "sm2",
-    "faction": "Space Marines",
-    "name": "Tactical Deployment",
-    "description": "Harcászati pozíciók elfoglalása.",
-    "selfEffect": { "statMods": { "DEF": 2 } },
-    "otherEffect": { "loot": true }
+    "faction": "space_marine",
+    "name": "Hold the Line",
+    "description": "Bolstered by unyielding faith, the line will not break.",
+    "selfEffect": { "tempBuff": { "stats": ["RES", "DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm2.png"
   },
   {
     "id": "sm3",
-    "faction": "Space Marines",
-    "name": "Honor Guard",
-    "description": "A becsület védelme inspirálja a katonákat.",
-    "selfEffect": { "statMods": { "ATK": 1, "DEF": 1 } },
-    "otherEffect": { "hpDelta": -2 }
+    "faction": "space_marine",
+    "name": "Coordinated Assault",
+    "description": "Brothers strike as one, overwhelming the foe’s defenses.",
+    "selfEffect": { "tempBuff": { "stats": ["ATK", "RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm3.png"
   },
   {
     "id": "sm4",
-    "faction": "Space Marines",
-    "name": "Codex Reading",
-    "description": "Stratégiai utasítások a jövőre nézve.",
-    "selfEffect": { "statMods": { "PSY": 2 } },
-    "otherEffect": { "effect": "battle" }
+    "faction": "space_marine",
+    "name": "Aegis Ward",
+    "description": "Psychic wards and ceramite plate shield mind and body alike.",
+    "selfEffect": { "tempBuff": { "stats": ["PSY", "DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm4.png"
   },
   {
     "id": "sm5",
-    "faction": "Space Marines",
-    "name": "Bolter Volley",
-    "description": "Tűzerő zápor az ellenségre.",
-    "selfEffect": { "effect": "battle" },
-    "otherEffect": { "hpDelta": -3 }
+    "faction": "space_marine",
+    "name": "Brotherhood Support",
+    "description": "The strength of the Chapter flows through every battle-brother.",
+    "selfEffect": { "tempBuff": { "stats": ["RES", "ATK"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "PSY", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm5.png"
   },
   {
     "id": "sm6",
-    "faction": "Space Marines",
-    "name": "Purity of the Chapter",
-    "description": "A tisztaság emeli a morált.",
-    "selfEffect": { "hpDelta": 1, "statMods": { "RES": 1 } },
-    "otherEffect": { "statMods": { "DEF": -1 } }
+    "faction": "space_marine",
+    "name": "Servo‑Arm Upgrade",
+    "description": "Techmarine craftsmanship augments both offense and defense.",
+    "selfEffect": { "tempBuff": { "stats": ["ATK", "DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "RES", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm6.png"
   },
   {
     "id": "sm7",
-    "faction": "Space Marines",
-    "name": "Strategic Advance",
-    "description": "Taktikai előny megszerzése.",
-    "selfEffect": { "statMods": { "ATK": 1 } },
-    "otherEffect": { "loot": true }
+    "faction": "space_marine",
+    "name": "Medicae Protocol",
+    "description": "Advanced field medicine restores strength and endurance.",
+    "selfEffect": { "tempBuff": { "stats": ["HP", "RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm7.png"
   },
   {
     "id": "sm8",
-    "faction": "Space Marines",
-    "name": "Shield Wall",
-    "description": "Védelem a csapat védelmére.",
-    "selfEffect": { "statMods": { "DEF": 2 } },
-    "otherEffect": { "effect": "battle" }
+    "faction": "space_marine",
+    "name": "Counter‑Strike Protocol",
+    "description": "Every blow met with a swift and punishing reprisal.",
+    "selfEffect": { "tempBuff": { "stats": ["ATK", "DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "HP", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm8.png"
   },
   {
     "id": "sm9",
-    "faction": "Space Marines",
-    "name": "Morale Boost",
-    "description": "A bátorság mindenkit ösztönöz.",
-    "selfEffect": { "hpDelta": 2 },
-    "otherEffect": { "hpDelta": -1 }
+    "faction": "space_marine",
+    "name": "Orbital Auspex Scan",
+    "description": "High-orbit sensors reveal enemy weaknesses before the strike.",
+    "selfEffect": { "tempBuff": { "stats": ["PSY", "RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm9.png"
   },
   {
     "id": "sm10",
-    "faction": "Space Marines",
-    "name": "Relic Discovery",
-    "description": "Ősi ereklye az erőt növeli.",
-    "selfEffect": { "loot": true },
-    "otherEffect": { "statMods": { "PSY": -1 } }
+    "faction": "space_marine",
+    "name": "Shield the Warlord",
+    "description": "Protecting the commander inspires greater resilience in all.",
+    "selfEffect": { "tempBuff": { "stats": ["DEF", "RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm10.png"
   },
   {
     "id": "sm11",
-    "faction": "Space Marines",
-    "name": "Veteran Strike",
-    "description": "Tapasztalt harcos gyors csapása.",
-    "selfEffect": { "effect": "battle" },
-    "otherEffect": { "hpDelta": -2 }
+    "faction": "space_marine",
+    "name": "Litany of Fury",
+    "description": "The Chaplain’s voice ignites righteous wrath and unbreakable resolve.",
+    "selfEffect": { "tempBuff": { "stats": ["ATK", "RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "PSY", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm11.png"
   },
   {
     "id": "sm12",
-    "faction": "Space Marines",
-    "name": "Chaplain’s Sermon",
-    "description": "A hitélet erősíti a csapatot.",
-    "selfEffect": { "statMods": { "PSY": 2 } },
-    "otherEffect": { "statMods": { "PSY": -1 } }
+    "faction": "space_marine",
+    "name": "Drop Pod Assault",
+    "description": "Rapid deployment catches the enemy off guard and strengthens the strike.",
+    "selfEffect": { "tempBuff": { "stats": ["ATK", "HP"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm12.png"
   },
   {
     "id": "sm13",
-    "faction": "Space Marines",
-    "name": "Combat Drill",
-    "description": "Gyakorlás gyorsítja a reakciót.",
-    "selfEffect": { "statMods": { "ATK": 1, "DEF": 1 } },
-    "otherEffect": { "hpDelta": -1 }
+    "faction": "space_marine",
+    "name": "Iron Halo Activation",
+    "description": "Sacred relic shields the bearer and bolsters their will.",
+    "selfEffect": { "tempBuff": { "stats": ["DEF", "PSY"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "RES", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm13.png"
   },
   {
     "id": "sm14",
-    "faction": "Space Marines",
-    "name": "Fortified Position",
-    "description": "Erődítmények növelik a védelmet.",
-    "selfEffect": { "statMods": { "DEF": 2 } },
-    "otherEffect": { "effect": "battle" }
+    "faction": "space_marine",
+    "name": "Tactical Resupply",
+    "description": "Ammunition and armor replenished, ready for renewed assault.",
+    "selfEffect": { "tempBuff": { "stats": ["HP", "DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm14.png"
   },
   {
     "id": "sm15",
-    "faction": "Space Marines",
-    "name": "Suppressive Fire",
-    "description": "Az ellenség hátrálásra kényszerítése.",
-    "selfEffect": { "effect": "battle" },
-    "otherEffect": { "hpDelta": -2 }
+    "faction": "space_marine",
+    "name": "Vigilance Protocol",
+    "description": "Constant watchfulness ensures swift retaliation and fortified defense.",
+    "selfEffect": { "tempBuff": { "stats": ["DEF", "ATK"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "HP", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm15.png"
   },
+
   {
     "id": "sm16",
-    "faction": "Space Marines",
-    "name": "Inspiring Presence",
-    "description": "A vezető ösztönző hatása.",
-    "selfEffect": { "statMods": { "ATK": 1, "PSY": 1 } },
-    "otherEffect": { "statMods": { "ATK": -1 } }
+    "faction": "space_marine",
+    "name": "Librarian’s Smite",
+    "description": "A psychic blast shatters enemy morale and strengthens the mind.",
+    "selfEffect": { "tempBuff": { "stats": ["PSY", "RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "HP", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm16.png"
   },
   {
     "id": "sm17",
-    "faction": "Space Marines",
-    "name": "Medic Assistance",
-    "description": "Gyors sebellátás a fronton.",
-    "selfEffect": { "hpDelta": 2 },
-    "otherEffect": { "hpDelta": -1 }
+    "faction": "space_marine",
+    "name": "Sacred Rite",
+    "description": "Ritual invocations awaken divine fury and mental clarity.",
+    "selfEffect": { "tempBuff": { "stats": ["PSY", "ATK"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "RES", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm17.png"
   },
   {
     "id": "sm18",
-    "faction": "Space Marines",
-    "name": "Resupply",
-    "description": "Fegyver és felszerelés pótlása.",
-    "selfEffect": { "loot": true },
-    "otherEffect": { "statMods": { "DEF": -1 } }
+    "faction": "space_marine",
+    "name": "Purity Seal",
+    "description": "Blessed parchment wards off corruption and bolsters resolve.",
+    "selfEffect": { "tempBuff": { "stats": ["RES", "PSY"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm18.png"
   },
   {
     "id": "sm19",
-    "faction": "Space Marines",
-    "name": "Determined Advance",
-    "description": "Határozott előretörés.",
-    "selfEffect": { "statMods": { "ATK": 1 } },
-    "otherEffect": { "effect": "battle" }
+    "faction": "space_marine",
+    "name": "Final Vow",
+    "description": "In the face of death, a Space Marine’s oath burns brightest.",
+    "selfEffect": { "tempBuff": { "stats": ["ATK", "HP"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "PSY", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm19.png"
   },
   {
     "id": "sm20",
-    "faction": "Space Marines",
-    "name": "Sacred Duty",
-    "description": "A szent kötelesség erőt ad.",
-    "selfEffect": { "hpDelta": 3 },
-    "otherEffect": { "statMods": { "PSY": -1 } }
+    "faction": "space_marine",
+    "name": "Chapter’s Legacy",
+    "description": "The deeds of fallen heroes echo through every strike.",
+    "selfEffect": { "tempBuff": { "stats": ["HP", "RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/sm20.png"
   }
 ]

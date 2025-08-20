@@ -582,46 +582,29 @@ display: block;
 margin: 0 auto 6px;
 }
 
-#tileTooltipLabel {
-font-size: 0.9rem;
-color: var(--fg);
-font-weight: normal;
-}
-
-.stats-vertical {
+.stat {
   display: flex;
-  flex-direction: column;
-  margin-top: 4px;
-  gap: 2px;
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 6px; /* név és érték között */
 }
 
-.stat-row span {
-  font-size: 14px;
+.stat-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px; /* hézag szám és nyilak között */
 }
 
-.stat-row .modifiers span {
-  margin-left: 4px;
-  font-weight: bold;
-  cursor: help; /* tooltip miatt */
-}
-
-.stats-horizontal {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.stat-item {
+.buff-arrow.up {
+  color: limegreen;
   font-size: 0.9em;
-  display: flex;
-  align-items: center;
+}
+.buff-arrow.down {
+  color: crimson;
+  font-size: 0.9em;
+}
+
+.stat-value span {
+  cursor: help; /* jelzi, hogy van tooltip */
 }
 
 /* --- Join Room Overlay Grid --- */
@@ -705,4 +688,10 @@ button.btn-back {
 
 button.btn-back:hover {
   background: #ff4b4b;
+}
+
+.modifiers {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }

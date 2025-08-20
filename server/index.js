@@ -36,10 +36,18 @@ function applyTempEffect(unit, effect, isBuff) {
     effect.stats.forEach(stat => {
       unit.stats[stat] = (unit.stats[stat] || 0) + effect.amount;
     });
-    unit.activeBuffs.push({ ...effect, type: "buff" });
+    unit.activeBuffs.push({
+      ...effect,
+      type: "buff",
+      sourceCard: effect.sourceCard || effect.name || null
+    });
   } else {
     unit.stats[effect.stat] = (unit.stats[effect.stat] || 0) + effect.amount;
-    unit.activeDebuffs.push({ ...effect, type: "debuff" });
+    unit.activeDebuffs.push({
+      ...effect,
+      type: "debuff",
+      sourceCard: effect.sourceCard || effect.name || null
+    });
   }
 }
 
@@ -127,7 +135,9 @@ function sanitizeGameStateForClients(state) {
       stats: p.stats,
       position: p.position,
       inventory: p.inventory,
-      alive: p.alive
+      alive: p.alive,
+      activeBuffs: p.activeBuffs || [],
+      activeDebuffs: p.activeDebuffs || []
     };
   }
   return {
@@ -285,7 +295,8 @@ io.on("connection", (socket) => {
   socket.on("confirmMove", ({ dice, targetCellId }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
-    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
+    if (!isPlayersTurn(gameState, socket.id))
+      return socket.emit("errorMsg", "Nem a te köröd!");
     const player = gameState.players[socket.id];
     if (!player || !player.alive) return;
 
@@ -303,7 +314,17 @@ io.on("connection", (socket) => {
 
     if (differentFaction) {
       gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
-      io.to(socket.currentRoom).emit("pvpStarted", { aId: player.id, bId: differentFaction.id, cellName: cell.name });
+      io.to(socket.currentRoom).emit("pvpStarted", {
+        aId: player.id,
+        bId: differentFaction.id,
+        cellName: cell.name
+      });
+
+      // **PvP logot majd a PvP csata kimeneténél hívd meg**, pl.:
+      // const result = battlePVP(...);
+      // const pvpLog = `...`;
+      // io.to(socket.currentRoom).emit("receiveChat", { ... });
+
     } else {
       if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
         const card = drawFactionCard(cell.faction);
@@ -321,8 +342,26 @@ io.on("connection", (socket) => {
         if (effect.effect === "battle") {
           const enemy = drawEnemyCard();
           io.to(socket.currentRoom).emit("enemyDrawn", enemy);
+
           const result = battlePVE(player, enemy, io, socket.id);
-          io.to(socket.currentRoom).emit("battleResult", { type: "PVE", result, playerId: player.id, enemy });
+          io.to(socket.currentRoom).emit("battleResult", {
+            type: "PVE",
+            result,
+            playerId: player.id,
+            enemy
+          });
+
+          // **Részletes PvE log**
+          const detailMsg =
+          `${player.name} dobása: ${result.rollP} + ATK(${player.stats.ATK}) - DEF(${enemy.DEF}) = ${result.totalP}\n` +
+          `${enemy.name || "Ellenség"} dobása: ${result.rollE} + ATK(${enemy.ATK}) - DEF(${player.stats.DEF}) = ${result.totalE}\n` +
+          `Győztes: ${result.winner === "player" ? player.name : (enemy.name || "Ellenség")}, sebzés: ${result.damage}`;
+
+          io.to(socket.currentRoom).emit("receiveChat", {
+            playerId: socket.id,
+            message: `${player.name} PvE harcot vívott a(z) ${enemy.name || "ellenfél"} ellen.\n${detailMsg}`
+          });
+
           if (result.winner === "enemy") {
             if (player.stats.HP <= 0) {
               player.alive = false;
@@ -346,7 +385,10 @@ io.on("connection", (socket) => {
             if (player.stats.HP <= 0) {
               player.alive = false;
               io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
-              io.to(socket.currentRoom).emit("receiveChat", { playerId: socket.id, message: `${player.name} died due to an event.` });
+              io.to(socket.currentRoom).emit("receiveChat", {
+                playerId: socket.id,
+                message: `${player.name} died due to an event.`
+              });
             }
           }
           if (effect.statMods) {
@@ -385,11 +427,19 @@ io.on("connection", (socket) => {
         advanceTurn(socket.currentRoom);
         return;
       }
+
       const result = battlePVP(A, B, io);
-      io.to(socket.currentRoom).emit("battleResult", { type: "PVP", result, aId: A.id, bId: B.id, cellId: pending.cellId });
+
+      io.to(socket.currentRoom).emit("battleResult", {
+        type: "PVP",
+        result,
+        aId: A.id,
+        bId: B.id,
+        cellId: pending.cellId
+      });
 
       const loser = result.winner === "A" ? B : A;
-      loser.stats.HP -= 5;
+      loser.stats.HP -= 1; // itt már fix 1 HP a sérülés, ha így akarod
       if (loser.stats.HP <= 0) {
         loser.alive = false;
         io.to(socket.currentRoom).emit("playerDied", { playerId: loser.id, cause: "PVP" });
@@ -402,7 +452,16 @@ io.on("connection", (socket) => {
         io.to(socket.currentRoom).emit("itemStolen", { from: loser.id, to: winner.id, item: stolen });
       }
 
-      io.to(socket.currentRoom).emit("receiveChat", { playerId: socket.id, message: `${A.name} defeated ${B.name} in PvP.` });
+      // 🔹 Új: részletes harci leírás a chatben
+      const detailMsg =
+      `${A.name} dobása: ${result.rolls.A} + ATK(${A.stats.ATK}) - DEF(${B.stats.DEF}) = ${result.totals.A}\n` +
+      `${B.name} dobása: ${result.rolls.B} + ATK(${B.stats.ATK}) - DEF(${A.stats.DEF}) = ${result.totals.B}\n` +
+      `Győztes: ${winner.name}, vesztes: ${loser.name}, vesztes HP veszteség: ${result.damage}`;
+
+      io.to(socket.currentRoom).emit("receiveChat", {
+        playerId: socket.id,
+        message: `${A.name} defeated ${B.name} in PvP.\n${detailMsg}`
+      });
 
       gameState.pvpPending = null;
       broadcast(socket.currentRoom);
