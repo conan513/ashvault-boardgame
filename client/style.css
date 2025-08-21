@@ -125,18 +125,6 @@ height: 95%;
 .cell.highlight { cursor: pointer; }
 .cell.current circle { stroke-width: 4px; }
 
-/* --- Player token --- */
-.playerToken {
-  stroke: #fff;
-  stroke-width: 2px;
-}
-
-.playerToken text {
-  fill: #fff;
-  font-size: 1.2vw;
-  font-weight: bold;
-}
-
 /* --- Általános UI --- */
 #statusBar {
 display: flex;
@@ -244,8 +232,9 @@ flex-direction: column;
 gap: 10px;
 }
 
+/* Chat üzenetek területe */
 #chatLog {
-background: var(--panel);
+background: var(--panel); /* Azonos háttér a chat ablakhoz */
 color: var(--fg);
 padding: 10px;
 border-radius: var(--radius);
@@ -253,6 +242,9 @@ font-size: 0.9rem;
 max-height: 300px;
 overflow-y: auto;
 white-space: pre-line;
+border: 1px solid var(--border); /* A keret most ugyanaz */
+box-shadow: var(--shadow); /* Árnyék ugyanaz */
+backdrop-filter: blur(10px); /* Üveg hatás itt is */
 }
 
 #chatInput {
@@ -281,8 +273,8 @@ button#sendChatBtn:hover {
   top: 70px; /* fejléc alatt */
   right: -320px; /* induljon a képernyőn kívülről */
   width: 500px;
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--panel); /* háttér ugyanaz, mint az egész ablaknak */
+  border: 1px solid var(--border); /* keret azonos */
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   z-index: 1000;
@@ -292,6 +284,7 @@ button#sendChatBtn:hover {
   padding: 1rem;
   opacity: 0;
   transition: all 0.3s ease; /* sima átmenet */
+  backdrop-filter: blur(10px); /* Üveg hatás */
 }
 
 /* Aktív állapot – helyére csúszik és látszik */
@@ -299,6 +292,18 @@ button#sendChatBtn:hover {
   right: 20px;
   opacity: 1;
 }
+
+/* Chat overlay háttér */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
 /* Pulzáló animáció új üzenetnél */
 @keyframes pulseNotify {
   0%   { transform: scale(1); box-shadow: 0 0 0px rgba(255, 0, 0, 0.6); }
@@ -724,4 +729,302 @@ button.btn-back:hover {
 
 .playerRow.faction-ch {
   background: rgba(224, 50, 50, 0.15); /* vörös */
+}
+
+/* ===== Warhammer 40K – Omega Vault: modern board look ===== */
+
+/* --- 1) Alapszínek / hangulat --- */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+
+:root {
+  --bg: #0b0f15;           /* háttér */
+  --panel: rgba(18, 24, 34, 0.6);
+  --panel-line: rgba(120, 180, 255, 0.12);
+  --fg: #e8eef7;           /* fő szöveg */
+  --muted: #aab3c2;
+
+  --accent: #7bc4ff;       /* UI accent */
+  --sm: #2a7fff;           /* Space Marines */
+  --el: #32d1a0;           /* Eldar */
+  --ok: #70d13e;           /* Orks */
+  --ch: #c04ff0;           /* Chaos */
+  --ne: #9aa7be;           /* Neutral */
+
+  --ring: #2a3d5b;
+  --radial: #141b26;
+}
+
+/* --- 2) Teljes oldal stílus / háttér --- */
+html, body {
+  height: 100%;
+  background:
+  radial-gradient(1200px 800px at 50% 30%, rgba(45,71,106,0.25), transparent 60%),
+  radial-gradient(800px 600px at 20% 80%, rgba(110,40,160,0.12), transparent 60%),
+  radial-gradient(900px 900px at 80% 20%, rgba(60,140,255,0.10), transparent 60%),
+  linear-gradient(180deg, var(--bg), #06080c 70%);
+  color: var(--fg);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* enyhe vignetta, “komoly projekt” hangulat */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background:
+  radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.33) 100%);
+  z-index: 0;
+}
+
+/* --- 3) Board környezet / keret --- */
+#boardWrap {
+position: relative;
+margin: clamp(8px, 3vmin, 24px) auto;
+width: min(92vmin, 940px);
+aspect-ratio: 1 / 1;
+border-radius: 24px;
+background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+box-shadow:
+0 0 0 1px var(--panel-line),
+0 10px 40px rgba(0,0,0,0.45),
+inset 0 0 60px rgba(100,160,255,0.06);
+backdrop-filter: blur(6px);
+z-index: 1;
+}
+
+/* rács-animáció a panel mögött (nagyon finom) */
+#boardWrap::before {
+content: "";
+position: absolute; inset: 1px;
+border-radius: 23px;
+background-image:
+linear-gradient(transparent 31px, rgba(120,180,255,0.06) 32px),
+linear-gradient(90deg, transparent 31px, rgba(120,180,255,0.06) 32px);
+background-size: 32px 32px;
+mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.8), transparent 85%);
+opacity: 0.35;
+animation: drift 24s linear infinite;
+}
+@keyframes drift {
+  from { transform: translate3d(0,0,0); }
+  to   { transform: translate3d(32px,32px,0); }
+}
+
+/* --- 4) Az SVG tábla --- */
+#boardSVG {
+width: 100%;
+height: 100%;
+display: block;
+filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+border: 1px solid var(--border); /* A keret most ugyanaz */
+box-shadow: var(--shadow); /* Árnyék ugyanaz */
+backdrop-filter: blur(10px); /* Üveg hatás itt is */
+}
+
+/* körgyűrűk */
+#boardSVG circle {
+paint-order: stroke;
+stroke: var(--ring);
+stroke-width: 3;
+fill: none;
+filter: drop-shadow(0 0 6px rgba(60,120,220,0.15));
+}
+
+/* sugárvonalak */
+#boardSVG line {
+stroke: #1a2535;
+stroke-width: 2;
+opacity: 0.85;
+}
+
+/* --- 5) Cellák (hexek) --- */
+.cell polygon {
+  fill: rgba(18, 24, 34, 0.9);
+  stroke: rgba(120,140,170,0.65);
+  stroke-width: 1.25;
+  transition: filter .2s ease, stroke .2s ease, fill .2s ease;
+}
+
+.cell text {
+  font-family: Orbitron, Inter, sans-serif;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  fill: var(--muted);
+  text-shadow:
+  0 0 2px rgba(0,0,0,0.6),
+  0 1px 0 rgba(0,0,0,0.45);
+  pointer-events: none;
+}
+
+/* frakció-színezett perem + enyhe gló */
+.cell.sm polygon { stroke: color-mix(in oklab, var(--sm) 60%, #93a6c6); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--sm) 40%, transparent)); }
+.cell.el polygon { stroke: color-mix(in oklab, var(--el) 60%, #93c6b4); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--el) 40%, transparent)); }
+.cell.ok polygon { stroke: color-mix(in oklab, var(--ok) 60%, #b3c693); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--ok) 40%, transparent)); }
+.cell.ch polygon { stroke: color-mix(in oklab, var(--ch) 60%, #c693e0); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--ch) 40%, transparent)); }
+.cell.ne polygon { stroke: color-mix(in oklab, var(--ne) 60%, #b8c2d4); filter: drop-shadow(0 0 3px rgba(150,170,195,0.25)); }
+
+/* hover feedback – profi, visszafogott */
+.cell:hover polygon {
+  fill: rgba(26, 34, 48, 0.92);
+  filter: drop-shadow(0 0 10px rgba(120, 180, 255, 0.22));  /* világító effekt */
+}
+
+/* aktuális játékos mező */
+.cell.current polygon {
+  stroke-width: 2.5;
+  animation: pulse 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(120, 200, 255, 0.75));
+}
+
+/* célmezők – pulzáló gyűrű */
+.cell.highlight polygon {
+  stroke-dasharray: 4 3;
+  animation: pulse 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(120, 220, 255, 0.5));
+}
+
+@keyframes pulse {
+  0%, 100% { stroke-width: 2; }
+  50%      { stroke-width: 3.5; }
+}
+
+/* frakció ikonok a hexeken */
+.cell image {
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
+  pointer-events: none;
+}
+
+/* --- 6) Játékos bábuk --- */
+.playerToken text {
+  font-family: Orbitron, Inter, sans-serif;
+  font-weight: 800;
+  font-size: 11.5px;
+  fill: #0b0f15;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.15);
+  pointer-events: none;
+}
+
+.playerToken circle {
+  transition: transform .12s ease, filter .2s ease;
+}
+
+.playerToken:hover circle {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.35));
+}
+
+/* --- 7) HUD gombok (pl. dobókocka, kör vége) --- */
+.btn {
+  --btn-bg: linear-gradient(180deg, rgba(90,140,220,0.25), rgba(60,100,170,0.22));
+  --btn-brd: rgba(120,180,255,0.35);
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-brd);
+  color: var(--fg);
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow:
+  0 0 0 1px rgba(255,255,255,0.02) inset,
+  0 8px 24px rgba(0,0,0,0.35);
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(150,210,255,0.65);
+  box-shadow:
+  0 0 0 1px rgba(255,255,255,0.05) inset,
+  0 12px 30px rgba(30,120,255,0.18);
+}
+.btn:active { transform: translateY(0); }
+
+/* példa kiemelt gomb szín */
+.btn--primary {
+  --btn-bg: linear-gradient(180deg, rgba(90,160,255,0.35), rgba(50,120,220,0.30));
+  --btn-brd: rgba(120,190,255,0.6);
+}
+
+/* gombsáv */
+#hudBar {
+position: relative;
+margin: 0 auto;
+margin-top: clamp(8px, 2vmin, 18px);
+width: min(92vmin, 940px);
+display: flex; gap: 10px; flex-wrap: wrap;
+justify-content: center;
+}
+
+/* dobás kijelző */
+#diceOut {
+display: inline-flex; align-items: center; gap: 8px;
+padding: 6px 10px;
+border-radius: 10px;
+background: rgba(255,255,255,0.03);
+border: 1px solid rgba(120,180,255,0.2);
+font-family: Orbitron, Inter, sans-serif;
+font-weight: 800;
+letter-spacing: .06em;
+}
+
+/* --- 8) Tooltipok (cella + játékos) – üveg panel --- */
+#tileTooltip, #playerTooltip {
+position: fixed;
+z-index: 9999;
+display: none;
+padding: 10px;
+border-radius: 14px;
+background: var(--panel);
+border: 1px solid var(--panel-line);
+box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+backdrop-filter: blur(8px) saturate(1.1);
+color: var(--fg);
+}
+#tileTooltip img, #playerTooltip img {
+display: block;
+object-fit: cover;
+box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* tippek címkéje */
+#tileTooltipLabel {
+margin-top: 8px;
+text-align: center;
+font-family: Orbitron, Inter, sans-serif;
+font-weight: 700;
+font-size: 14px;
+letter-spacing: .04em;
+}
+
+/* --- 9) Felugró értesítés (toast) – ha osztályt akarsz használni --- */
+.toast {
+  position: fixed;
+  bottom: 16px; right: 16px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  color: var(--fg);
+  font-weight: 600;
+  z-index: 10000;
+}
+
+/* --- 10) Reszponzív / akadálymentes --- */
+@media (max-width: 560px) {
+  #boardWrap { border-radius: 18px; }
+  .btn { padding: 9px 12px; border-radius: 10px; }
+  #diceOut { font-size: 0.95rem; }
+  .cell text { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
 }
