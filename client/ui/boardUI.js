@@ -140,19 +140,24 @@ function renderBoard(state) {
       token.setAttribute("transform", `translate(${x + offsetX}, ${y + offsetY})`);
       token.style.pointerEvents = "all"; // hover maradjon
 
-      // --- karakter kép a tokenhez ---
-      const char = ALL_CHARS.find(c => c.id === p.characterId);
-      if (char) {
-        const img = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        img.setAttribute("href", char.img);        // karakter kép
-        img.setAttribute("x", -12);                // középre igazítás
-        img.setAttribute("y", -24);                // aljához igazítva
-        img.setAttribute("width", 24);             // méret
-        img.setAttribute("height", 24);
-        img.setAttribute("pointer-events", "none");
-        img.setAttribute("preserveAspectRatio", "xMidYMid meet");
-        token.appendChild(img);
-      }
+      // --- bábu ikon a frakció szerint ---
+      const pawnIcons = {
+        "Space Marines": "./images/characters/sm.png",
+        "Eldar": "./images/characters/el.png",
+        "Orks": "./images/characters/ok.png",
+        "Chaos": "./images/characters/ch.png",
+        "NEUTRAL": "./images/characters/ne.png"
+      };
+
+      const pawnImg = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      pawnImg.setAttribute("href", pawnIcons[p.faction] || "./images/characters/ne.png");
+      pawnImg.setAttribute("x", -48);
+      pawnImg.setAttribute("y", -80);
+      pawnImg.setAttribute("width", 96);
+      pawnImg.setAttribute("height", 96);
+      pawnImg.setAttribute("pointer-events", "none");
+      pawnImg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      token.appendChild(pawnImg);
 
       // --- név rövidítés a token alá ---
       const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");

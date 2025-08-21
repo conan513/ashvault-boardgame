@@ -720,17 +720,6 @@ button.btn-back:hover {
   --radial: #141b26;
 }
 
-
-/* enyhe vignetta, “komoly projekt” hangulat */
-body::before {
-  content: "";
-  position: fixed; inset: 0;
-  pointer-events: none;
-  background:
-  radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.33) 100%);
-  z-index: 0;
-}
-
 /* --- 3) Board környezet / keret --- */
 #boardWrap {
 position: relative;
@@ -999,7 +988,9 @@ letter-spacing: .04em;
   backdrop-filter: blur(8px) brightness(0.8);
   background: rgba(0, 0, 0, 0.45);
   z-index: 1000;
-  animation: fadeIn 0.6s ease;
+  /*animation: fadeIn 0.6s ease;*/
+  background: url('./images/w40k.jpeg') no-repeat center center;
+  background-size: cover; /* kitölti a képernyőt, arányokat megtartva */
 }
 
 .overlay-content {
