@@ -1,203 +1,6 @@
 let BOARD_CACHE = null;
 let HIGHLIGHTS = [];
 
-function renderBoard(state) {
-  BOARD_CACHE = state.board;
-  const svg = document.getElementById("boardSVG");
-  svg.innerHTML = "";
-
-  const cx = 450, cy = 450;
-  const rOuter = 360;
-  const rInner = 240;
-
-  svg.insertAdjacentHTML("beforeend", `
-  <defs>
-  <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-  <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="black"/>
-  </filter>
-  </defs>
-  `);
-
-  function posFor(cell) {
-    if (cell.ring === "CENTER") return { x: cx, y: cy };
-    if (cell.ring === "OUTER") {
-      const ringIdx = cell.id;
-      const angle = (ringIdx / 24) * Math.PI * 2 - Math.PI / 2;
-      return { x: cx + Math.cos(angle) * rOuter, y: cy + Math.sin(angle) * rOuter };
-    } else if (cell.ring === "INNER") {
-      const ringIdx = cell.id - 24;
-      const angle = (ringIdx / 12) * Math.PI * 2 - Math.PI / 2;
-      return { x: cx + Math.cos(angle) * rInner, y: cy + Math.sin(angle) * rInner };
-    }
-  }
-
-  // sugaras háttér
-  for (let i = 0; i < 24; i++) {
-    const angle = (i / 24) * Math.PI * 2;
-    const x2 = cx + Math.cos(angle) * rOuter;
-    const y2 = cy + Math.sin(angle) * rOuter;
-    svg.insertAdjacentHTML("beforeend",
-                           `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#1a2535" stroke-width="2"/>`
-    );
-  }
-
-  const ringStyle = "stroke:#2a3d5b; stroke-width:3; fill:none";
-  svg.insertAdjacentHTML("beforeend",
-                         `<circle cx="${cx}" cy="${cy}" r="${rInner}" style="${ringStyle}" />` +
-                         `<circle cx="${cx}" cy="${cy}" r="${rOuter}" style="${ringStyle}" />`
-  );
-
-  function hexPath(x, y, r) {
-    return Array.from({ length: 6 }, (_, i) => {
-      const angle = (Math.PI / 3) * i - Math.PI / 6;
-      return [x + Math.cos(angle) * r, y + Math.sin(angle) * r].join(",");
-    }).join(" ");
-  }
-
-  for (const cell of state.board) {
-    const { x, y } = posFor(cell);
-    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    g.classList.add("cell");
-    const fcls = ({ "Space Marines": "sm", "Eldar": "el", "Orks": "ok", "Chaos": "ch", "NEUTRAL": "ne" })[cell.faction] || "ne";
-    g.classList.add(fcls);
-    g.dataset.id = cell.id;
-
-    // hexagon háttér
-    const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    poly.setAttribute("points", hexPath(x, y, 22));
-    poly.setAttribute("fill", "rgba(30,30,40,0.8)");
-    poly.setAttribute("stroke", "#555");
-    g.appendChild(poly);
-
-    // frakció ikon
-    const icon = document.createElementNS("http://www.w3.org/2000/svg", "image");
-    icon.setAttribute("href", `/icons/${fcls}.png`);
-    icon.setAttribute("x", x - 15);
-    icon.setAttribute("y", y - 15);
-    icon.setAttribute("width", 30);
-    icon.setAttribute("height", 30);
-    g.appendChild(icon);
-
-    // név
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", x);
-    label.setAttribute("y", y - 28);
-    label.setAttribute("text-anchor", "middle");
-    label.textContent = cell.name;
-    g.appendChild(label);
-
-    // Átlátszó réteg a név fölé (ne zavarja a kattintást, a .cell-re kattintunk)
-    const transparentLayer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    transparentLayer.setAttribute("x", x - 22);
-    transparentLayer.setAttribute("y", y - 45);
-    transparentLayer.setAttribute("width", 44);
-    transparentLayer.setAttribute("height", 22);
-    transparentLayer.setAttribute("fill", "rgba(255,255,255,0)");
-    transparentLayer.setAttribute("pointer-events", "all");
-    g.appendChild(transparentLayer);
-
-    // Tooltip események a cellákhoz
-    g.addEventListener("mouseover", function(event) {
-      showTooltip(cell);
-    });
-    g.addEventListener("mouseout", function(event) {
-      hideTooltip();
-    });
-
-    svg.appendChild(g);
-  }
-
-  // ---- player tokenek rajzolása (csoportosan, körívben elosztva) ----
-  const playersByCell = {};
-  for (const p of Object.values(state.players)) {
-    if (!p.alive) continue;
-    playersByCell[p.position] = playersByCell[p.position] || [];
-    playersByCell[p.position].push(p);
-  }
-
-  for (const [cellId, players] of Object.entries(playersByCell)) {
-    const cell = state.board.find(c => c.id == cellId);
-    if (!cell) continue;
-    const { x, y } = posFor(cell);
-
-    const count = players.length;
-    const radius = count > 1 ? 16 : 0;
-
-    players.forEach((p, idx) => {
-      const angle = (idx / count) * 2 * Math.PI;
-      const offsetX = radius * Math.cos(angle);
-      const offsetY = radius * Math.sin(angle);
-
-      const token = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      token.classList.add("playerToken");
-      token.setAttribute("data-player", p.name);
-      token.setAttribute("transform", `translate(${x + offsetX}, ${y + offsetY})`);
-      // Hover maradjon, click menjen át alá → a clicket továbbítjuk kézzel
-      token.style.pointerEvents = "all";
-
-      const color = ({ "Space Marines": "#2a7fff", "Eldar": "#32d1a0", "Orks": "#70d13e", "Chaos": "#c04ff0" })[p.faction] || "#fff";
-
-      const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      disk.setAttribute("cx", 0);
-      disk.setAttribute("cy", 0);
-      disk.setAttribute("r", 12);
-      disk.setAttribute("fill", color);
-      disk.setAttribute("stroke", "#000");
-      disk.setAttribute("stroke-width", "2");
-      disk.setAttribute("filter", "url(#shadow)");
-      disk.setAttribute("pointer-events", "none"); // ne vegye át a clicket
-
-      const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      txt.setAttribute("x", 0);
-      txt.setAttribute("y", 4);
-      txt.setAttribute("text-anchor", "middle");
-      txt.textContent = p.name.slice(0, 2).toUpperCase();
-      txt.setAttribute("pointer-events", "none"); // ne vegye át a clicket
-
-      token.appendChild(disk);
-      token.appendChild(txt);
-
-      // Tooltip események a bábukhoz (hover)
-      token.addEventListener("mouseover", function() {
-        showPlayerTooltip(p);
-      });
-      token.addEventListener("mouseout", function() {
-        hideTooltip();
-      });
-
-      // KATTINTÁS ÁTENGEDÉSE az alatta lévő cellára
-      token.addEventListener("click", function(e) {
-        const prev = token.style.pointerEvents;
-        token.style.pointerEvents = "none"; // ideiglenesen kikapcsoljuk, hogy megtaláljuk az alatta lévőt
-        const under = document.elementFromPoint(e.clientX, e.clientY);
-        token.style.pointerEvents = prev || "all";
-        if (under) {
-          under.dispatchEvent(new MouseEvent("click", {
-            clientX: e.clientX,
-            clientY: e.clientY,
-            bubbles: true,
-            cancelable: true,
-            view: window
-          }));
-        }
-      });
-
-      svg.appendChild(token);
-    });
-  }
-
-  const current = state.currentPlayer;
-  if (current && state.players[current]) {
-    const cid = state.players[current].position;
-    const sel = svg.querySelector(`.cell[data-id="${cid}"]`);
-    if (sel) sel.classList.add("current");
-  }
-
-  // --- cursor melletti tooltip bekapcsolása ---
-  enableTileHoverPopup();
-}
-
-
 // Player tokenek tooltip kezelése
 function showPlayerTooltip(player) {
   const tooltip = document.getElementById("playerTooltip");
@@ -337,26 +140,28 @@ function renderBoard(state) {
       token.setAttribute("transform", `translate(${x + offsetX}, ${y + offsetY})`);
       token.style.pointerEvents = "all"; // hover maradjon
 
-      const color = ({ "Space Marines": "#2a7fff", "Eldar": "#32d1a0", "Orks": "#70d13e", "Chaos": "#c04ff0" })[p.faction] || "#fff";
+      // --- karakter kép a tokenhez ---
+      const char = ALL_CHARS.find(c => c.id === p.characterId);
+      if (char) {
+        const img = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        img.setAttribute("href", char.img);        // karakter kép
+        img.setAttribute("x", -12);                // középre igazítás
+        img.setAttribute("y", -24);                // aljához igazítva
+        img.setAttribute("width", 24);             // méret
+        img.setAttribute("height", 24);
+        img.setAttribute("pointer-events", "none");
+        img.setAttribute("preserveAspectRatio", "xMidYMid meet");
+        token.appendChild(img);
+      }
 
-      const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      disk.setAttribute("cx", 0);
-      disk.setAttribute("cy", 0);
-      disk.setAttribute("r", 12);
-      disk.setAttribute("fill", color);
-      disk.setAttribute("stroke", "#000");
-      disk.setAttribute("stroke-width", "2");
-      disk.setAttribute("filter", "url(#shadow)");
-      disk.setAttribute("pointer-events", "none");
-
+      // --- név rövidítés a token alá ---
       const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
       txt.setAttribute("x", 0);
-      txt.setAttribute("y", 4);
+      txt.setAttribute("y", 6); // alá tolva
       txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("font-size", "8px");
       txt.textContent = p.name.slice(0, 2).toUpperCase();
       txt.setAttribute("pointer-events", "none");
-
-      token.appendChild(disk);
       token.appendChild(txt);
 
       // Tooltip események

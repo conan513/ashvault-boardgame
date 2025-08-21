@@ -227,13 +227,13 @@ io.on("connection", (socket) => {
     if (!gameState) return;
 
     if (Object.keys(gameState.players).length >= 4) {
-      return socket.emit("errorMsg", "Ez a szoba már tele van (max 4 játékos).");
+      return socket.emit("errorMsg", "This room is full (max 4 players).");
     }
 
     const c = characters.find(ch => ch.id === characterId);
-    if (!c) return socket.emit("errorMsg", "Ismeretlen karakter.");
+    if (!c) return socket.emit("errorMsg", "Unknown character.");
     if (Object.values(gameState.players).some(p => p.characterId === characterId)) {
-      return socket.emit("errorMsg", "Ez a karakter már foglalt!");
+      return socket.emit("errorMsg", "This character is already taken!");
     }
 
     if (gameState.waitingForCharacters[socket.id]) {
@@ -270,7 +270,7 @@ io.on("connection", (socket) => {
   socket.on("rollDice", () => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
-    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!");
+    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "It's not your turn!");
 
     const dice = Math.floor(Math.random() * 6) + 1;
     const player = gameState.players[socket.id];
@@ -313,7 +313,7 @@ io.on("connection", (socket) => {
 
     const targets = adjacencyAtDistance(gameState.board, player.position, dice);
     if (!targets.includes(targetCellId)) {
-      return socket.emit("errorMsg", "Érvénytelen célmező.");
+      return socket.emit("errorMsg", "Invalid target cell.");
     }
 
     player.position = targetCellId;
@@ -368,14 +368,14 @@ io.on("connection", (socket) => {
             if (player.stats.HP <= 0) {
               player.alive = false;
               io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
-              sendSystemMessage(socket.currentRoom, `${player.name} meghalt PvE során.`);
+              sendSystemMessage(socket.currentRoom, `${player.name} has died in PvE combat.`);
             }
           } else {
             if (!sameFaction || card.loot) {
               const item = drawEquipmentCard();
               applyItemToPlayer(player, item);
               io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
-              sendSystemMessage(socket.currentRoom, `${player.name} lootolt egy tárgyat: ${item.name}`);
+              sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`);
             }
           }
         } else {
@@ -383,14 +383,14 @@ io.on("connection", (socket) => {
             const item = drawEquipmentCard();
             applyItemToPlayer(player, item);
             io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
-            sendSystemMessage(socket.currentRoom, `${player.name} lootolt egy tárgyat: ${item.name}`);
+            sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`);
           }
           if (effect.hpDelta) {
             player.stats.HP += effect.hpDelta;
             if (player.stats.HP <= 0) {
               player.alive = false;
               io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
-              sendSystemMessage(socket.currentRoom, `${player.name} meghalt esemény miatt.`);
+              sendSystemMessage(socket.currentRoom, `${player.name} has died due to an event.`);
             }
           }
           if (effect.statMods) {
@@ -398,17 +398,17 @@ io.on("connection", (socket) => {
               player.stats[k] = Math.max(0, player.stats[k] + v);
             }
             io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
-            sendSystemMessage(socket.currentRoom, `${player.name} stat módosítást kapott: ${JSON.stringify(effect.statMods)}`);
+            sendSystemMessage(socket.currentRoom, `${player.name} received stat modifications: ${JSON.stringify(effect.statMods)}`);
           }
           if (effect.tempBuff) {
             applyTempEffect(player, effect.tempBuff, true);
             io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
-            sendSystemMessage(socket.currentRoom, `${player.name} ideiglenes buffot kapott: ${JSON.stringify(effect.tempBuff)}`);
+            sendSystemMessage(socket.currentRoom, `${player.name} received a temporary buff: ${JSON.stringify(effect.tempBuff)}`);
           }
           if (effect.tempDebuff) {
             applyTempEffect(player, effect.tempDebuff, false);
             io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
-            sendSystemMessage(socket.currentRoom, `${player.name} ideiglenes debuffot kapott: ${JSON.stringify(effect.tempDebuff)}`);
+            sendSystemMessage(socket.currentRoom, `${player.name} received a temporary debuff: ${JSON.stringify(effect.tempDebuff)}`);
           }
         }
       }
@@ -448,7 +448,7 @@ io.on("connection", (socket) => {
       if (loser.stats.HP <= 0) {
         loser.alive = false;
         io.to(socket.currentRoom).emit("playerDied", { playerId: loser.id, cause: "PVP" });
-        sendSystemMessage(socket.currentRoom, `${loser.name} meghalt PvP során.`);
+        sendSystemMessage(socket.currentRoom, `${loser.name} has died in PvP combat.`);
       }
 
       const winner = result.winner === "A" ? A : B;
@@ -456,7 +456,7 @@ io.on("connection", (socket) => {
         const stolen = loser.inventory.pop();
         applyItemToPlayer(winner, stolen);
         io.to(socket.currentRoom).emit("itemStolen", { from: loser.id, to: winner.id, item: stolen });
-        sendSystemMessage(socket.currentRoom, `${winner.name} ellopott egy tárgyat ${loser.name}-tól: ${stolen.name}`);
+        sendSystemMessage(socket.currentRoom, `${winner.name} stole an item from ${loser.name}: ${stolen.name}`);
       }
 
       const detailMsg =
@@ -464,7 +464,7 @@ io.on("connection", (socket) => {
       `${B.name} dobása: ${result.rolls.B} + ATK(${B.stats.ATK}) - DEF(${A.stats.DEF}) = ${result.totals.B}\n` +
       `Győztes: ${winner.name}, vesztes: ${loser.name}, vesztes HP veszteség: ${result.damage}`;
 
-      sendSystemMessage(socket.currentRoom, `${A.name} legyőzte ${B.name}-t PvP-ben.\n${detailMsg}`);
+      sendSystemMessage(socket.currentRoom, `${A.name} challenged ${B.name} to a 1v1 PvP battle.\n${detailMsg}`);
 
       gameState.pvpPending = null;
       broadcast(socket.currentRoom);
@@ -482,7 +482,7 @@ io.on("connection", (socket) => {
 
         if (gameState.players[socket.id]) {
           const leavingPlayer = gameState.players[socket.id];
-          sendSystemMessage(roomName, `${leavingPlayer.name} elhagyta a játékot.`);
+          sendSystemMessage(roomName, `${leavingPlayer.name} has left the game.`);
 
           delete gameState.players[socket.id];
           gameState.turnOrder = gameState.turnOrder.filter(id => id !== socket.id);

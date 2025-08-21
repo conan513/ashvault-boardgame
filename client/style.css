@@ -1,30 +1,40 @@
 :root {
-  --bg: #0c0f14;
-  --fg: #f0f4f8;
-  --accent: #50d1ff;
-  --sm: #2a7fff;
-  --el: #32d1a0;
-  --ok: #70d13e;
-  --ch: #c04ff0;
-  --neutral: #999;
-  --danger: #ff6b6b;
-  --good: #6bff9e;
-  --panel: #141a26;
+  --bg: #0c0f14;                /* háttér */
+  --fg: #f0f4f8;                /* fő szöveg */
+  --accent: #50d1ff;            /* UI accent */
+
+  --sm: #2a7fff;                /* Space Marines */
+  --el: #32d1a0;                /* Eldar */
+  --ok: #70d13e;                /* Orks */
+  --ch: #c04ff0;                /* Chaos */
+  --neutral: #999;              /* Neutral */
+
+  --danger: #ff6b6b;            /* új */
+  --good: #6bff9e;              /* új */
+
+  --muted: #aab3c2;             /* régi */
+  --panel: #141a26;             /* frissített */
+  --panel-line: rgba(120, 180, 255, 0.12);
   --border: #2a3a52;
   --shadow: 0 4px 12px rgba(0,0,0,0.4);
   --radius: 12px;
+
+  --ring: #2a3d5b;
+  --radial: #141b26;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
   font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  background: url("./images/bg.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color: #f0f4f8;
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
 }
 
 header, footer {
@@ -77,15 +87,6 @@ display: flex;
 justify-content: center;
 align-items: center;
 position: relative; /* ez kell, hogy a diceOut a boardhoz igazodjon */
-}
-
-#boardSVG {
-background: radial-gradient(ellipse at center, #111722 0%, #0b0f15 100%);
-border: 1px solid var(--border);
-border-radius: var(--radius);
-box-shadow: var(--shadow);
-width: 95%;
-height: 95%;
 }
 
 /* --- Board cellák --- */
@@ -293,17 +294,6 @@ button#sendChatBtn:hover {
   opacity: 1;
 }
 
-/* Chat overlay háttér */
-.overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
 /* Pulzáló animáció új üzenetnél */
 @keyframes pulseNotify {
   0%   { transform: scale(1); box-shadow: 0 0 0px rgba(255, 0, 0, 0.6); }
@@ -316,16 +306,6 @@ animation: pulseNotify 0.8s infinite;
 background-color: #ff4b4b; /* piros jelzés */
 color: white;
 border-radius: 6px;
-}
-/* Overlay háttér */
-.overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
 }
 
 /* Overlay tartalom */
@@ -511,10 +491,10 @@ color: white;
 
 /* --- Hex cellák stílus --- */
 .cell polygon {
-  stroke: #233046;
-  stroke-width: 2px;
-  fill: #0f1521;
-  transition: all 0.3s ease;
+  fill: rgba(18, 24, 34, 0.9);
+  stroke: rgba(120, 140, 170, 0.65);
+  stroke-width: 1.25;
+  transition: filter .2s ease, stroke .2s ease, fill .2s ease;
 }
 
 .cell.sm polygon { stroke: var(--sm); }
@@ -533,20 +513,6 @@ color: white;
   0%   { filter: drop-shadow(0 0 0 rgba(80,209,255,0)); }
   50%  { filter: drop-shadow(0 0 12px rgba(80,209,255,0.8)); }
   100% { filter: drop-shadow(0 0 0 rgba(80,209,255,0)); }
-}
-
-/* --- Player tokenek --- */
-.playerToken {
-  stroke: #fff;
-  stroke-width: 2px;
-  filter: drop-shadow(0 0 6px rgba(0,0,0,0.8));
-  transition: transform 0.3s ease;
-}
-
-.playerToken text {
-  fill: #fff;
-  font-size: 1.2vw;
-  font-weight: bold;
 }
 
 /* --- Token lépés animáció --- */
@@ -754,18 +720,6 @@ button.btn-back:hover {
   --radial: #141b26;
 }
 
-/* --- 2) Teljes oldal stílus / háttér --- */
-html, body {
-  height: 100%;
-  background:
-  radial-gradient(1200px 800px at 50% 30%, rgba(45,71,106,0.25), transparent 60%),
-  radial-gradient(800px 600px at 20% 80%, rgba(110,40,160,0.12), transparent 60%),
-  radial-gradient(900px 900px at 80% 20%, rgba(60,140,255,0.10), transparent 60%),
-  linear-gradient(180deg, var(--bg), #06080c 70%);
-  color: var(--fg);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  overflow-x: hidden;
-}
 
 /* enyhe vignetta, “komoly projekt” hangulat */
 body::before {
@@ -813,13 +767,15 @@ animation: drift 24s linear infinite;
 
 /* --- 4) Az SVG tábla --- */
 #boardSVG {
+background: radial-gradient(ellipse at center, #111722 0%, #0b0f15 100%);
+border: 1px solid var(--border);
+border-radius: var(--radius);
+box-shadow: var(--shadow);
 width: 100%;
 height: 100%;
 display: block;
 filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
-border: 1px solid var(--border); /* A keret most ugyanaz */
-box-shadow: var(--shadow); /* Árnyék ugyanaz */
-backdrop-filter: blur(10px); /* Üveg hatás itt is */
+backdrop-filter: blur(10px);
 }
 
 /* körgyűrűk */
@@ -839,13 +795,6 @@ opacity: 0.85;
 }
 
 /* --- 5) Cellák (hexek) --- */
-.cell polygon {
-  fill: rgba(18, 24, 34, 0.9);
-  stroke: rgba(120,140,170,0.65);
-  stroke-width: 1.25;
-  transition: filter .2s ease, stroke .2s ease, fill .2s ease;
-}
-
 .cell text {
   font-family: Orbitron, Inter, sans-serif;
   font-weight: 700;
@@ -897,17 +846,24 @@ opacity: 0.85;
 }
 
 /* --- 6) Játékos bábuk --- */
+.playerToken {
+  stroke: #fff;
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.8));
+  transition: transform 0.3s ease;
+}
+
 .playerToken text {
   font-family: Orbitron, Inter, sans-serif;
-  font-weight: 800;
-  font-size: 11.5px;
-  fill: #0b0f15;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.15);
+  font-weight: 800; /* Felülírja a 'bold'-ot */
+  font-size: 11.5px; /* Felülírja az 1.2vw-t */
+  fill: #0b0f15; /* Felülírja a #fff-et */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
   pointer-events: none;
 }
 
 .playerToken circle {
-  transition: transform .12s ease, filter .2s ease;
+  transition: transform 0.12s ease, filter 0.2s ease;
 }
 
 .playerToken:hover circle {
@@ -1029,23 +985,17 @@ letter-spacing: .04em;
   * { animation: none !important; transition: none !important; }
 }
 
-/* === GLOBAL BACKGROUND === */
-body {
-  margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: url("./assets/wh40k_bg.jpg") no-repeat center center fixed;
-  background-size: cover;
-  color: #f0f4f8;
-  overflow: hidden;
-}
-
 /* Általános overlay stílus */
 .overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-backdrop-filter: blur(8px) brightness(0.8); /* Safari / WebKit */
   backdrop-filter: blur(8px) brightness(0.8);
   background: rgba(0, 0, 0, 0.45);
   z-index: 1000;
