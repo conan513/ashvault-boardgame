@@ -179,12 +179,18 @@ io.on("connection", (socket) => {
     });
   }
 
-  // Szoba lista
+  // Szobák listázása – csak elérhető szobák
   socket.on("listRooms", () => {
-    const list = Object.entries(rooms).map(([name, state]) => ({
+    const list = Object.entries(rooms)
+    .filter(([name, state]) => {
+      // csak azok a szobák, ahol még van várakozó játékos karakterválasztóra
+      return Object.keys(state.waitingForCharacters || {}).length > 0;
+    })
+    .map(([name, state]) => ({
       name,
-      players: Object.keys(state.players).length + Object.keys(state.waitingForCharacters).length
+      players: Object.keys(state.players).length
     }));
+
     socket.emit("roomList", list);
   });
 
