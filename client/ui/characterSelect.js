@@ -99,6 +99,11 @@ function renderPlayers(state) {
       imgWrap.style.position = "relative";
       imgWrap.style.width = "100%";
 
+      // ha halott, akkor kapja meg a player-dead osztályt
+      if (!p.alive) {
+        imgWrap.classList.add("player-dead");
+      }
+
       const img = document.createElement("img");
       img.src = char.img;
       img.alt = char.name;

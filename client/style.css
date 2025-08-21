@@ -123,8 +123,6 @@ position: relative; /* ez kell, hogy a diceOut a boardhoz igazodjon */
   fill: #1e2a3f;
   filter: drop-shadow(0 0 6px rgba(80,209,255,0.6));
 }
-.cell.highlight { cursor: pointer; }
-.cell.current circle { stroke-width: 4px; }
 
 /* --- Általános UI --- */
 #statusBar {
@@ -294,15 +292,7 @@ button#sendChatBtn:hover {
   opacity: 1;
 }
 
-/* Pulzáló animáció új üzenetnél */
-@keyframes pulseNotify {
-  0%   { transform: scale(1); box-shadow: 0 0 0px rgba(255, 0, 0, 0.6); }
-  50%  { transform: scale(1.15); box-shadow: 0 0 15px rgba(255, 0, 0, 0.8); }
-  100% { transform: scale(1); box-shadow: 0 0 0px rgba(255, 0, 0, 0.6); }
-}
-
 #toggleChatBtn.notify {
-animation: pulseNotify 0.8s infinite;
 background-color: #ff4b4b; /* piros jelzés */
 color: white;
 border-radius: 6px;
@@ -505,15 +495,9 @@ color: white;
 
 .cell.highlight polygon {
   fill: #1e2a3f;
-  animation: pulseHex 1.5s infinite;
   cursor: pointer;
 }
 
-@keyframes pulseHex {
-  0%   { filter: drop-shadow(0 0 0 rgba(80,209,255,0)); }
-  50%  { filter: drop-shadow(0 0 12px rgba(80,209,255,0.8)); }
-  100% { filter: drop-shadow(0 0 0 rgba(80,209,255,0)); }
-}
 
 /* --- Token lépés animáció --- */
 @keyframes moveToken {
@@ -736,24 +720,6 @@ backdrop-filter: blur(6px);
 z-index: 1;
 }
 
-/* rács-animáció a panel mögött (nagyon finom) */
-#boardWrap::before {
-content: "";
-position: absolute; inset: 1px;
-border-radius: 23px;
-background-image:
-linear-gradient(transparent 31px, rgba(120,180,255,0.06) 32px),
-linear-gradient(90deg, transparent 31px, rgba(120,180,255,0.06) 32px);
-background-size: 32px 32px;
-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.8), transparent 85%);
-opacity: 0.35;
-animation: drift 24s linear infinite;
-}
-@keyframes drift {
-  from { transform: translate3d(0,0,0); }
-  to   { transform: translate3d(32px,32px,0); }
-}
-
 /* --- 4) Az SVG tábla --- */
 #boardSVG {
 background: radial-gradient(ellipse at center, #111722 0%, #0b0f15 100%);
@@ -811,53 +777,18 @@ opacity: 0.85;
 
 /* aktuális játékos mező */
 .cell.current polygon {
-  stroke-width: 2.5;
-  animation: pulse 1.2s ease-in-out infinite;
   filter: drop-shadow(0 0 14px rgba(120, 200, 255, 0.75));
 }
 
 /* célmezők – pulzáló gyűrű */
 .cell.highlight polygon {
-  stroke-dasharray: 4 3;
-  animation: pulse 1.2s ease-in-out infinite;
   filter: drop-shadow(0 0 14px rgba(120, 220, 255, 0.5));
-}
-
-@keyframes pulse {
-  0%, 100% { stroke-width: 2; }
-  50%      { stroke-width: 3.5; }
 }
 
 /* frakció ikonok a hexeken */
 .cell image {
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
   pointer-events: none;
-}
-
-/* --- 6) Játékos bábuk --- */
-.playerToken {
-  stroke: #fff;
-  stroke-width: 2px;
-  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.8));
-  transition: transform 0.3s ease;
-}
-
-.playerToken text {
-  font-family: Orbitron, Inter, sans-serif;
-  font-weight: 800; /* Felülírja a 'bold'-ot */
-  font-size: 11.5px; /* Felülírja az 1.2vw-t */
-  fill: #0b0f15; /* Felülírja a #fff-et */
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
-  pointer-events: none;
-}
-
-.playerToken circle {
-  transition: transform 0.12s ease, filter 0.2s ease;
-}
-
-.playerToken:hover circle {
-  transform: scale(1.06);
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.35));
 }
 
 /* --- 7) HUD gombok (pl. dobókocka, kör vége) --- */
@@ -1064,12 +995,38 @@ letter-spacing: .04em;
   color: #50d1ff;
 }
 
-/* Fénylő animáció */
-@keyframes glowPulse {
-  from { text-shadow: 0 0 10px rgba(80, 209, 255, 0.6); transform: scale(1); }
-  to   { text-shadow: 0 0 25px rgba(50, 209, 160, 1); transform: scale(1.03); }
-}
-
 #charOverlay .overlay-content {
 max-width: 2000px;
+}
+
+.player-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.player-char-img {
+  transition: opacity 2s ease;
+}
+
+.player-dead .player-char-img {
+  opacity: 0.3;
+  filter: grayscale(100%);
+}
+
+.player-dead::after {
+  content: "DEAD";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: red;
+  font-weight: bold;
+  text-shadow: 0 0 8px black;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }

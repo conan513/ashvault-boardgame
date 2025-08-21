@@ -190,20 +190,31 @@ io.on("connection", (socket) => {
   });
 
   // Szoba létrehozása vagy csatlakozás
-  socket.on("createOrJoinRoom", ({ roomName }) => {
-    if (!rooms[roomName]) {
+  socket.on("createOrJoinRoom", ({ roomName, create }) => {
+    if (create) {
+      // 🔹 Szoba létrehozás
+      if (rooms[roomName]) {
+        return socket.emit("errorMsg", "❌ A szoba név már foglalt!");
+      }
       rooms[roomName] = makeGameState();
       resetDecksState();
+    } else {
+      // 🔹 Csatlakozás meglévő szobához
+      if (!rooms[roomName]) {
+        return socket.emit("errorMsg", "❌ Nincs ilyen szoba!");
+      }
     }
 
     const gameState = rooms[roomName];
 
     socket.join(roomName);
     socket.currentRoom = roomName;
-    gameState.waitingForCharacters[socket.id] = true; // karakterválasztón vár
+    gameState.waitingForCharacters[socket.id] = true;
+
     socket.emit("roomJoined", { roomName });
     socket.emit("hello", { factions, characters });
   });
+
 
   // Kilépés szobából
   socket.on("leaveRoom", () => {

@@ -19,12 +19,30 @@ const chatLog = $("#chatLog");
 const chatInput = $("#chatInput");
 const sendChatBtn = $("#sendChatBtn");
 
+socket.on("errorMsg", (m) => {
+  // szép toast helyett alert helyett
+  showToast(`❌ ${m}`);
+
+  // Ha szoba létrehozás / csatlakozás közben jön hiba, akkor vissza a menübe
+  const menuOverlay = $("#menuOverlay");
+  const joinOverlay = $("#joinOverlay");
+  const charOverlay = $("#charOverlay");
+
+  if (joinOverlay) joinOverlay.style.display = "none";
+  if (charOverlay) charOverlay.style.display = "none";
+  if (menuOverlay) menuOverlay.style.display = "flex";
+
+  LAST_ROOM = null;
+  LAST_NAME = null;
+  LAST_CHAR = null;
+});
+
 socket.on("connect", () => {
   MY_ID = socket.id;
 
   // ha újracsatlakoztunk és volt szoba/név
   if (LAST_ROOM && LAST_NAME && LAST_CHAR) {
-    socket.emit("createOrJoinRoom", { roomName: LAST_ROOM });
+    socket.emit("createOrJoinRoom", { roomName: LAST_ROOM, create: false }); // reconnect csak join
     setTimeout(() => {
       socket.emit("joinGame", { playerName: LAST_NAME, characterId: LAST_CHAR });
     }, 500);
@@ -196,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = createRoomName.value.trim();
       if (!name) return;
       LAST_ROOM = name;
-      socket.emit("createOrJoinRoom", { roomName: name });
+      socket.emit("createOrJoinRoom", { roomName: name, create: true }); // <-- itt fontos
     });
 
     // === Szobalista és csatlakozás ===
@@ -221,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.textContent = `${room.name} (${room.players} játékos)`;
         btn.addEventListener("click", () => {
           LAST_ROOM = room.name;
-          socket.emit("createOrJoinRoom", { roomName: room.name });
+          socket.emit("createOrJoinRoom", { roomName: room.name, create: false }); // <-- itt fontos
           joinOverlay.style.display = "none";
           menuOverlay.style.display = "none";
         });
