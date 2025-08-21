@@ -229,12 +229,25 @@ io.on("connection", (socket) => {
   socket.on("startLobby", () => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
+
     if (gameState.hostId !== socket.id) {
       return socket.emit("errorMsg", "Csak a host indíthatja a játékot!");
     }
 
+    // Beállítjuk, hogy elindult a karakterválasztó
     gameState.lobbyStarted = true;
+    gameState.characterSelectStarted = true;
+
+    // Értesítjük a szoba minden tagját, hogy a lobby elindult
     io.to(socket.currentRoom).emit("lobbyStarted");
+
+    // Frissítjük a szobalistát minden kliensnél, hogy eltűnjön az indított szoba
+    const updatedRooms = Object.values(rooms).map(r => ({
+      name: r.name,
+      players: Object.keys(r.players).length,
+                                                        characterSelectStarted: !!r.characterSelectStarted
+    }));
+    io.emit("roomList", updatedRooms);
   });
 
   // Kilépés lobbyból

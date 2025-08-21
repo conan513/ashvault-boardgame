@@ -226,37 +226,53 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = createRoomName.value.trim();
       if (!name) return;
       LAST_ROOM = name;
-      socket.emit("createOrJoinRoom", { roomName: name, create: true }); // <-- itt fontos
+      socket.emit("createOrJoinRoom", { roomName: name, create: true });
     });
 
     // === Szobalista és csatlakozás ===
     const joinOverlay = $("#joinOverlay");
     const roomListDiv = $("#roomList");
+
     $("#openJoinOverlayBtn").addEventListener("click", () => {
       joinOverlay.style.display = "flex";
       socket.emit("listRooms");
     });
+
     $("#closeJoinOverlay").addEventListener("click", () => {
       joinOverlay.style.display = "none";
     });
 
+    // Szobalista frissítése
     socket.on("roomList", (rooms) => {
+      const roomListDiv = $("#roomList");
       roomListDiv.innerHTML = "";
-      if (rooms.length === 0) {
+
+      // Csak azok a szobák, ahol még nem indult el a karakterválasztó
+      const filteredRooms = rooms.filter(r => !r.characterSelectStarted);
+
+      if (filteredRooms.length === 0) {
         roomListDiv.innerHTML = "<p>Nincsenek aktív szobák.</p>";
         return;
       }
-      rooms.forEach(room => {
+
+      filteredRooms.forEach(room => {
         const btn = document.createElement("button");
         btn.textContent = `${room.name} (${room.players} játékos)`;
         btn.addEventListener("click", () => {
           LAST_ROOM = room.name;
-          socket.emit("createOrJoinRoom", { roomName: room.name, create: false }); // <-- itt fontos
-          joinOverlay.style.display = "none";
-          menuOverlay.style.display = "none";
+          socket.emit("createOrJoinRoom", { roomName: room.name, create: false });
+          $("#joinOverlay").style.display = "none";
+          $("#menuOverlay").style.display = "none";
         });
         roomListDiv.appendChild(btn);
       });
+    });
+
+    // === valós idejű szobalista-frissítés ===
+    socket.on("roomUpdated", (updatedRoom) => {
+      // csak ha nyitva van a joinOverlay
+      if (!joinOverlay || joinOverlay.style.display !== "flex") return;
+      socket.emit("listRooms");
     });
 
     // === LOBBY események ===
