@@ -1,7 +1,18 @@
 // client/ui/characterSelect.js
 let ALL_CHARS = [];
 
+// Klienseknek elküldött karakterlista kezelése
+socket.on("characterList", (characters) => {
+  renderCharacterSelect(characters);  // Megjelenítjük a karaktereket
+});
+
+// A karakterválasztó frissítése
 function renderCharacterSelect(characters) {
+  if (!characters || characters.length === 0) {
+    console.log("No characters available!");  // Ha üres a karakterek listája
+    return;
+  }
+
   ALL_CHARS = characters;
   const wrap = document.getElementById("charSelect");
   wrap.innerHTML = "";
@@ -15,7 +26,9 @@ function renderCharacterSelect(characters) {
 
   // Szétosztás
   for (const c of characters) {
-    factions[c.faction].push(c);
+    if (c.faction) {
+      factions[c.faction].push(c);
+    }
   }
 
   const statIcons = {
@@ -48,7 +61,7 @@ function renderCharacterSelect(characters) {
       <div><b>${c.name}</b></div>
       `;
 
-      // --- stat ikonok vízszintesen
+      // Stat ikonok vízszintesen
       const statsRow = document.createElement("div");
       statsRow.className = "stats-horizontal";
 

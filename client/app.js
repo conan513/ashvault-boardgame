@@ -20,16 +20,17 @@ const chatInput = $("#chatInput");
 const sendChatBtn = $("#sendChatBtn");
 
 socket.on("errorMsg", (m) => {
-  // szép toast helyett alert helyett
   showToast(`❌ ${m}`);
 
   // Ha szoba létrehozás / csatlakozás közben jön hiba, akkor vissza a menübe
   const menuOverlay = $("#menuOverlay");
   const joinOverlay = $("#joinOverlay");
   const charOverlay = $("#charOverlay");
+  const lobbyOverlay = $("#lobbyOverlay");
 
   if (joinOverlay) joinOverlay.style.display = "none";
   if (charOverlay) charOverlay.style.display = "none";
+  if (lobbyOverlay) lobbyOverlay.style.display = "none";
   if (menuOverlay) menuOverlay.style.display = "flex";
 
   LAST_ROOM = null;
@@ -50,7 +51,8 @@ socket.on("connect", () => {
 });
 
 socket.on("hello", ({ factions, characters }) => {
-  renderCharacterSelect(characters);
+  console.log("Received characters:", characters);  // Ellenőrizd, hogy itt van-e adat
+  renderCharacterSelect(characters);  // Karakterek renderelése
 });
 
 socket.on("updateGame", (state) => {
@@ -181,6 +183,16 @@ function updateTurnUI() {
   endTurnBtn.disabled = !mine;
 }
 
+function renderLobby(players) {
+  const list = $("#lobbyPlayers");
+  list.innerHTML = "";
+  players.forEach(p => {
+    const div = document.createElement("div");
+    div.textContent = p.name;
+    list.appendChild(div);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const chatPanel = $("#chatPanel");
   const toggleChatBtn = $("#toggleChatBtn");
@@ -247,10 +259,40 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Ha sikerült csatlakozni a szobához
-    socket.on("roomJoined", ({ roomName }) => {
+    // === LOBBY események ===
+    socket.on("roomJoined", ({ roomName, isHost, players }) => {
       menuOverlay.style.display = "none";
+      joinOverlay.style.display = "none";
+      $("#charOverlay").style.display = "none";
+      $("#lobbyOverlay").style.display = "flex";
+      renderLobby(players);
+
+      // csak a host látja a Start gombot
+      const startBtn = $("#startGameBtn");
+      startBtn.style.display = isHost ? "block" : "none";
+    });
+
+    socket.on("updateLobby", (players) => {
+      renderLobby(players);
+    });
+
+    socket.on("lobbyStarted", () => {
+      $("#lobbyOverlay").style.display = "none";
       $("#charOverlay").style.display = "flex";
+    });
+
+    // === Lobby gombok ===
+    $("#startGameBtn").addEventListener("click", () => {
+      socket.emit("startLobby");
+    });
+
+    $("#leaveLobbyBtn").addEventListener("click", () => {
+      socket.emit("leaveRoom");
+      $("#lobbyOverlay").style.display = "none";
+      menuOverlay.style.display = "flex";
+      LAST_ROOM = null;
+      LAST_NAME = null;
+      LAST_CHAR = null;
     });
 
     // === Karakter választó ===
