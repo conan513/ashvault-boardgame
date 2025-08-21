@@ -1028,3 +1028,107 @@ letter-spacing: .04em;
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* === GLOBAL BACKGROUND === */
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: url("./assets/wh40k_bg.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color: #f0f4f8;
+  overflow: hidden;
+}
+
+/* Általános overlay stílus */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px) brightness(0.8);
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  animation: fadeIn 0.6s ease;
+}
+
+.overlay-content {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 30px 40px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  text-align: center;
+  max-width: 480px;
+  width: 90%;
+  backdrop-filter: blur(15px) saturate(140%);
+  animation: scaleUp 0.4s ease;
+}
+
+/* Gombok modern stílusa */
+.overlay-content button,
+.overlay-content select,
+.overlay-content input {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #f0f4f8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.overlay-content button:hover,
+.overlay-content select:hover {
+  background: rgba(80, 209, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Főcímek */
+.overlay-content h2 {
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  color: #50d1ff;
+  text-shadow: 0 0 10px rgba(80, 209, 255, 0.7);
+}
+
+/* Animációk */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Játék cím a főmenüben */
+.game-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #f0f4f8;
+  text-align: center;
+  margin-bottom: 25px;
+  text-shadow: 0 0 20px rgba(80, 209, 255, 0.8), 0 0 40px rgba(50, 209, 160, 0.6);
+  animation: glowPulse 3s infinite alternate ease-in-out;
+}
+
+.game-title span {
+  font-size: 1.5rem;
+  display: block;
+  margin-top: 10px;
+  color: #50d1ff;
+}
+
+/* Fénylő animáció */
+@keyframes glowPulse {
+  from { text-shadow: 0 0 10px rgba(80, 209, 255, 0.6); transform: scale(1); }
+  to   { text-shadow: 0 0 25px rgba(50, 209, 160, 1); transform: scale(1.03); }
+}
+
+#charOverlay .overlay-content {
+max-width: 2000px;
+}

@@ -126,10 +126,20 @@ socket.on("pvpStarted", ({ aId, bId, cellName }) => {
 socket.on("errorMsg", (m) => alert(m));
 
 socket.on("receiveChat", ({ playerId, message }) => {
-  const player = GAME?.players?.[playerId] || { name: playerId };
-  chatLog.innerHTML += `<p><strong>${player.name}:</strong> ${message}</p>`;
+  if (playerId === null) {
+    // rendszerüzenet (system)
+    chatLog.innerHTML += `<p style="color:#50d1ff; font-style:italic;">💬 ${message}</p>`;
+  } else {
+    // normál játékos üzenet
+    const player = GAME?.players?.[playerId] || { name: playerId };
+    chatLog.innerHTML += `<p><strong>${player.name}:</strong> ${message}</p>`;
+  }
+
   chatLog.scrollTop = chatLog.scrollHeight;
-  if (!$("#chatPanel").classList.contains("show")) $("#toggleChatBtn").classList.add("notify");
+
+  if (!$("#chatPanel").classList.contains("show")) {
+    $("#toggleChatBtn").classList.add("notify");
+  }
 });
 
 sendChatBtn.addEventListener("click", () => {
