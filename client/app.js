@@ -25,14 +25,14 @@ const playerNameInput = $("#playerName"); // főmenü név mező
 window.addEventListener("DOMContentLoaded", () => {
   const savedName = localStorage.getItem("playerName");
   if (savedName) {
-    playerNameInput.value = savedName;
+    $("#playerName").value = savedName;
     LAST_NAME = savedName;
   }
 });
 
-playerNameInput.addEventListener("input", () => {
-  localStorage.setItem("playerName", playerNameInput.value.trim());
-  LAST_NAME = playerNameInput.value.trim();
+$("#playerName").addEventListener("input", () => {
+  LAST_NAME = $("#playerName").value.trim();
+  localStorage.setItem("playerName", LAST_NAME);
 });
 
 function ensurePlayerName() {
@@ -72,7 +72,7 @@ socket.on("connect", () => {
 
   // ha újracsatlakoztunk és volt szoba/név
   if (LAST_ROOM && LAST_NAME && LAST_CHAR) {
-    socket.emit("createOrJoinRoom", { roomName: LAST_ROOM, create: false }); // reconnect csak join
+    socket.emit("createOrJoinRoom", { roomName: LAST_ROOM, create: false, playerName: LAST_NAME });
     setTimeout(() => {
       socket.emit("joinGame", { playerName: LAST_NAME, characterId: LAST_CHAR });
     }, 500);
@@ -215,12 +215,45 @@ function updateTurnUI() {
 function renderLobby(players) {
   const list = $("#lobbyPlayers");
   list.innerHTML = "";
+
   players.forEach(p => {
     const div = document.createElement("div");
-    div.textContent = p.name;
+    div.className = "lobby-player";
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "name";
+    // Ha még nincs név (Várakozó…), használjuk p.name-et vagy fallback-et
+    nameSpan.textContent = p.name || "Várakozó...";
+
+    div.appendChild(nameSpan);
     list.appendChild(div);
   });
 }
+
+// Lobby frissítése a szervertől
+socket.on("updateLobby", (players) => {
+  renderLobby(players);
+});
+
+// Szoba csatlakozás
+socket.on("roomJoined", ({ roomName, isHost, players }) => {
+  $("#menuOverlay").style.display = "none";
+  $("#joinOverlay").style.display = "none";
+  $("#charOverlay").style.display = "none";
+  $("#lobbyOverlay").style.display = "flex";
+
+  renderLobby(players);
+
+  // csak a host látja a Start gombot
+  const startBtn = $("#startGameBtn");
+  startBtn.style.display = isHost ? "block" : "none";
+});
+
+// Lobby indítás
+socket.on("lobbyStarted", () => {
+  $("#lobbyOverlay").style.display = "none";
+  $("#charOverlay").style.display = "flex";
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   const chatPanel = $("#chatPanel");
@@ -256,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = createRoomName.value.trim();
       if (!name) return;
       LAST_ROOM = name;
-      socket.emit("createOrJoinRoom", { roomName: name, create: true });
+      socket.emit("createOrJoinRoom", { roomName: name, create: true, playerName: LAST_NAME });
     });
 
     // === Szobalista és csatlakozás ===
@@ -291,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.textContent = `${room.name} (${room.players} játékos)`;
         btn.addEventListener("click", () => {
           LAST_ROOM = room.name;
-          socket.emit("createOrJoinRoom", { roomName: room.name, create: false });
+          socket.emit("createOrJoinRoom", { roomName: room.name, create: false, playerName: LAST_NAME });
           $("#joinOverlay").style.display = "none";
           $("#menuOverlay").style.display = "none";
         });

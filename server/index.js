@@ -195,7 +195,7 @@ io.on("connection", (socket) => {
   });
 
   // Szoba létrehozás / csatlakozás
-  socket.on("createOrJoinRoom", ({ roomName, create }) => {
+  socket.on("createOrJoinRoom", ({ roomName, create, playerName }) => {
     if (create) {
       if (rooms[roomName]) {
         return socket.emit("errorMsg", "❌ A szoba név már foglalt!");
@@ -212,8 +212,14 @@ io.on("connection", (socket) => {
     const gameState = rooms[roomName];
     socket.join(roomName);
     socket.currentRoom = roomName;
-    gameState.waitingForCharacters[socket.id] = { id: socket.id, name: "Várakozó..." };
 
+    // Ide kerül a várakozó játékos a lobbyban
+    gameState.waitingForCharacters[socket.id] = {
+      id: socket.id,
+      name: playerName || "Várakozó..."
+    };
+
+    // Kliens értesítése, hogy csatlakozott a szobához
     socket.emit("roomJoined", {
       roomName,
       isHost: gameState.hostId === socket.id,
@@ -222,8 +228,11 @@ io.on("connection", (socket) => {
 
     socket.emit("hello", { factions, characters });
 
+    // Frissítjük a lobby minden tagja számára
     io.to(roomName).emit("updateLobby", Object.values(gameState.waitingForCharacters));
   });
+
+
 
   // Host elindítja a lobbyt → mehet karakterválasztás
   socket.on("startLobby", () => {
@@ -262,12 +271,15 @@ io.on("connection", (socket) => {
     if (gameState) {
       delete gameState.waitingForCharacters[socket.id];
       delete gameState.players[socket.id];
+
+      // Mindenki frissítése a lobbyban
       io.to(roomName).emit("updateLobby", Object.values(gameState.waitingForCharacters));
+
       tryDeleteRoom(roomName);
     }
   });
 
-  // Karakter választás
+
   // Játékos csatlakozása a játékhoz (karakter választás)
   socket.on("joinGame", ({ playerName, characterId }) => {
     const gameState = rooms[socket.currentRoom];
@@ -287,8 +299,10 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "This character is already taken!");
     }
 
+    // Eltávolítjuk a várakozók közül
     delete gameState.waitingForCharacters[socket.id];
 
+    // Hozzáadjuk a játékosok közé
     gameState.players[socket.id] = {
       id: socket.id,
       name: playerName || "Névtelen",
@@ -312,8 +326,11 @@ io.on("connection", (socket) => {
     sendSystemMessage(socket.currentRoom, `${playerName} has joined the game.`);
     broadcast(socket.currentRoom);
 
-    // Minden szoba csatlakozott játékosának elküldjük a karaktereket
-    socket.emit("characterList", characters);  // Kliensnek küldjük a karaktereket
+    // Minden kliens frissítése a lobbyban
+    io.to(socket.currentRoom).emit("updateLobby", Object.values(gameState.players));
+
+    // Kliensnek küldjük a karaktereket
+    socket.emit("characterList", characters);
   });
 
   // Dobás
@@ -528,30 +545,27 @@ io.on("connection", (socket) => {
       const gameState = rooms[roomName];
 
       if (gameState) {
-        const wasCurrent = getCurrentPlayerId(gameState) === socket.id;
-
-        if (gameState.players[socket.id]) {
-          const leavingPlayer = gameState.players[socket.id];
+        const leavingPlayer = gameState.players[socket.id];
+        if (leavingPlayer) {
           sendSystemMessage(roomName, `${leavingPlayer.name} has left the game.`);
-
           delete gameState.players[socket.id];
           gameState.turnOrder = gameState.turnOrder.filter(id => id !== socket.id);
           if (gameState.currentTurnIndex >= gameState.turnOrder.length) {
             gameState.currentTurnIndex = 0;
           }
           broadcast(roomName);
-          if (wasCurrent) {
-            io.to(roomName).emit("turnChanged", getCurrentPlayerId(gameState));
-          }
         }
 
         if (gameState.waitingForCharacters[socket.id]) {
           delete gameState.waitingForCharacters[socket.id];
         }
+
+        io.to(roomName).emit("updateLobby", Object.values(gameState.waitingForCharacters));
       }
 
       tryDeleteRoom(roomName);
     });
+
 });
 
 
