@@ -14,36 +14,43 @@
 </head>
 <body>
 
-  <!-- MAIN MENU OVERLAY -->
-  <div id="menuOverlay" class="overlay" style="display:flex;">
-    <div class="overlay-content">
+<!-- MAIN MENU OVERLAY -->
+<div id="menuOverlay" class="overlay" style="display:flex;">
+  <div class="overlay-content">
     <div class="game-title">
-  ⚔️ Warhammer 40,000<br/>
-  <span>Online Boardgame</span>
-</div>
+      ⚔️ Warhammer 40,000<br/>
+      <span>Online Boardgame</span>
+    </div>
 
-      <!-- Create Room -->
-      <form id="createRoomForm" style="margin-bottom:15px;">
-        <label>
-          New Room: <input id="createRoomName" required maxlength="16" />
-        </label>
-        <button type="submit">Create Room</button>
-      </form>
+        <!-- Player Name -->
+    <form id="playerNameForm" style="margin-bottom:15px;">
+      <label>
+        Name: <input id="playerName" required maxlength="16" />
+      </label>
+    </form>
 
-      <!-- Join Room Button -->
-      <button id="openJoinOverlayBtn">🔎 Join Room</button>
+    <!-- Create Room -->
+    <form id="createRoomForm" style="margin-bottom:15px;">
+      <label>
+        <input id="createRoomName" required maxlength="16" />
+      </label>
+      <button type="submit">Create Room</button>
+    </form>
 
-      <!-- Extra menu buttons -->
-      <div class="menu-buttons" style="margin-top:20px;">
-        <button id="howToBtn">📖 How to Play</button>
-        <button id="creditsBtn">👤 Credits</button>
-        <select id="menuLangSelect">
-          <option value="en">English</option>
-          <option value="hu">Magyar</option>
-        </select>
-      </div>
+    <!-- Join Room Button -->
+    <button id="openJoinOverlayBtn">🔎 Join Room</button>
+
+    <!-- Extra menu buttons -->
+    <div class="menu-buttons" style="margin-top:20px;">
+      <button id="howToBtn">📖 How to Play</button>
+      <button id="creditsBtn">👤 Credits</button>
+      <select id="menuLangSelect">
+        <option value="en">English</option>
+        <option value="hu">Magyar</option>
+      </select>
     </div>
   </div>
+</div>
 
   <!-- Join Room overlay -->
   <div id="joinOverlay" class="overlay" style="display:none;">
@@ -84,9 +91,7 @@
 
   <!-- EXISTING HEADER -->
   <header>
-    <h1>Warhammer 40,000 – Online Boardgame
-      <small>(Fan-made by Conan)</small>
-    </h1>
+    <h1>Warhammer 40,000 – Online Boardgame</h1>
     <div id="statusBar">
       <span id="turnInfo">Connecting...</span>
       <button id="rollBtn" disabled>🎲 Roll</button>
@@ -147,7 +152,6 @@
     <div class="overlay-content">
       <h2>Select a Character</h2>
       <form id="joinForm">
-        <label>Name: <input id="playerName" required maxlength="16" /></label>
         <button type="submit">Join</button>
         <div id="charSelect" class="char-grid"></div>
       </form>

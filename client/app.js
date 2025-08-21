@@ -19,6 +19,35 @@ const chatLog = $("#chatLog");
 const chatInput = $("#chatInput");
 const sendChatBtn = $("#sendChatBtn");
 
+const playerNameInput = $("#playerName"); // főmenü név mező
+
+// === NÉV kezelése localStorage-ban ===
+window.addEventListener("DOMContentLoaded", () => {
+  const savedName = localStorage.getItem("playerName");
+  if (savedName) {
+    playerNameInput.value = savedName;
+    LAST_NAME = savedName;
+  }
+});
+
+playerNameInput.addEventListener("input", () => {
+  localStorage.setItem("playerName", playerNameInput.value.trim());
+  LAST_NAME = playerNameInput.value.trim();
+});
+
+function ensurePlayerName() {
+  const name = playerNameInput.value.trim();
+  if (!name) {
+    alert("⚠️ Add meg a neved előbb!");
+    playerNameInput.focus();
+    return false;
+  }
+  LAST_NAME = name;
+  localStorage.setItem("playerName", name);
+  return true;
+}
+
+// === SOCKET események ===
 socket.on("errorMsg", (m) => {
   showToast(`❌ ${m}`);
 
@@ -223,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // === Szoba létrehozás ===
     createRoomForm.addEventListener("submit", (e) => {
       e.preventDefault();
+      if (!ensurePlayerName()) return; // név ellenőrzés
       const name = createRoomName.value.trim();
       if (!name) return;
       LAST_ROOM = name;
@@ -234,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const roomListDiv = $("#roomList");
 
     $("#openJoinOverlayBtn").addEventListener("click", () => {
+      if (!ensurePlayerName()) return; // név ellenőrzés
       joinOverlay.style.display = "flex";
       socket.emit("listRooms");
     });

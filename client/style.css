@@ -1030,3 +1030,53 @@ max-width: 2000px;
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
+
+#lobbyOverlay {
+background: rgba(0,0,0,0.8);
+backdrop-filter: blur(6px);
+color: #f0f4f8;
+padding: 20px;
+border-radius: 16px;
+box-shadow: 0 0 20px rgba(0,0,0,0.6);
+font-family: 'Segoe UI', sans-serif;
+}
+
+#lobbyOverlay h2 {
+font-size: 1.5rem;
+margin-bottom: 15px;
+text-align: center;
+color: var(--accent, #50d1ff);
+}
+
+#lobbyPlayers {
+background: #1a1d23;
+border: 1px solid #333;
+border-radius: 12px;
+padding: 15px;
+box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+}
+
+#lobbyOverlay button {
+padding: 10px 20px;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+font-size: 1rem;
+transition: 0.2s;
+}
+
+#startGameBtn {
+background: var(--ok, #70d13e);
+color: #fff;
+}
+
+#leaveLobbyBtn {
+background: var(--danger, #ff6b6b);
+color: #fff;
+}
+
+#lobbyOverlay button:hover {
+transform: scale(1.05);
+box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+

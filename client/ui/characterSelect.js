@@ -260,7 +260,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     nameInput.parentNode.insertBefore(flexWrap, nameInput);
-    flexWrap.appendChild(backBtn);
     flexWrap.appendChild(nameInput);
 
     const joinBtn = joinForm.querySelector("button[type='submit']");
