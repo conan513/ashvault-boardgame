@@ -370,7 +370,7 @@ io.on("connection", (socket) => {
   });
 
   // Mozgás megerősítése
-  socket.on("confirmMove", ({ dice, targetCellId }) => {
+  socket.on("confirmMove", ({ dice, targetCellId, path }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
     if (!isPlayersTurn(gameState, socket.id))
@@ -383,6 +383,15 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "Invalid target cell.");
     }
 
+    // 🔹 Broadcast animációs path minden kliensnek
+    if (path && path.length > 0) {
+      io.to(socket.currentRoom).emit("playerMoved", {
+        playerId: player.id,
+        path
+      });
+    }
+
+    // 🔹 Végső pozíció frissítése
     player.position = targetCellId;
 
     const othersHere = Object.values(gameState.players)

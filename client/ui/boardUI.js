@@ -137,8 +137,8 @@ function renderBoard(state) {
       const token = document.createElementNS("http://www.w3.org/2000/svg", "g");
       token.classList.add("playerToken");
       token.setAttribute("data-player", p.name);
+      token.setAttribute("data-player-id", p.id);   // 🔹 új sor
       token.setAttribute("transform", `translate(${x + offsetX}, ${y + offsetY})`);
-      token.style.pointerEvents = "all"; // hover maradjon
 
       // --- bábu ikon a frakció szerint ---
       const pawnIcons = {
@@ -211,8 +211,7 @@ function renderBoard(state) {
 
 function animateMove(player, path, callback) {
   const svg = document.getElementById("boardSVG");
-  const token = [...svg.querySelectorAll(".playerToken")]
-  .find(t => t.querySelector("text").textContent === player.name.slice(0, 2).toUpperCase());
+  const token = svg.querySelector(`.playerToken[data-player-id="${player.id}"]`);
   if (!token) {
     if (callback) callback();
     return;
@@ -261,6 +260,7 @@ function animateMove(player, path, callback) {
   moveNext();
 }
 
+
 function highlightTargets(targetIds, onPick) {
   clearHighlights();
   const svg = document.getElementById("boardSVG");
@@ -292,7 +292,7 @@ function highlightTargets(targetIds, onPick) {
       }
 
       animateMove(me, chosenPath, () => {
-        socket.emit("confirmMove", { dice: LAST_DICE, targetCellId: id });
+        socket.emit("confirmMove", { dice: LAST_DICE, targetCellId: id, path: chosenPath });
         clearHighlights();
       });
     };
@@ -407,6 +407,14 @@ function enableTileHoverPopup() {
     });
   });
 }
+
+socket.on("playerMoved", ({ playerId, path }) => {
+  const player = GAME.players[playerId];
+  if (!player) return;
+  player.position = path[path.length-1]; // állapot frissítése
+  animateMove(player, path);             // animáció lefuttatása
+});
+
 
 window.renderBoard = renderBoard;
 window.highlightTargets = highlightTargets;
