@@ -38,7 +38,7 @@ $("#playerName").addEventListener("input", () => {
 function ensurePlayerName() {
   const name = playerNameInput.value.trim();
   if (!name) {
-    alert("⚠️ Add meg a neved előbb!");
+    alert("⚠️ Please enter your name first!");
     playerNameInput.focus();
     return false;
   }
@@ -95,7 +95,7 @@ socket.on("updateGame", (state) => {
 socket.on("turnChanged", (playerId) => {
   const mine = (playerId === MY_ID);
   $("#turnInfo").innerHTML = mine
-  ? `<span class="badge turn">A te köröd</span>`
+  ? `<span class="badge turn">Your turn</span>`
   : `Most: <b>${shortName(playerId) || "-"}</b>`;
 
   rollBtn.disabled = !mine || !canRoll;
@@ -141,7 +141,7 @@ socket.on("diceResult", ({ dice }) => {
 
 socket.on("cardDrawn", ({ playerId, card, type }) => {
   if (type === "FACTION") {
-    showToast(`🃏 ${shortName(playerId)} húzott egy frakció lapot: ${card.name}`);
+    showToast(`🃏 ${shortName(playerId)} drew a faction card: ${card.name}`);
   }
 
   const view = $("#cardView");
@@ -157,7 +157,7 @@ socket.on("cardDrawn", ({ playerId, card, type }) => {
 socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); });
 socket.on("battleResult", (data) => { renderBattle(data); });
 socket.on("itemLooted", ({ playerId, item }) => {
-  showToast(`🎁 ${shortName(playerId)} kapta: ${item.name}`);
+  showToast(`🎁 ${shortName(playerId)} received: ${item.name}`);
   const view = $("#cardView");
   view.innerHTML = `
   <div class="card">
@@ -166,8 +166,8 @@ socket.on("itemLooted", ({ playerId, item }) => {
   </div>
   `;
 });
-socket.on("itemStolen", ({ from, to, item }) => { showToast(`🗡️ ${shortName(to)} ellopta ${shortName(from)} tárgyát: ${item.name}`); });
-socket.on("playerDied", ({ playerId }) => { showToast(`💀 ${shortName(playerId)} elesett!`); });
+socket.on("itemStolen", ({ from, to, item }) => { showToast(`🗡️ ${shortName(to)} stole ${shortName(from)}'s item: ${item.name}`); });
+socket.on("playerDied", ({ playerId }) => { showToast(`💀 ${shortName(playerId)} has fallen!`); });
 socket.on("pvpStarted", ({ aId, bId, cellName }) => {
   showToast(`⚔️ PVP ${shortName(aId)} vs ${shortName(bId)} @ ${cellName}`);
   socket.emit("resolvePVP");
@@ -223,7 +223,7 @@ function renderLobby(players) {
     const nameSpan = document.createElement("span");
     nameSpan.className = "name";
     // Ha még nincs név (Várakozó…), használjuk p.name-et vagy fallback-et
-    nameSpan.textContent = p.name || "Várakozó...";
+    nameSpan.textContent = p.name || "Waiting...";
 
     div.appendChild(nameSpan);
     list.appendChild(div);
@@ -315,7 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const filteredRooms = rooms.filter(r => !r.characterSelectStarted);
 
       if (filteredRooms.length === 0) {
-        roomListDiv.innerHTML = "<p>Nincsenek aktív szobák.</p>";
+        roomListDiv.innerHTML = "<p>No active rooms.</p>";
         return;
       }
 
@@ -380,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const name = $("#playerName").value.trim();
       const sel = document.querySelector("input[name='charPick']:checked");
-      if (!sel) return alert("Válassz karaktert!");
+      if (!sel) return alert("Please select a character!");
       LAST_NAME = name;
       LAST_CHAR = sel.value;
       socket.emit("joinGame", { playerName: name, characterId: sel.value });

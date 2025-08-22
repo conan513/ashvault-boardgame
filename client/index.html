@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Ashvault - The Last Flame (Fan-made Project by Conan)</title>
+  <title>Ashvault - The Last Flame (Project made by Conan)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./style.css" />
   <script src="/socket.io/socket.io.js"></script>
@@ -80,27 +80,29 @@
     <div class="overlay-content">
       <h2>👤 Credits</h2>
       <p>
-        Fan-made project by <b>Conan</b>.<br/>
+        Project made by <b>Conan</b>.<br/>
       </p>
       <button onclick="document.getElementById('creditsOverlay').style.display='none'">Close</button>
     </div>
   </div>
 
   <!-- EXISTING HEADER -->
-  <header>
-    <h1>Ashvault - The Last Flame</h1>
-    <div id="statusBar">
-      <span id="turnInfo">Connecting...</span>
-      <button id="rollBtn" disabled>🎲 Roll</button>
-      <button id="endTurnBtn" disabled>➡️ End Turn</button>
-      <span id="diceOut"></span>
-      <select id="langSelect" style="margin-left:auto">
-        <option value="en">English</option>
-        <option value="hu">Magyar</option>
-      </select>
-      <button id="toggleChatBtn" style="margin-left: 10px;">💬 Chat</button>
-    </div>
-  </header>
+<header style="position: relative;">
+  <h1>Ashvault - The Last Flame</h1>
+  <div id="headerBadge">
+    <span>⚠ Early Build – Fan-made by Conan</span>
+  </div>
+  <div id="statusBar">
+    <span id="turnInfo">Connecting...</span>
+    <button id="rollBtn" disabled>🎲 Roll</button>
+    <button id="endTurnBtn" disabled>➡️ End Turn</button>
+    <span id="diceOut"></span>
+    <select id="langSelect" style="margin-left:auto">
+      <option value="en">English</option>
+    </select>
+    <button id="toggleChatBtn" style="margin-left: 10px;">💬 Chat</button>
+  </div>
+</header>
 
   <!-- MAIN CONTENT -->
   <main>
@@ -131,10 +133,6 @@
       </div>
     </section>
   </main>
-
-  <footer>
-    Fan-made, unofficial – all rights belong to Games Workshop. Project by Conan.
-  </footer>
 
   <!-- Chat Panel – popup -->
   <div id="chatPanel" class="panel chat-popup">

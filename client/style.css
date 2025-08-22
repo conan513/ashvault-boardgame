@@ -1088,3 +1088,17 @@ color: #fff;
 background: #e74c3c;
 }
 
+#headerBadge {
+position: absolute;
+top: 5px;
+right: 10px;
+background: rgba(255, 100, 0, 0.2);
+color: #ff6600;
+padding: 3px 8px;
+border-radius: 6px;
+font-size: 0.75rem;
+font-weight: bold;
+font-family: 'Arial', sans-serif;
+text-shadow: 1px 1px 2px black;
+pointer-events: none;
+}
