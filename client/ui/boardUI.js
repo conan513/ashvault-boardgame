@@ -142,21 +142,25 @@ function renderBoard(state) {
 
       // --- bábu ikon a frakció szerint ---
       const pawnIcons = {
-        "Space Marines": "./images/characters/sm.png",
-        "Eldar": "./images/characters/el.png",
-        "Orks": "./images/characters/ok.png",
-        "Chaos": "./images/characters/ch.png",
+        "Order of Knights": "./images/characters/ok.png",
+        "The Hollow Grove": "./images/characters/hg.png",
+        "Cyber Dwarves": "./images/characters/cd.png",
+        "Graveborn": "./images/characters/gh.png",
         "NEUTRAL": "./images/characters/ne.png"
       };
 
       const pawnImg = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      pawnImg.setAttribute("href", pawnIcons[p.faction] || "./images/characters/ne.png");
+
+      if (p.pawn) {
+        pawnImg.setAttribute("href", p.pawn); // egyedi bábu
+      } else {
+        pawnImg.setAttribute("href", pawnIcons[p.faction]); // ha nincs egyedi, frakció ikon
+      }
+
       pawnImg.setAttribute("x", -48);
       pawnImg.setAttribute("y", -80);
       pawnImg.setAttribute("width", 96);
       pawnImg.setAttribute("height", 96);
-      pawnImg.setAttribute("pointer-events", "none");
-      pawnImg.setAttribute("preserveAspectRatio", "xMidYMid meet");
       token.appendChild(pawnImg);
 
       // --- név rövidítés a token alá ---

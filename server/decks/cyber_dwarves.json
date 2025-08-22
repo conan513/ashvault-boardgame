@@ -1,0 +1,38 @@
+[
+  { "id": "cd1", "faction": "Cyber Dwarves", "name": "Primarch Overclock", "description": "Divine cogs spin faster than mortal sight can follow. (Self: tempBuff ATK+2 for 3 turns / Other: tempDebuff DEF-1 for 3 turns)", "selfEffect": { "tempBuff": { "stats": ["ATK"], "amount": 2, "duration": 3 } }, "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } }, "image": "/images/cards/cd1.png" },
+  { "id": "cd2", "faction": "Cyber Dwarves", "name": "Forgehammer Strike", "description": "One blow to shatter steel and bone alike. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/cd2.png" },
+  { "id": "cd3", "faction": "Cyber Dwarves", "name": "Steam Vent Blast", "description": "Superheated vents scald the enemy. (Self: battle / Other: RES -1)", "selfEffect": { "effect": "battle" }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/cd3.png" },
+  { "id": "cd4", "faction": "Cyber Dwarves", "name": "Gearhold Salvage", "description": "Recovered scrap turned into fortune. (Self: loot / Other: DEF -1)", "selfEffect": { "loot": true }, "otherEffect": { "statMods": { "DEF": -1 } }, "image": "/images/cards/cd4.png" },
+  { "id": "cd5", "faction": "Cyber Dwarves", "name": "Mechplate Reinforcement", "description": "Layer upon layer of forged protection. (Self: HP +1 / Other: tempDebuff ATK-1 for 3 turns)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } }, "image": "/images/cards/cd5.png" },
+  { "id": "cd6", "faction": "Cyber Dwarves", "name": "Runesteel Infusion", "description": "Arcane sigils enhance the frame. (Self: DEF +1 / Other: loot)", "selfEffect": { "statMods": { "DEF": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/cd6.png" },
+  { "id": "cd7", "faction": "Cyber Dwarves", "name": "Pressure Spike", "description": "Pipes hiss before releasing a deadly burst. (Self: battle / Other: tempDebuff DEF-2 for 2 turns)", "selfEffect": { "effect": "battle" }, "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -2, "duration": 2 } }, "image": "/images/cards/cd7.png" },
+  { "id": "cd8", "faction": "Cyber Dwarves", "name": "Exo-Servos", "description": "Servomotors add might to every swing. (Self: tempBuff ATK+1 for 3 turns / Other: RES -1)", "selfEffect": { "tempBuff": { "stats": ["ATK"], "amount": 1, "duration": 3 } }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/cd8.png" },
+  { "id": "cd9", "faction": "Cyber Dwarves", "name": "Blast Furnace Barrage", "description": "Molten metal rains upon the foe. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/cd9.png" },
+  { "id": "cd10", "faction": "Cyber Dwarves", "name": "Wrenchmaster's Gambit", "description": "A quick fix that turns the tide. (Self: PSY +1 / Other: loot)", "selfEffect": { "statMods": { "PSY": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/cd10.png" },
+  { "id": "cd11", "faction": "Cyber Dwarves", "name": "Mag-Clamp Grapple", "description": "No escape from the iron grip. (Self: HP +1 / Other: tempDebuff ATK-2 for 2 turns)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -2, "duration": 2 } }, "image": "/images/cards/cd11.png" },
+  { "id": "cd12", "faction": "Cyber Dwarves", "name": "Runegear Overload", "description": "Push the runes past safe limits. (Self: tempBuff ATK+3 for 3 turns / Other: DEF -1)", "selfEffect": { "tempBuff": { "stats": ["ATK"], "amount": 3, "duration": 3 } }, "otherEffect": { "statMods": { "DEF": -1 } }, "image": "/images/cards/cd12.png" },
+  { "id": "cd13", "faction": "Cyber Dwarves", "name": "Ironbeard's Edict", "description": "A command backed by centuries of craft. (Self: RES +1 / Other: battle)", "selfEffect": { "statMods": { "RES": 1 } }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/cd13.png" },
+  { "id": "cd14", "faction": "Cyber Dwarves", "name": "Alloyed Faith", "description": "Faith and steel intertwined. (Self: HP +1 / Other: loot)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/cd14.png" },
+  { "id": "cd15", "faction": "Cyber Dwarves", "name": "Cogwheel Blitz", "description": "A barrage of spinning steel. (Self: battle / Other: RES -1)", "selfEffect": { "effect": "battle" }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/cd15.png" },
+  { "id": "cd16", "faction": "Cyber Dwarves", "name": "Pressure-Sealed Armor", "description": "Perfectly fitted for survival in any depth. (Self: tempBuff DEF+1 for 3 turns / Other: tempDebuff ATK-1 for 3 turns)", "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 1, "duration": 3 } }, "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } }, "image": "/images/cards/cd16.png" },
+  { "id": "cd17", "faction": "Cyber Dwarves", "name": "Gyroblade Charge", "description": "Momentum and machinery unite. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/cd17.png" },
+  { "id": "cd18", "faction": "Cyber Dwarves", "name": "Ore Purity Ritual", "description": "Refined to perfection. (Self: DEF +1 / Other: DEF -1)", "selfEffect": { "statMods": { "DEF": 1 } }, "otherEffect": { "statMods": { "DEF": -1 } }, "image": "/images/cards/cd18.png" },
+  {
+    "id": "cd19",
+    "faction": "Cyber Dwarves",
+    "name": "Steam-Powered Rampage",
+    "description": "Unstoppable force driven by boiling fury. (Self: tempBuff ATK+1, DEF+1 for 3 turns / Other: RES -1)",
+    "selfEffect": { "tempBuff": { "stats": ["ATK","DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "statMods": { "RES": -1 } },
+    "image": "/images/cards/cd19.png"
+  },
+  {
+    "id": "cd20",
+    "faction": "Cyber Dwarves",
+    "name": "Foundry's Fortune",
+    "description": "The heart of the forge yields unexpected bounty. (Self: loot / Other: tempDebuff ATK-1 for 3 turns)",
+    "selfEffect": { "loot": true },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/cd20.png"
+  }
+]

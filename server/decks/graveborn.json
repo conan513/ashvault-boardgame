@@ -1,0 +1,30 @@
+[
+  { "id": "gb1", "faction": "Graveborn", "name": "Nightfall's Embrace", "description": "A chill spreads as shadows coil around you. (Self: RES +1 / Other: tempDebuff ATK-1 for 3 turns)", "selfEffect": { "statMods": { "RES": 1 } }, "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } }, "image": "/images/cards/gb1.png" },
+  { "id": "gb2", "faction": "Graveborn", "name": "Deathless Onslaught", "description": "The relentless dead surge forward without fear. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/gb2.png" },
+  { "id": "gb3", "faction": "Graveborn", "name": "Harvest of Souls", "description": "Each foe's fall feeds the eternal void. (Self: loot / Other: RES -1)", "selfEffect": { "loot": true }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/gb3.png" },
+  { "id": "gb4", "faction": "Graveborn", "name": "Funeral March", "description": "A dirge that saps the will to fight. (Self: HP +1 / Other: tempDebuff DEF-1 for 3 turns)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } }, "image": "/images/cards/gb4.png" },
+  { "id": "gb5", "faction": "Graveborn", "name": "Wail of the Damned", "description": "The scream chills the living marrow. (Self: PSY +1 / Other: ATK -1)", "selfEffect": { "statMods": { "PSY": 1 } }, "otherEffect": { "statMods": { "ATK": -1 } }, "image": "/images/cards/gb5.png" },
+  { "id": "gb6", "faction": "Graveborn", "name": "Boneshard Volley", "description": "Splinters of the grave pierce mortal flesh. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/gb6.png" },
+  { "id": "gb7", "faction": "Graveborn", "name": "Ghoul's Feast", "description": "The fallen fuel the unholy host. (Self: HP +1 / Other: loot)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/gb7.png" },
+  { "id": "gb8", "faction": "Graveborn", "name": "Tombguard's Grip", "description": "Cold hands drag the foe toward darkness. (Self: tempBuff DEF+1 for 3 turns / Other: tempDebuff ATK-1 for 3 turns)", "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 1, "duration": 3 } }, "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } }, "image": "/images/cards/gb8.png" },
+  { "id": "gb9", "faction": "Graveborn", "name": "Eternal Rest", "description": "Granting peace through endless night. (Self: RES +1 / Other: RES -1)", "selfEffect": { "statMods": { "RES": 1 } }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/gb9.png" },
+  { "id": "gb10", "faction": "Graveborn", "name": "Plaguewind", "description": "A fetid gust wilts all in its path. (Self: battle / Other: tempDebuff DEF-2 for 2 turns)", "selfEffect": { "effect": "battle" }, "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -2, "duration": 2 } }, "image": "/images/cards/gb10.png" },
+  { "id": "gb11", "faction": "Graveborn", "name": "Crypt's Secret", "description": "A hidden cache among the dead. (Self: loot / Other: DEF -1)", "selfEffect": { "loot": true }, "otherEffect": { "statMods": { "DEF": -1 } }, "image": "/images/cards/gb11.png" },
+  { "id": "gb12", "faction": "Graveborn", "name": "Specter's Veil", "description": "The living blade passes through shade, to no avail. (Self: tempBuff RES+2 for 3 turns / Other: loot)", "selfEffect": { "tempBuff": { "stats": ["RES"], "amount": 2, "duration": 3 } }, "otherEffect": { "loot": true }, "image": "/images/cards/gb12.png" },
+  { "id": "gb13", "faction": "Graveborn", "name": "Nocturne of Silence", "description": "Music that stills both heart and hope. (Self: HP +1 / Other: RES -1)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/gb13.png" },
+  { "id": "gb14", "faction": "Graveborn", "name": "Revenant's Charge", "description": "Even the grave cannot slow their march. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/gb14.png" },
+  { "id": "gb15", "faction": "Graveborn", "name": "Soul Shackle", "description": "Binding the essence itself. (Self: PSY +1 / Other: tempDebuff ATK-1 for 3 turns)", "selfEffect": { "statMods": { "PSY": 1 } }, "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } }, "image": "/images/cards/gb15.png" },
+  { "id": "gb16", "faction": "Graveborn", "name": "Carrion's Claim", "description": "Nothing is wasted under the Pact. (Self: loot / Other: loot)", "selfEffect": { "loot": true }, "otherEffect": { "loot": true }, "image": "/images/cards/gb16.png" },
+  { "id": "gb17", "faction": "Graveborn", "name": "Lich's Insight", "description": "A mind sharpened by centuries of death. (Self: PSY +1 / Other: DEF -1)", "selfEffect": { "statMods": { "PSY": 1 } }, "otherEffect": { "statMods": { "DEF": -1 } }, "image": "/images/cards/gb17.png" },
+  { "id": "gb18", "faction": "Graveborn", "name": "Morbid Fortitude", "description": "Pain is but a fading memory. (Self: HP +1 / Other: battle)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/gb18.png" },
+  { "id": "gb19", "faction": "Graveborn", "name": "Necrotic Armor", "description": "Bone and rot guard the wearer. (Self: tempBuff DEF+1 for 3 turns / Other: DEF -1)", "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 1, "duration": 3 } }, "otherEffect": { "statMods": { "DEF": -1 } }, "image": "/images/cards/gb19.png" },
+  {
+    "id": "gb20",
+    "faction": "Graveborn",
+    "name": "The Final Candle",
+    "description": "Its guttering light heralds the endless night. (Self: RES +1 / Other: battle)",
+    "selfEffect": { "statMods": { "RES": 1 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/gb20.png"
+  }
+]

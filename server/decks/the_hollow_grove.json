@@ -1,0 +1,30 @@
+[
+  { "id": "hg1", "faction": "The Hollow Grove", "name": "Roots of Renewal", "description": "Ancient roots wind around you, mending flesh and spirit. (Self: HP +1 / Other: battle)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/hg1.png" },
+  { "id": "hg2", "faction": "The Hollow Grove", "name": "Thornsnare Ambush", "description": "Barbed vines lash out to trap the unwary. (Self: ATK +1 / Other: tempDebuff DEF-1 for 3 turns)", "selfEffect": { "statMods": { "ATK": 1 } }, "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } }, "image": "/images/cards/hg2.png" },
+  { "id": "hg3", "faction": "The Hollow Grove", "name": "Grovekeeper’s Blessing", "description": "The forest spirits whisper strength into your bones. (Self: RES +1 / Other: loot)", "selfEffect": { "statMods": { "RES": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/hg3.png" },
+  { "id": "hg4", "faction": "The Hollow Grove", "name": "Pack Hunt", "description": "Wolves of the deepwood surge upon your foes. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/hg4.png" },
+  { "id": "hg5", "faction": "The Hollow Grove", "name": "Bloom of Plenty", "description": "Flowers unfurl, revealing gifts of the wild. (Self: loot / Other: RES -1)", "selfEffect": { "loot": true }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/hg5.png" },
+  { "id": "hg6", "faction": "The Hollow Grove", "name": "Barkskin Rite", "description": "Thick bark shields you from harm. (Self: tempBuff DEF+2 for 3 turns / Other: ATK -1)", "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 2, "duration": 3 } }, "otherEffect": { "statMods": { "ATK": -1 } }, "image": "/images/cards/hg6.png" },
+  { "id": "hg7", "faction": "The Hollow Grove", "name": "Owl's Insight", "description": "The moon-eyed seer guides your path. (Self: PSY +1 / Other: loot)", "selfEffect": { "statMods": { "PSY": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/hg7.png" },
+  { "id": "hg8", "faction": "The Hollow Grove", "name": "Entangling Growth", "description": "Vines coil tightly around enemy limbs. (Self: HP +1 / Other: tempDebuff ATK-2 for 2 turns)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -2, "duration": 2 } }, "image": "/images/cards/hg8.png" },
+  { "id": "hg9", "faction": "The Hollow Grove", "name": "Nature's Fury", "description": "A storm of thorns and claws descends. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/hg9.png" },
+  { "id": "hg10", "faction": "The Hollow Grove", "name": "Sylvan Pact", "description": "Allies share the wild’s bounty. (Self: HP +1 / Other: loot)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/hg10.png" },
+  { "id": "hg11", "faction": "The Hollow Grove", "name": "Sapling's Gift", "description": "A new shoot offers hope. (Self: HP +1 / Other: RES -1)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/hg11.png" },
+  { "id": "hg12", "faction": "The Hollow Grove", "name": "Wild Surge", "description": "Primal forces erupt without warning. (Self: battle / Other: tempDebuff DEF-1 for 3 turns)", "selfEffect": { "effect": "battle" }, "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } }, "image": "/images/cards/hg12.png" },
+  { "id": "hg13", "faction": "The Hollow Grove", "name": "Moonlit Gathering", "description": "Spirits confer their blessing under the full moon. (Self: RES +1 / Other: loot)", "selfEffect": { "statMods": { "RES": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/hg13.png" },
+  { "id": "hg14", "faction": "The Hollow Grove", "name": "Hunter's Cunning", "description": "Instinct and experience combine. (Self: PSY +1 / Other: DEF -1)", "selfEffect": { "statMods": { "PSY": 1 } }, "otherEffect": { "statMods": { "DEF": -1 } }, "image": "/images/cards/hg14.png" },
+  { "id": "hg15", "faction": "The Hollow Grove", "name": "Predator's Ambush", "description": "Patience and precision. (Self: battle / Other: ATK -1)", "selfEffect": { "effect": "battle" }, "otherEffect": { "statMods": { "ATK": -1 } }, "image": "/images/cards/hg15.png" },
+  { "id": "hg16", "faction": "The Hollow Grove", "name": "Verdant Armor", "description": "Living leaves weave into a shield. (Self: tempBuff DEF+1 for 3 turns / Other: loot)", "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 1, "duration": 3 } }, "otherEffect": { "loot": true }, "image": "/images/cards/hg16.png" },
+  { "id": "hg17", "faction": "The Hollow Grove", "name": "Feral Roar", "description": "The cry chills enemies’ hearts. (Self: HP +1 / Other: RES -1)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "statMods": { "RES": -1 } }, "image": "/images/cards/hg17.png" },
+  { "id": "hg18", "faction": "The Hollow Grove", "name": "Sacred Glade", "description": "A place of peace. (Self: HP +1 / Other: loot)", "selfEffect": { "statMods": { "HP": 1 } }, "otherEffect": { "loot": true }, "image": "/images/cards/hg18.png" },
+  { "id": "hg19", "faction": "The Hollow Grove", "name": "Wild Hunt", "description": "The spirits ride to war. (Self: battle / Other: battle)", "selfEffect": { "effect": "battle" }, "otherEffect": { "effect": "battle" }, "image": "/images/cards/hg19.png" },
+  {
+    "id": "hg20",
+    "faction": "The Hollow Grove",
+    "name": "Life’s Cycle",
+    "description": "Life and death in eternal dance. (Self: RES +1 / Other: tempDebuff ATK-1 for 3 turns)",
+    "selfEffect": { "statMods": { "RES": 1 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/hg20.png"
+  }
+]

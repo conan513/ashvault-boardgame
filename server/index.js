@@ -133,6 +133,8 @@ function sanitizeGameStateForClients(state) {
       faction: p.faction,
       characterId: p.characterId,
       characterName: p.characterName,
+      characterImg: p.characterImg,   // 🔹 kliens is látja a képet
+      pawn: p.pawn,
       stats: p.stats,
       position: p.position,
       inventory: p.inventory,
@@ -309,6 +311,8 @@ io.on("connection", (socket) => {
       faction: c.faction,
       characterId: c.id,
       characterName: c.name,
+      characterImg: c.img,   // portré
+      pawn: c.pawn,          // 🔹 bábu ikon
       stats: { HP: c.HP, ATK: c.ATK, DEF: c.DEF, PSY: c.PSY, RES: c.RES },
       position: c.spawn,
       inventory: [],

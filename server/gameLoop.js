@@ -1,7 +1,7 @@
-const smDeck = require("./decks/spaceMarines.json");
-const elDeck = require("./decks/eldar.json");
-const okDeck = require("./decks/orks.json");
-const chDeck = require("./decks/chaos.json");
+const cdDeck = require("./decks/cyber_dwarves.json");
+const okDeck = require("./decks/order_of_knights.json");
+const gbDeck = require("./decks/graveborn.json");
+const hgDeck = require("./decks/the_hollow_grove.json");
 const eqDeck = require("./decks/equipment.json");
 const enDeck = require("./decks/enemies.json");
 
@@ -19,10 +19,10 @@ function shuffle(arr) {
 // Inicializál egy adott paklit
 function initDeck(faction) {
   switch (faction) {
-    case "Order of Knights": decksState[faction] = shuffle(smDeck); break;
-    case "The Hollow Grove": decksState[faction] = shuffle(elDeck); break;
-    case "Cyber Dwarves":    decksState[faction] = shuffle(okDeck); break;
-    case "Graveborn":        decksState[faction] = shuffle(chDeck); break;
+    case "Order of Knights": decksState[faction] = shuffle(okDeck); break;
+    case "The Hollow Grove": decksState[faction] = shuffle(hgDeck); break;
+    case "Cyber Dwarves":    decksState[faction] = shuffle(cdDeck); break;
+    case "Graveborn":        decksState[faction] = shuffle(gbDeck); break;
     case "Equipment":        decksState[faction] = shuffle(eqDeck); break;
     case "Enemies":          decksState[faction] = shuffle(enDeck); break;
   }

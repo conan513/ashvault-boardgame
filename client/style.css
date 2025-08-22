@@ -116,7 +116,7 @@ position: relative; /* ez kell, hogy a diceOut a boardhoz igazodjon */
 .cell.hg circle { stroke: var(--hg); }
 .cell.cd circle { stroke: var(--cd); }
 .cell.gb circle { stroke: var(--gb); }
-.cell.ne circle { stroke: var(--neutral); }
+.cell.ne circle { stroke: var(--ne); }
 
 .cell.highlight circle {
   fill: #1e2a3f;
@@ -643,7 +643,7 @@ button.btn-back:hover {
 }
 
 .playerRow.faction-hg {
-  background: rgba(192, 79, 240, 0.15); /* lila */
+  background: rgba(50, 209, 160, 0.15); /* türkiz */
 }
 
 .playerRow.faction-cd {
@@ -651,7 +651,7 @@ button.btn-back:hover {
 }
 
 .playerRow.faction-gb {
-  background: rgba(224, 50, 50, 0.15); /* vörös */
+  background: rgba(192, 79, 240, 0.15); /* lilás */
 }
 
 /* ===== Warhammer 40K – Omega Vault: modern board look ===== */
@@ -718,7 +718,7 @@ opacity: 0.85;
 }
 
 /* frakció-színezett perem + enyhe gló */
-.cell.ok polygon { stroke: color-mix(in oklab, var(--om) 60%, #93a6c6); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--ok) 40%, transparent)); }
+.cell.ok polygon { stroke: color-mix(in oklab, var(--ok) 60%, #93a6c6); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--ok) 40%, transparent)); }
 .cell.hg polygon { stroke: color-mix(in oklab, var(--hg) 60%, #93c6b4); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--hg) 40%, transparent)); }
 .cell.cd polygon { stroke: color-mix(in oklab, var(--cd) 60%, #b3c693); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--cd) 40%, transparent)); }
 .cell.gb polygon { stroke: color-mix(in oklab, var(--gb) 60%, #c693e0); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--gb) 40%, transparent)); }

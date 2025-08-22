@@ -1,0 +1,107 @@
+feladat
+készíts a 4 frakciónak 1-1 20 lapos paklit a lenti szabályok szerint
+ügyelj rá hogy 2 egyforma lap egy frakción belül ne legyen
+probáld meg specializálni a paklikat, igazítva a frakciókhoz
+frakciók nevei pontosan legyenek a kártya json részében: "Order of Knights", "The Hollow Grove", "Cyber Dwarves", "Graveborn"
+angol nyelven legyen és a hatások legyenek benne a leításban
+leirást ugy csináld meg hogy vedd figyelembe hogy a self és other effekt körül csak az egyik aktiválódik, attól függ hogy azonos frakciós játékos huzza fel vagy ellenséges, de a leírás maradjon lore friendly
+leírásban legyen benne zárójelben, hogy milyen effekt is érvényesül
+mindegyik deck külön fájlba megy
+arra ügyelj hogy lap elosztásnál tartsd a megadott intervallumokat de 100% fölé ne menj és legyen minden fajta lapból a pakliban igazodva a faction filozofiájához
+kérek egy táblázatot hogyan osztottad el a lapokat frakciónként (milyen hatásból mennyi van)
+
+Stats:
+HP	(Health Points)
+ATK	 (Attack)
+DEF	 (Defense)
+RES	 (Resistance)
+PSY	 (Psychic Power)
+
+Stat modok legfeljebb +1 lehet.
+tempBuff maximum +3 lehet
+tempDebuff maximum -3 lehet
+
+otherEffect: (ez álltalában negatív, ellenséges frakcióból érkező játékos kapja)
+40-60% "effect": "battle"
+10-30% "loot": true
+10-20% valamilyen stats modosító
+10-20% tempDebuff
+
+selfEffect: (ez álltalában pozitiv, azonos frakciós játékos kapja)
+30-50% HP: +1
+10-30% stat modosítók (pozitiv)
+10-30% "effect": "battle"
+10-20% loot
+10-20% tempBuff
+
+példa statMods:
+"statMods": { "PSY": -1 }
+
+vagy egy negativ és egy plus
+"statMods": { "RES": -1, "DEF": 1 }
+
+példa battle-re:
+"otherEffect": { "effect": "battle" },
+
+példa a loot-ra:
+"otherEffect": { "loot": true },
+
+példa tempBuff-ra:
+"selfEffect": { "tempBuff": { "stats": ["ATK", "DEF"], "amount": 1, "duration": 3 } },
+
+példa tempDebuff-re:
+"otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+
+példa lap:
+  {
+    "id": "ch1",
+    "faction": "chaos",
+    "name": "Loot of the Warp",
+    "description": "The Immaterium grants you fleshly vigor and fills your grasp with plunder.",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "loot": true },
+    "image": "/images/cards/ch1.png"
+  },
+
+
+
+lore:
+🌌 A Last Flame krónikája
+A világ végnapjai közelednek. Az Égbolt Harangjai elnémultak, a nagy királyságok elporladtak, és a valaha öröknek hitt városok romokba dőltek. A történészek szerint mindennek kulcsa a Last Flame — az istenek utolsó ajándéka a halandók világára. Ez a láng őrzi a teremtés szikráját, és aki birtokolja, átírhatja a világ sorsát: megújíthatja azt, vagy örökre elolthatja.
+
+A Last Flame holléte sokáig legenda volt, ám a közelmúltban egy ősi próféciát fejtettek meg a Romok Könyvtárában. Most négy hatalmas frakció készül mindent kockára tenni, hogy a lángot megszerezze.
+
+⚔️ Order of Knights – Bearers of the Iron Oath
+Hitvallás: „A törvény örök, még ha a világ össze is omlik.”
+
+Az Ősi Rend már a Birodalmak korában is őrködött az igazság és becsület fölött. Ők hisznek benne, hogy a Last Flame erejével helyreállíthatják a rendet, és új királyt ültethetnek az Üres Trónra. Azonban a világ romlott, és ellenségeik szerint a lovagok vakok lettek az irgalomra. Ha ők szerzik meg a lángot, vasból kovácsolt törvényük új aranykort hozhat… vagy könyörtelen zsarnokságot.
+
+Kapcsolatuk a Last Flame-mel: A Rend szerint a láng az Ősi Eskü szimbóluma, és birtoklása jogot ad nekik, hogy „helyes útra” tereljék a világot.
+
+🌲 The Hollow Grove – Alliance of the Wild
+Hitvallás: „Az ember a föld betegségének neve.”
+
+A mély erdők és titkos ligetek népe, akik szerint a Last Flame maga a természet szívének utolsó dobbanása. Az erdőszellemek és ősi bestiák azt hiszik, hogy ha ők szerzik meg a lángot, az megtisztítja a világot a fém és füst mételyétől. A Hollow Grove nem ismeri a „birtoklás” fogalmát — szerintük a lángot az örök körforgás részeként kell elengedni, hogy az élet újjászülessen az emberiség romjain.
+
+Kapcsolatuk a Last Flame-mel: Számukra ez a láng nem fegyver, hanem gyógyító tűz, amely a haldokló világ sebeit forrasztaná be… még ha ehhez az egész civilizáció hamuvá válása is szükséges.
+
+⚙️ Cyber Dwarves – Clan Gearhold
+Hitvallás: „A gép örökebb, mint a hús.”
+
+A föld alatti kazánhallok és acélvárosok urai. A Gearhold a Last Flame-et egyfajta tökéletes energiaforrásként látja, amellyel áttörhetik a technomágia korlátait és örök mozgást érhetnek el. A klán vezetői szerint a láng uralma alatt új kort alapíthatnának, ahol az anyag és mágia eggyé válik, s a gép az örökkévalóságba viszi őket.
+
+Kapcsolatuk a Last Flame-mel: Számukra ez a láng a Primarch Reactor kulcsa — egy isteni gépszív, amely soha nem áll le.
+
+☠️ Graveborn – Pact of Death
+Hitvallás: „Minden fény a sötétbe tér vissza.”
+
+A halálból visszatértek, akiket a világ egykor elfeledett és megrémült tőlük. A Pact of Death nem uralkodni akar, hanem véget vetni a létezésnek. Szerintük a Last Flame a világ utolsó bilincse, amely még visszatartja az örök pihenést. Ha ők szerzik meg, eloltják a lángot, és így elhozzák a „Néma Éjszakát”, melyben sem fájdalom, sem remény nem marad.
+
+Kapcsolatuk a Last Flame-mel: A láng kioltása számukra az egyetlen valódi béke, amely megszabadítja a világot a végtelen körforgástól.
+
+🌍 A háború háttere
+A prófécia szerint a Last Flame a Világtörő Bástya mélyén rejtőzik, amely az egykori égistenek és földszellemek csatatere. Csak az juthat el oda, aki legyőzi a három próbatételt: Az Eskü Tükrét, A Végtelen Erdőt és A Vas-Labirintust.
+
+A frakciók szövetségeket, árulásokat és csatákat vívnak egymással — mind jól tudják, hogy nem elég megtalálni a lángot, birtokolni is tudni kell.
+
+És ahogy a világ fénye egyre halványul, úgy nő a tét: Aki megszerzi a Last Flame-et, új világot teremthet… vagy lezárhatja mindörökre.

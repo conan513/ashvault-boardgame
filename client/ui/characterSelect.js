@@ -105,25 +105,28 @@ function renderPlayers(state) {
     const alive = p.alive ? "" : `<span class="dead">[ELHUNYT]</span>`;
 
     // === karakter kép teljes szélességben ===
+    // === karakter kép ===
     const char = ALL_CHARS.find(c => c.id == p.characterId);
-    if (char) {
+    const imgSrc = p.characterImg || (char && char.img) || "";
+
+    if (imgSrc) {
       const imgWrap = document.createElement("div");
       imgWrap.className = "player-img-wrap";
       imgWrap.style.position = "relative";
       imgWrap.style.width = "100%";
 
-      // ha halott, akkor kapja meg a player-dead osztályt
+      // halott játékos
       if (!p.alive) {
         imgWrap.classList.add("player-dead");
       }
 
       const img = document.createElement("img");
-      img.src = char.img;
-      img.alt = char.name;
+      img.src = imgSrc;
+      img.alt = char ? char.name : "";
       img.className = "player-char-img";
       img.style.width = "100%";
       img.style.height = "auto";
-      img.style.maxHeight = "180px"; // összenyomva 1080p-hez
+      img.style.maxHeight = "180px";
       img.style.borderRadius = "10px";
       img.style.objectFit = "cover";
       imgWrap.appendChild(img);
@@ -131,7 +134,7 @@ function renderPlayers(state) {
       // név overlay
       const nameOverlay = document.createElement("div");
       nameOverlay.className = "player-name-overlay";
-      nameOverlay.innerHTML = `<b class="${factionClass}">${p.name}</b> ${alive}`;
+      nameOverlay.innerHTML = `<b class="${p.faction.replace(/\s/g,'-').toLowerCase()}">${p.name}</b>` + (!p.alive ? ` <span class="dead">[ELHUNYT]</span>` : "");
       nameOverlay.style.position = "absolute";
       nameOverlay.style.bottom = "5px";
       nameOverlay.style.left = "50%";
@@ -144,7 +147,7 @@ function renderPlayers(state) {
       nameOverlay.style.whiteSpace = "nowrap";
       imgWrap.appendChild(nameOverlay);
 
-      // "Kör" jelző overlay
+      // "Kör" jelző
       if (state.currentPlayer === p.id) {
         const turnBadge = document.createElement("div");
         turnBadge.innerHTML = `<span class="badge turn">Kör</span>`;
@@ -156,6 +159,7 @@ function renderPlayers(state) {
 
       li.appendChild(imgWrap);
     }
+
 
     // === stat ikonok vízszintesen ===
     const statIcons = {

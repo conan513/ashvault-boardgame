@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ok1",
+    "faction": "Order of Knights",
+    "name": "Vow of the Last Flame",
+    "description": "Swearing the Iron Oath before the sacred fire fills your spirit with unbreakable resolve. (Self: HP +1 / Other: battle)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ok1.png"
+  },
+  {
+    "id": "ok2",
+    "faction": "Order of Knights",
+    "name": "Shieldwall Stand",
+    "description": "The knights lock shields, forming an unyielding wall of steel. (Self: DEF +1 / Other: ATK -1 for 3 turns)",
+    "selfEffect": { "statMods": { "DEF": 1 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/ok2.png"
+  },
+  {
+    "id": "ok3",
+    "faction": "Order of Knights",
+    "name": "Banner of the Realm",
+    "description": "Under the banner's shadow, allies rally while foes falter. (Self: tempBuff ATK+1, DEF+1 for 3 turns / Other: RES -1)",
+    "selfEffect": { "tempBuff": { "stats": ["ATK","DEF"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "statMods": { "RES": -1 } },
+    "image": "/images/cards/ok3.png"
+  },
+  {
+    "id": "ok4",
+    "faction": "Order of Knights",
+    "name": "Trial by Combat",
+    "description": "Only through the clash of blades is justice met. (Self: battle / Other: battle)",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ok4.png"
+  },
+  {
+    "id": "ok5",
+    "faction": "Order of Knights",
+    "name": "Oathkeeper's Boon",
+    "description": "Your unwavering honor inspires comrades. (Self: HP +1 / Other: loot)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "loot": true },
+    "image": "/images/cards/ok5.png"
+  },
+  {
+    "id": "ok6",
+    "faction": "Order of Knights",
+    "name": "Knight's Resolve",
+    "description": "The Iron Oath fortifies your will. (Self: RES +1 / Other: DEF -1)",
+    "selfEffect": { "statMods": { "RES": 1 } },
+    "otherEffect": { "statMods": { "DEF": -1 } },
+    "image": "/images/cards/ok6.png"
+  },
+  {
+    "id": "ok7",
+    "faction": "Order of Knights",
+    "name": "Mounted Charge",
+    "description": "Warhorses thunder, scattering the enemy ranks. (Self: battle / Other: ATK -2 for 2 turns)",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -2, "duration": 2 } },
+    "image": "/images/cards/ok7.png"
+  },
+  {
+    "id": "ok8",
+    "faction": "Order of Knights",
+    "name": "Blessing of the Justiciar",
+    "description": "A holy rite mends wounds before the final march. (Self: HP +1 / Other: loot)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "loot": true },
+    "image": "/images/cards/ok8.png"
+  },
+  {
+    "id": "ok9",
+    "faction": "Order of Knights",
+    "name": "Iron Discipline",
+    "description": "Drilled beyond breaking, the formation holds. (Self: tempBuff DEF+2 for 3 turns / Other: RES -1)",
+    "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 2, "duration": 3 } },
+    "otherEffect": { "statMods": { "RES": -1 } },
+    "image": "/images/cards/ok9.png"
+  },
+  {
+    "id": "ok10",
+    "faction": "Order of Knights",
+    "name": "The King's Judgement",
+    "description": "Sentence is carried out at sword's point. (Self: battle / Other: battle)",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ok10.png"
+  },
+  {
+    "id": "ok11",
+    "faction": "Order of Knights",
+    "name": "Guardian's Vigil",
+    "description": "Ever watchful, ever ready. (Self: HP +1 / Other: DEF -1)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "statMods": { "DEF": -1 } },
+    "image": "/images/cards/ok11.png"
+  },
+  {
+    "id": "ok12",
+    "faction": "Order of Knights",
+    "name": "March of the Just",
+    "description": "Feet pounding, banners high, the advance is unstoppable. (Self: battle / Other: loot)",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "loot": true },
+    "image": "/images/cards/ok12.png"
+  },
+  {
+    "id": "ok13",
+    "faction": "Order of Knights",
+    "name": "Heirloom Greatblade",
+    "description": "Ancestral steel cleaves through despair. (Self: ATK +1 / Other: tempDebuff DEF-1 for 3 turns)",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/ok13.png"
+  },
+  {
+    "id": "ok14",
+    "faction": "Order of Knights",
+    "name": "Ceremonial Blessing",
+    "description": "Ritual words carry the weight of ancient vows. (Self: HP +1 / Other: RES -1)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "statMods": { "RES": -1 } },
+    "image": "/images/cards/ok14.png"
+  },
+  {
+    "id": "ok15",
+    "faction": "Order of Knights",
+    "name": "Steelbound Loyalty",
+    "description": "Chains of duty bind tighter than any prison. (Self: tempBuff RES+1 for 3 turns / Other: loot)",
+    "selfEffect": { "tempBuff": { "stats": ["RES"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "loot": true },
+    "image": "/images/cards/ok15.png"
+  },
+  {
+    "id": "ok16",
+    "faction": "Order of Knights",
+    "name": "Paladin's Wrath",
+    "description": "Radiant fury strikes down the unjust. (Self: battle / Other: tempDebuff ATK-1 for 3 turns)",
+    "selfEffect": { "effect": "battle" },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/ok16.png"
+  },
+  {
+    "id": "ok17",
+    "faction": "Order of Knights",
+    "name": "Commander's Tactics",
+    "description": "A sharp mind is as vital as a sharp blade. (Self: PSY +1 / Other: RES -1)",
+    "selfEffect": { "statMods": { "PSY": 1 } },
+    "otherEffect": { "statMods": { "RES": -1 } },
+    "image": "/images/cards/ok17.png"
+  },
+  {
+    "id": "ok18",
+    "faction": "Order of Knights",
+    "name": "The Last Bastion",
+    "description": "Here, we make our stand. (Self: HP +1 / Other: battle)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ok18.png"
+  },
+  {
+    "id": "ok19",
+    "faction": "Order of Knights",
+    "name": "Honor's Edge",
+    "description": "A blade that cuts lies and steel alike. (Self: ATK +1 / Other: RES -1)",
+    "selfEffect": { "statMods": { "ATK": 1 } },
+    "otherEffect": { "statMods": { "RES": -1 } },
+    "image": "/images/cards/ok19.png"
+  },
+  {
+    "id": "ok20",
+    "faction": "Order of Knights",
+    "name": "Unbroken Oath",
+    "description": "No darkness can sway the sworn. (Self: tempBuff RES+2 for 3 turns / Other: loot)",
+    "selfEffect": { "tempBuff": { "stats": ["RES"], "amount": 2, "duration": 3 } },
+    "otherEffect": { "loot": true },
+    "image": "/images/cards/ok20.png"
+  }
+]
