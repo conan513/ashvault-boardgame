@@ -1,5 +1,7 @@
 # 🔥 Ashvault – The Last Flame
 
+![Ashvault Cover](ashvault.jpg)
+
 **Ashvault – The Last Flame** is a web-based, multiplayer online board game set in a world consumed by fire and darkness. Choose your hero from unique factions, fight rivals, and claim the legendary **Last Flame** hidden at the center of the board.
 
 ---
