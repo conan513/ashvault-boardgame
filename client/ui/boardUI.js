@@ -74,7 +74,7 @@ function renderBoard(state) {
     const { x, y } = posFor(cell);
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     g.classList.add("cell");
-    const fcls = ({ "Space Marines": "sm", "Eldar": "el", "Orks": "ok", "Chaos": "ch", "NEUTRAL": "ne" })[cell.faction] || "ne";
+    const fcls = ({ "Order of Knights": "ok", "The Hollow Grove": "hg", "Cyber Dwarves": "cd", "Graveborn": "gb", "NEUTRAL": "ne" })[cell.faction] || "ne";
     g.classList.add(fcls);
     g.dataset.id = cell.id;
 

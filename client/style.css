@@ -1,26 +1,25 @@
 :root {
-  --bg: #0c0f14;                /* háttér */
-  --fg: #f0f4f8;                /* fő szöveg */
-  --accent: #50d1ff;            /* UI accent */
+  --bg: #1a1a1a;            /* Sötét háttér */
+  --fg: #f9f3e7;            /* Fényes, krémes szöveg */
+  --accent: #fcbf49;         /* Fő UI accent: aranysárga */
+  --ok: #2a7fff;           /* Space Marines */
+  --hg: #32d1a0;           /* Eldar */
+  --cd: #70d13e;           /* Orks */
+  --gb: #c04ff0;           /* Chaos */
+  --ne: #9aa7be;           /* Neutral */
 
-  --sm: #2a7fff;                /* Space Marines */
-  --el: #32d1a0;                /* Eldar */
-  --ok: #70d13e;                /* Orks */
-  --ch: #c04ff0;                /* Chaos */
-  --neutral: #999;              /* Neutral */
+  --danger: #f94144;         /* Veszély: piros */
+  --good: #90be6d;           /* Jó: lime zöld */
 
-  --danger: #ff6b6b;            /* új */
-  --good: #6bff9e;              /* új */
-
-  --muted: #aab3c2;             /* régi */
-  --panel: #141a26;             /* frissített */
-  --panel-line: rgba(120, 180, 255, 0.12);
-  --border: #2a3a52;
-  --shadow: 0 4px 12px rgba(0,0,0,0.4);
+  --muted: #c9ada7;          /* Halvány, szürke árnyalat */
+  --panel: rgb(20,20,20, 0.6);          /* Frissített panel szín */
+  --panel-line: rgba(250, 200, 50, 0.12); /* Sárgás árnyalatú vonal */
+  --border: #6a4c30;         /* Kávébarna színű szegély */
+  --shadow: 0 4px 12px rgba(0,0,0,0.6);
   --radius: 12px;
 
-  --ring: #2a3d5b;
-  --radial: #141b26;
+  --ring: #f5cb5c;           /* Sárga gyűrű */
+  --radial: #3f3b37;         /* Sötétbarna, föld színe */
 }
 
 * { box-sizing: border-box; }
@@ -113,10 +112,10 @@ position: relative; /* ez kell, hogy a diceOut a boardhoz igazodjon */
   pointer-events: none;
 }
 
-.cell.sm circle { stroke: var(--sm); }
-.cell.el circle { stroke: var(--el); }
 .cell.ok circle { stroke: var(--ok); }
-.cell.ch circle { stroke: var(--ch); }
+.cell.hg circle { stroke: var(--hg); }
+.cell.cd circle { stroke: var(--cd); }
+.cell.gb circle { stroke: var(--gb); }
 .cell.ne circle { stroke: var(--neutral); }
 
 .cell.highlight circle {
@@ -371,36 +370,36 @@ animation: diceRoll 0.6s ease-in-out infinite;
 font-weight: bold;
 }
 
-.char-card.faction-sm:hover,
-.char-card.faction-sm input:checked + img { box-shadow: 0 0 10px var(--sm); }
-
-.char-card.faction-el:hover,
-.char-card.faction-el input:checked + img { box-shadow: 0 0 10px var(--el); }
-
 .char-card.faction-ok:hover,
 .char-card.faction-ok input:checked + img { box-shadow: 0 0 10px var(--ok); }
 
-.char-card.faction-ch:hover,
-.char-card.faction-ch input:checked + img { box-shadow: 0 0 10px var(--ch); }
+.char-card.faction-hg:hover,
+.char-card.faction-hg input:checked + img { box-shadow: 0 0 10px var(--hg); }
 
-.char-card.faction-sm {
-  background: rgba(42,127,255,0.15); /* kékes */
-  border: 2px solid var(--sm);
-}
+.char-card.faction-cd:hover,
+.char-card.faction-cd input:checked + img { box-shadow: 0 0 10px var(--cd); }
 
-.char-card.faction-el {
-  background: rgba(50,209,160,0.15); /* zöldeskék */
-  border: 2px solid var(--el);
-}
+.char-card.faction-gb:hover,
+.char-card.faction-gb input:checked + img { box-shadow: 0 0 10px var(--gb); }
 
 .char-card.faction-ok {
-  background: rgba(112,209,62,0.15); /* zöldes */
+  background: rgba(42,127,255,0.15); /* kékes */
   border: 2px solid var(--ok);
 }
 
-.char-card.faction-ch {
+.char-card.faction-hg {
+  background: rgba(50,209,160,0.15); /* zöldeskék */
+  border: 2px solid var(--hg);
+}
+
+.char-card.faction-cd {
+  background: rgba(112,209,62,0.15); /* zöldes */
+  border: 2px solid var(--cd);
+}
+
+.char-card.faction-gb {
   background: rgba(192,79,240,0.15); /* lilás */
-  border: 2px solid var(--ch);
+  border: 2px solid var(--gb);
 }
 
 
@@ -424,21 +423,6 @@ font-weight: bold;
 .char-card img {
   width: 100%;
   border-radius: 8px;
-}
-
-/* nagyító gomb jobb alsó sarokban */
-.zoom-btn {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  display: none;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  padding: 6px;
-  cursor: pointer;
-  font-size: 16px;
 }
 
 /* csak hoverkor látszik */
@@ -487,10 +471,10 @@ color: white;
   transition: filter .2s ease, stroke .2s ease, fill .2s ease;
 }
 
-.cell.sm polygon { stroke: var(--sm); }
-.cell.el polygon { stroke: var(--el); }
 .cell.ok polygon { stroke: var(--ok); }
-.cell.ch polygon { stroke: var(--ch); }
+.cell.hg polygon { stroke: var(--hg); }
+.cell.cd polygon { stroke: var(--cd); }
+.cell.gb polygon { stroke: var(--gb); }
 .cell.ne polygon { stroke: var(--neutral); }
 
 .cell.highlight polygon {
@@ -654,19 +638,19 @@ button.btn-back:hover {
   padding: 0;
 }
 
-.playerRow.faction-sm {
+.playerRow.faction-ok {
   background: rgba(80, 129, 255, 0.15); /* kékes */
 }
 
-.playerRow.faction-el {
+.playerRow.faction-hg {
   background: rgba(192, 79, 240, 0.15); /* lila */
 }
 
-.playerRow.faction-ok {
+.playerRow.faction-cd {
   background: rgba(112, 209, 62, 0.15); /* zöld */
 }
 
-.playerRow.faction-ch {
+.playerRow.faction-gb {
   background: rgba(224, 50, 50, 0.15); /* vörös */
 }
 
@@ -674,24 +658,6 @@ button.btn-back:hover {
 
 /* --- 1) Alapszínek / hangulat --- */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600;800&display=swap');
-
-:root {
-  --bg: #0b0f15;           /* háttér */
-  --panel: rgba(18, 24, 34, 0.6);
-  --panel-line: rgba(120, 180, 255, 0.12);
-  --fg: #e8eef7;           /* fő szöveg */
-  --muted: #aab3c2;
-
-  --accent: #7bc4ff;       /* UI accent */
-  --sm: #2a7fff;           /* Space Marines */
-  --el: #32d1a0;           /* Eldar */
-  --ok: #70d13e;           /* Orks */
-  --ch: #c04ff0;           /* Chaos */
-  --ne: #9aa7be;           /* Neutral */
-
-  --ring: #2a3d5b;
-  --radial: #141b26;
-}
 
 /* --- 3) Board környezet / keret --- */
 #boardWrap {
@@ -752,10 +718,10 @@ opacity: 0.85;
 }
 
 /* frakció-színezett perem + enyhe gló */
-.cell.sm polygon { stroke: color-mix(in oklab, var(--sm) 60%, #93a6c6); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--sm) 40%, transparent)); }
-.cell.el polygon { stroke: color-mix(in oklab, var(--el) 60%, #93c6b4); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--el) 40%, transparent)); }
-.cell.ok polygon { stroke: color-mix(in oklab, var(--ok) 60%, #b3c693); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--ok) 40%, transparent)); }
-.cell.ch polygon { stroke: color-mix(in oklab, var(--ch) 60%, #c693e0); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--ch) 40%, transparent)); }
+.cell.ok polygon { stroke: color-mix(in oklab, var(--om) 60%, #93a6c6); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--ok) 40%, transparent)); }
+.cell.hg polygon { stroke: color-mix(in oklab, var(--hg) 60%, #93c6b4); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--hg) 40%, transparent)); }
+.cell.cd polygon { stroke: color-mix(in oklab, var(--cd) 60%, #b3c693); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--cd) 40%, transparent)); }
+.cell.gb polygon { stroke: color-mix(in oklab, var(--gb) 60%, #c693e0); filter: drop-shadow(0 0 4px color-mix(in oklab, var(--gb) 40%, transparent)); }
 .cell.ne polygon { stroke: color-mix(in oklab, var(--ne) 60%, #b8c2d4); filter: drop-shadow(0 0 3px rgba(150,170,195,0.25)); }
 
 /* hover feedback – profi, visszafogott */
@@ -909,7 +875,7 @@ letter-spacing: .04em;
   background: rgba(0, 0, 0, 0.45);
   z-index: 1000;
   /*animation: fadeIn 0.6s ease;*/
-  background: url('./images/w40k.jpeg') no-repeat center center;
+  background: url('./images/ashvault_bg.jpg') no-repeat center center;
   background-size: cover; /* kitölti a képernyőt, arányokat megtartva */
 }
 
@@ -970,10 +936,10 @@ letter-spacing: .04em;
 .game-title {
   font-size: 2.5rem;
   font-weight: bold;
-  color: #f0f4f8;
+  color: #f5f5f5; /* Világos szöveg */
   text-align: center;
   margin-bottom: 25px;
-  text-shadow: 0 0 20px rgba(80, 209, 255, 0.8), 0 0 40px rgba(50, 209, 160, 0.6);
+  text-shadow: 0 0 20px rgba(255, 152, 0, 0.8), 0 0 40px rgba(255, 87, 34, 0.6); /* Narancssárga és piros árnyékolás */
   animation: glowPulse 3s infinite alternate ease-in-out;
 }
 
@@ -981,7 +947,7 @@ letter-spacing: .04em;
   font-size: 1.5rem;
   display: block;
   margin-top: 10px;
-  color: #50d1ff;
+  color: #ff5722; /* Piros kiemelés */
 }
 
 #charOverlay .overlay-content {
@@ -1085,12 +1051,12 @@ min-width: 260px;
 }
 
 .lobby-player.ready .status {
-  background: var(--ok, #70d13e);
+  background: var(--cd, #70d13e);
   color: #000;
 }
 
 .lobby-player.waiting .status {
-  background: var(--sm, #2a7fff);
+  background: var(--ok, #2a7fff);
   color: #fff;
 }
 
@@ -1109,7 +1075,7 @@ margin-top: 10px;
 }
 
 #lobbyOverlay button:hover {
-background: var(--sm, #2a7fff);
+background: var(--ok, #2a7fff);
 transform: scale(1.05);
 }
 
@@ -1121,3 +1087,4 @@ color: #fff;
 #leaveLobbyBtn:hover {
 background: #e74c3c;
 }
+

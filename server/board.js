@@ -8,36 +8,44 @@ const gatewaysInner = [24, 27, 30, 33];
 function factionForIndex(i) {
   if (i < 24) {
     const idx = i % 24;
-    if (idx < 6) return "Space Marines";
-    if (idx < 12) return "Eldar";
-    if (idx < 18) return "Orks";
-    if (idx < 24) return "Chaos";
+    if (idx < 6) return "Order of Knights";
+    if (idx < 12) return "The Hollow Grove";
+    if (idx < 18) return "Cyber Dwarves";
+    if (idx < 24) return "Graveborn";
   } else if (i < 36) {
     const idx = (i - 24) % 12;
-    if (idx < 3) return "Space Marines";
-    if (idx < 6) return "Eldar";
-    if (idx < 9) return "Orks";
-    if (idx < 12) return "Chaos";
+    if (idx < 3) return "Order of Knights";
+    if (idx < 6) return "The Hollow Grove";
+    if (idx < 9) return "Cyber Dwarves";
+    if (idx < 12) return "Graveborn";
   }
   return "NEUTRAL";
 }
 
 function nameForCell(i) {
   const namesOuter = [
-    // 24 külső mező neve
-    "Macragge Watch","Titus’ Rampart","Astartes Bastion","Librarium Gate","Techmarine Forge","Honor Guard Keep",
-    "Ulthwé Path","Biel-Tan Grove","Saim-Hann Way","Iyanden Veil","Alaitoc Ridge","Webway Portal",
-    "Waaagh! Cliff","Grot Tunnels","Big Mek Yard","Squig Plain","Warboss Roost","Deff Docks",
-    "Vox of Chaos","Daemon Rift","Warp Scar","Black Legion Way","Eightfold Spire","Oblivion Post"
+    // Order of Knights (0–5)
+    "Caelis Gate","Granite Bastion","Goldvoice Chapel","Knight’s Keep","Oathsworn Watch","Sanctum of Steel",
+    // The Hollow Grove (6–11)
+    "Whispering Thicket","Moonpetal Glade","Elderwood Path","Thornwisp Vale","Wildmother’s Grove","Heartroot Circle",
+    // Cyber Dwarves (12–17)
+    "Ironstep Gate","Sparkfist Forge","Cogspire Yard","Data Mines","Scrapline Outpost","Codeflare Nexus",
+    // Graveborn (18–23)
+    "Butcher’s Moor","Rustheart Chains","Bonebrand Spire","Whisperveil Marsh","Grave Mother’s Den","Oblivion Crypt"
   ];
   const namesInner = [
-    // 12 belső mező neve
-    "Inner Macragge","Servo Reliquary","Astartes Shrine","Infinity Circuit","Spirit Gate","Seer Council",
-    "Teef Market","Ork Scrapway","Zogwort Den","Dark Creed","Warp Altar","Plague Chapel"
+    // Order of Knights (24–26)
+    "Inner Keep","Reliquary of Valor","Hall of Oaths",
+    // The Hollow Grove (27–29)
+    "Spirit Hollow","Ancient Grove","Seer’s Arbor",
+    // Cyber Dwarves (30–32)
+    "Core Reactor","Mech-Forge","Circuit Sanctum",
+    // Graveborn (33–35)
+    "Dark Reliquary","Plague Chapel","Warped Sepulcher"
   ];
   if (i < 24) return namesOuter[i];
   if (i >= 24 && i < 36) return namesInner[i - 24];
-  return "The Omega Vault";
+  return "The Last Flame"; // center
 }
 
 function initBoard() {

@@ -19,12 +19,12 @@ function shuffle(arr) {
 // Inicializál egy adott paklit
 function initDeck(faction) {
   switch (faction) {
-    case "Space Marines": decksState[faction] = shuffle(smDeck); break;
-    case "Eldar":         decksState[faction] = shuffle(elDeck); break;
-    case "Orks":          decksState[faction] = shuffle(okDeck); break;
-    case "Chaos":         decksState[faction] = shuffle(chDeck); break;
-    case "Equipment":     decksState[faction] = shuffle(eqDeck); break;
-    case "Enemies":       decksState[faction] = shuffle(enDeck); break;
+    case "Order of Knights": decksState[faction] = shuffle(smDeck); break;
+    case "The Hollow Grove": decksState[faction] = shuffle(elDeck); break;
+    case "Cyber Dwarves":    decksState[faction] = shuffle(okDeck); break;
+    case "Graveborn":        decksState[faction] = shuffle(chDeck); break;
+    case "Equipment":        decksState[faction] = shuffle(eqDeck); break;
+    case "Enemies":          decksState[faction] = shuffle(enDeck); break;
   }
 }
 
@@ -54,10 +54,10 @@ function drawEnemyCard() {
 
 // Összes pakli resetelése (pl. új játék induláskor)
 function resetDecksState() {
-  initDeck("Space Marines");
-  initDeck("Eldar");
-  initDeck("Orks");
-  initDeck("Chaos");
+  initDeck("Order of Knights");
+  initDeck("The Hollow Grove");
+  initDeck("Cyber Dwarves");
+  initDeck("Graveborn");
   initDeck("Equipment");
   initDeck("Enemies");
 }

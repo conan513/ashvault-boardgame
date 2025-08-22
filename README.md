@@ -1,38 +1,36 @@
-![Warhammer 40K: Omega Vault](w40k.jpeg)
+# 🔥 Ashvault – The Last Flame
 
-# 🌌 Warhammer 40K: Omega Vault
-
-**Warhammer 40K: Omega Vault** is a web-based, multiplayer online board game set in the grimdark universe of Warhammer 40,000. Choose iconic characters from legendary factions and battle for galactic supremacy — or race to unlock the mysterious Omega Vault at the center of the board.
+**Ashvault – The Last Flame** is a web-based, multiplayer online board game set in a world consumed by fire and darkness. Choose your hero from unique factions, fight rivals, and claim the legendary **Last Flame** hidden at the center of the board.
 
 ---
 
-## 🎮 Core Gameplay Mechanics
+## 🎮 Core Gameplay
 
-- **Turn-Based Play**: Players act in a fixed order. Only the active player can move or act during their turn.
-- **Dice Movement**: Movement is determined by rolling a die. The number rolled equals the number of spaces the player must move.
-- **Interactive Board**: After rolling, valid movement paths are highlighted. Players click to confirm their chosen direction.
+- **Turn-Based** – players act in a fixed order, only the active player can move or act.  
+- **Dice Movement** – movement is determined by rolling a die. The rolled number = the exact spaces moved.  
+- **Interactive Board** – valid paths are highlighted after rolling; players click to confirm their move.  
 
 ---
 
 ## 🗺️ Game Board
 
-- **Structure**: 40 circular tiles arranged in two concentric rings (outer and inner).
-- **Transition Points**: Only 4 tiles allow movement between rings.
+- **Structure**: 40 circular tiles in two concentric rings.  
+- **Passages**: 4 transition points connect outer and inner rings.  
 - **Faction Zones**:
-  - Space Marines
-  - Eldar
-  - Orks
-  - Chaos
-- **Omega Vault**: A 41st tile at the center of the board — the ultimate objective.
-- **Unique Tile Names**: Each tile has a distinct name for immersion and strategy.
+  - **Solaris Guard**  
+  - **Eclipse Nomads**  
+  - **Ironclaw Horde**  
+  - **Voidborn Cult**  
+- **Ashvault Core**: the 41st central tile – the ultimate objective.  
+- **Unique Tile Names**: every tile has a distinct name for immersion and strategy.  
 
 ---
 
-## 👥 Multiplayer & Character Selection
+## 👥 Multiplayer & Characters
 
-- **Player Setup**: Players enter a name and select a unique character. No duplicates allowed.
-- **Faction-Based Characters**: 12 starting characters (3 per faction), each with lore-accurate stats and abilities.
-- **Spawn Points**: Each character spawns on a fixed tile based on their faction.
+- **Setup**: enter a player name and choose a unique hero (no duplicates).  
+- **Faction-Based Heroes**: 12 starting characters (3 per faction), each with distinct stats and abilities.  
+- **Spawn Points**: each hero spawns on a fixed tile in their faction’s zone.  
 
 ### 🧬 Stats System
 
@@ -41,42 +39,67 @@
 | HP   | Health Points |
 | ATK  | Attack |
 | DEF  | Defense |
-| PSY  | Psychic Power |  <-- not implemented yet
-| RES  | Resistance |  <-- not implemented yet
+| PSY  | Psychic / Mental Power *(not yet implemented)* |
+| RES  | Resistance *(not yet implemented)* |
 
-- **Death & Elimination**: If HP ≤ 0, the character dies and is removed from the game.
+- **Death & Elimination**: if HP ≤ 0, the character is removed from the game.  
 
 ---
 
 ## 🎒 Inventory System
 
-- Players maintain an inventory of items acquired through loot or PvP.
-- Items can modify character stats and influence combat outcomes.
+- Players maintain an inventory of items gained through loot or PvP.  
+- Items can modify stats or affect combat outcomes.  
 
 ---
 
 ## 🃏 Deck System
 
-There are 6 modular decks stored in separate files:
+The game uses **6 modular decks**, stored in separate files:  
 
 ### Faction Event Decks (4 total)
-- 20 cards per faction
-- On own faction tile: minor negative event
-- On enemy faction tile: major challenge (battle) + loot
+- 20 cards per faction  
+- On own faction tile: minor negative event  
+- On enemy faction tile: major challenge (battle) + loot  
 
 ### Item Deck
-- 20 equipment cards that modify stats
+- 20 equipment cards that modify stats  
 
 ### Enemy Deck
-- 20 enemy cards used in PvE battles
-- Each card reveals its effects upon draw
+- 20 enemy cards used in PvE battles  
+- Each card has unique effects  
 
 ---
 
 ## ⚔️ Combat System
 
 ### PvE Combat
-- Triggered by drawing a battle card from a faction deck
-- Player draws an enemy from the enemy deck
+- Triggered when a faction event card requires a battle  
+- Player draws an enemy card from the **Enemy Deck**  
 
-**Combat Formula**:
+**Combat Formula (simplified):**
+
+Attack = (d6 + ATK) - Enemy DEF
+Defense = (d6 + DEF) - Enemy ATK
+
+
+- Results determine damage and outcome (victory or defeat).  
+
+---
+
+## 🚀 Development Status
+
+- ✅ Core gameplay  
+- ✅ Multiplayer & lobby  
+- ✅ Character selection  
+- 🚧 Inventory & advanced combat mechanics  
+- 🚧 PSY & RES stats  
+
+---
+
+## 📜 License
+
+This project is an original fan-made board game concept.  
+All names, factions, and mechanics in **Ashvault – The Last Flame** are original creations.  
+
+

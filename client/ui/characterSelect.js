@@ -18,10 +18,10 @@ function renderCharacterSelect(characters) {
   wrap.innerHTML = "";
 
   const factions = {
-    "Space Marines": [],
-    "Eldar": [],
-    "Orks": [],
-    "Chaos": []
+    "Order of Knights": [],
+    "The Hollow Grove": [],
+    "Cyber Dwarves": [],
+    "Graveborn": []
   };
 
   // Szétosztás
@@ -48,10 +48,10 @@ function renderCharacterSelect(characters) {
     for (const c of chars) {
       const id = `pick_${c.id}`;
       const factionClass =
-      c.faction === "Space Marines" ? "faction-sm"
-      : c.faction === "Eldar" ? "faction-el"
-      : c.faction === "Orks" ? "faction-ok"
-      : "faction-ch";
+      c.faction === "Order of Knights" ? "faction-ok"
+      : c.faction === "The Hollow Grove" ? "faction-hg"
+      : c.faction === "Cyber Dwarves" ? "faction-cd"
+      : "faction-gb";
 
       const card = document.createElement("label");
       card.className = `char-card ${factionClass}`;
@@ -94,10 +94,10 @@ function renderPlayers(state) {
     li.style.flexDirection = "column";
     li.style.alignItems = "center";
 
-    const factionClass = p.faction === "Space Marines" ? "faction-sm"
-    : p.faction === "Eldar" ? "faction-el"
-    : p.faction === "Orks" ? "faction-ok"
-    : "faction-ch";
+    const factionClass = p.faction === "Order of Knights" ? "faction-ok"
+    : p.faction === "The Hollow Grove" ? "faction-hg"
+    : p.faction === "Cyber Dwarves" ? "faction-cd"
+    : "faction-gb";
 
     // 👉 frakció class hozzáadása a háttérhez
     li.classList.add(factionClass);
