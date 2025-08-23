@@ -139,42 +139,44 @@ socket.on("diceResult", ({ dice }) => {
   diceNumber.textContent = dice;
 });
 
-socket.on("cardDrawn", ({ playerId, card, type }) => {
+socket.on("cardDrawn", ({ playerId, playerName, pawn, card, type }) => {
   console.log("Card Data:", card);  // Debugging
 
+  // Bal oldali játékos infó kitöltése
+  if (playerName) $("#playerName").textContent = playerName;
+  if (pawn) $("#playerPawn").src = pawn;
+
+  // Toast csak faction kártyánál
   if (type === "FACTION") {
-    showToast(`🃏 ${shortName(playerId)} drew a faction card: ${card.name}`);
+    showToast(`🃏 ${playerName} drew a faction card: ${card.name}`);
   }
 
-  // Kártya adatok megjelenítése
+  // Kártyaadatok megjelenítése
   if (card) {
-    const cardName = $("#cardName");
-    const cardFaction = $("#cardFaction");
-    const cardDescription = $("#cardDescription");
-    const cardEffect = $("#cardEffect");
-    const cardImageContainer = $("#cardImageContainer");
-
-    cardName.textContent = card.name || "No name";
-    cardFaction.textContent = card.faction || "No faction";
-    cardDescription.textContent = card.description || "No description available.";
-    cardEffect.textContent = card.effect || "No effect";
+    $("#cardName").textContent = card.name || "No name";
+    $("#cardFaction").textContent = card.faction || "No faction";
+    $("#cardDescription").textContent = card.description || "No description available.";
+    $("#cardEffect").textContent = card.effect || "No effect";
 
     // Kép megjelenítése, ha van
     if (card.image) {
-      cardImageContainer.innerHTML = `<img src="${card.image}" alt="${card.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />`;
+      $("#cardImageContainer").innerHTML =
+      `<img src="${card.image}" alt="${card.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />`;
     } else {
-      cardImageContainer.innerHTML = "";
+      $("#cardImageContainer").innerHTML = "";
     }
 
+    // Overlay megjelenítése
     const cardOverlay = $("#cardOverlay");
     if (cardOverlay) {
-      cardOverlay.style.display = "flex";  // Overlay megjelenítése
+      cardOverlay.style.display = "flex";
       console.log("Card overlay displayed");
     }
   } else {
     console.error("No card data received!");
   }
 });
+
 
 
 $("#closeCardViewBtn").addEventListener("click", () => {
@@ -284,13 +286,14 @@ socket.on("lobbyStarted", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  const chatPanel = $("#chatPanel");
-  const toggleChatBtn = $("#toggleChatBtn");
-
-  toggleChatBtn.addEventListener("click", () => {
-    chatPanel.classList.toggle("show");
-    if (chatPanel.classList.contains("show")) toggleChatBtn.classList.remove("notify");
-  });
+  const closeCardViewBtn = document.getElementById("closeCardViewBtn");
+  if (closeCardViewBtn) {
+    closeCardViewBtn.addEventListener("click", () => {
+      document.getElementById("cardOverlay").style.display = "none";
+    });
+  }
+  const playerNameEl = $("#playerName");
+  if (playerNameEl) playerNameEl.textContent = playerName;
 
     // === FŐMENÜ kezelése ===
     const menuOverlay = $("#menuOverlay");

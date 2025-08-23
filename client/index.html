@@ -172,17 +172,26 @@
   <div id="tooltipLabel"></div>
 </div>
 
-<div id="cardOverlay" style="display: none;">
-  <div id="cardView" class="card-view">
-    <h2 id="cardName" class="card-name">Card Name</h2>
-    <p id="cardFaction" class="card-faction">Faction</p>
-    <p id="cardDescription" class="card-description">Description</p>
-    <p id="cardEffect" class="card-effect">Effect</p>
-    <div id="cardImageContainer" class="card-image-container"></div>
-    <button id="closeCardViewBtn" class="close-btn">Close</button>
+
+<div id="cardOverlay" style="display:none;">
+  <div class="cardContainer">
+    <div class="cardColumn">
+      <img id="playerPawn" src="pawn.png" alt="Pawn">
+    </div>
+    <div class="cardImageAndDesc">
+      <div id="cardImageContainer">
+        <img src="card.png" alt="Card">
+      </div>
+      <div class="cardDescriptionBlock">
+        <div id="cardName">Kártya neve</div>
+        <div id="cardFaction">Frakció</div>
+        <div id="cardDescription">Leírás…</div>
+        <div id="cardEffect">Hatás…</div>
+        <button id="closeCardViewBtn">Bezár</button>
+      </div>
+    </div>
   </div>
 </div>
-
 
 </body>
 </html>

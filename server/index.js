@@ -416,6 +416,8 @@ io.on("connection", (socket) => {
         gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
         io.to(socket.currentRoom).emit("cardDrawn", {
           playerId: player.id,
+          playerName: player.characterName, // a választott karakter neve
+          pawn: player.pawn,                 // bábu képe
           type: "FACTION",
           faction: cell.faction,
           card
