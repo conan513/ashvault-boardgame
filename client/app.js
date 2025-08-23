@@ -47,6 +47,42 @@ function ensurePlayerName() {
   return true;
 }
 
+socket.on("dayNightChanged", (cycle) => {
+  const bg = document.getElementById("skyBackground");
+  const label = document.getElementById("dayNightLabel");
+  const icon = document.getElementById("dayNightIcon");
+  const stars = document.getElementById("stars");
+
+  icon.classList.add("fade-out");
+
+  setTimeout(() => {
+    if (cycle === "day") {
+      bg.setAttribute("fill", "skyblue");
+      icon.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "/icons/sun.png");
+      label.textContent = "Nappal van";
+      document.body.classList.remove("night");
+    } else {
+      bg.setAttribute("fill", "#0b1a3b");
+      icon.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "/icons/moon.png");
+      label.textContent = "Éjszaka van";
+      document.body.classList.add("night");
+      generateStars(stars);
+    }
+    icon.classList.remove("fade-out");
+  }, 500);
+});
+
+function generateStars(starsGroup) {
+  starsGroup.innerHTML = "";
+  for (let i = 0; i < 20; i++) {
+    const star = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    star.setAttribute("cx", Math.random() * 400);
+    star.setAttribute("cy", Math.random() * 200);
+    star.setAttribute("r", Math.random() * 2 + 1);
+    starsGroup.appendChild(star);
+  }
+}
+
 // === SOCKET események ===
 socket.on("errorMsg", (m) => {
   showToast(`❌ ${m}`);
@@ -355,6 +391,14 @@ document.querySelectorAll('.tilt-item').forEach(tilt => {
   tilt.addEventListener('mouseleave', () => {
     tilt.style.transform = 'rotateX(0) rotateY(0)';
   });
+});
+
+const chatPanel = $("#chatPanel");
+const toggleChatBtn = $("#toggleChatBtn");
+
+toggleChatBtn.addEventListener("click", () => {
+  chatPanel.classList.toggle("show");
+  if (chatPanel.classList.contains("show")) toggleChatBtn.classList.remove("notify");
 });
 
 document.addEventListener("DOMContentLoaded", () => {

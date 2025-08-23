@@ -83,7 +83,9 @@ function makeGameState() {
     pvpPending: null,
     waitingForCharacters: {}, // ide kerülnek lobbyban várakozók
     hostId: null,
-    lobbyStarted: false
+    lobbyStarted: false,
+    dayNightCycle: "day", // New state for day-night cycle
+    turnCompleted: {} // Track completed turns for each player
   };
 }
 
@@ -369,9 +371,25 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "Nem a te köröd!");
     }
 
+    // Mark the player's turn as completed
+    gameState.turnCompleted[socket.id] = true;
+
+    // Check if all players have completed their turn
+    const allPlayersCompleted = Object.keys(gameState.players).every(playerId => gameState.turnCompleted[playerId]);
+
+    if (allPlayersCompleted) {
+      // Switch the day-night cycle
+      gameState.dayNightCycle = gameState.dayNightCycle === "day" ? "night" : "day";
+      io.to(socket.currentRoom).emit("dayNightChanged", gameState.dayNightCycle);
+
+      // Reset the turn completion status
+      gameState.turnCompleted = {};
+    }
+
     advanceTurn(socket.currentRoom);
     io.to(socket.currentRoom).emit("turnChanged", getCurrentPlayerId(gameState));
   });
+
 
   // Mozgás megerősítése
   socket.on("confirmMove", ({ dice, targetCellId, path }) => {
@@ -416,8 +434,8 @@ io.on("connection", (socket) => {
         gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
         io.to(socket.currentRoom).emit("cardDrawn", {
           playerId: player.id,
-          playerName: player.characterName, // a választott karakter neve
-          pawn: player.pawn,                 // bábu képe
+          playerName: player.characterName,
+          pawn: player.pawn,
           type: "FACTION",
           faction: cell.faction,
           card
@@ -438,7 +456,6 @@ io.on("connection", (socket) => {
             enemy
           });
 
-          // 🔹 System üzenet PvE részletekkel
           const detailMsg =
           `${player.name} dobása: ${result.rollP} + ATK(${player.stats.ATK}) - DEF(${enemy.DEF}) = ${result.totalP}\n` +
           `${enemy.name || "Ellenség"} dobása: ${result.rollE} + ATK(${enemy.ATK}) - DEF(${player.stats.DEF}) = ${result.totalE}\n` +
@@ -496,9 +513,27 @@ io.on("connection", (socket) => {
       }
     }
 
+    // 🔹 Kör végi logika
     broadcast(socket.currentRoom);
-    if (!gameState.pvpPending) advanceTurn(socket.currentRoom);
+
+    if (!gameState.pvpPending) {
+      // Jelöljük, hogy a játékos lépett
+      gameState.turnCompleted[socket.id] = true;
+
+      const activePlayers = Object.keys(gameState.players);
+      const allPlayersCompleted = activePlayers.every(id => gameState.turnCompleted[id]);
+
+      if (allPlayersCompleted) {
+        gameState.dayNightCycle = gameState.dayNightCycle === "day" ? "night" : "day";
+        io.to(socket.currentRoom).emit("dayNightChanged", gameState.dayNightCycle);
+        gameState.turnCompleted = {};
+      }
+
+      // Következő játékos
+      advanceTurn(socket.currentRoom);
+    }
   });
+
 
     // PVP megoldása
     socket.on("resolvePVP", () => {

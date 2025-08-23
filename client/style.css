@@ -351,17 +351,6 @@ border-radius: 6px;
   100% { transform: rotate(360deg); }
 }
 
-#diceOut {
-position: absolute;       /* a board fölé helyezéshez */
-top: 30px;                /* igény szerint pozíció */
-left: 30px;
-font-size: 2rem;
-display: flex;
-align-items: center;
-gap: 0.3rem;
-z-index: 10;
-}
-
 #diceIcon.rolling {
 display: inline-block;
 animation: diceRoll 0.6s ease-in-out infinite;
@@ -793,18 +782,6 @@ display: flex; gap: 10px; flex-wrap: wrap;
 justify-content: center;
 }
 
-/* dobás kijelző */
-#diceOut {
-display: inline-flex; align-items: center; gap: 8px;
-padding: 6px 10px;
-border-radius: 10px;
-background: rgba(255,255,255,0.03);
-border: 1px solid rgba(120,180,255,0.2);
-font-family: Orbitron, Inter, sans-serif;
-font-weight: 800;
-letter-spacing: .06em;
-}
-
 /* --- 8) Tooltipok (cella + játékos) – üveg panel --- */
 #tileTooltip, #playerTooltip {
 position: fixed;
@@ -1115,6 +1092,7 @@ justify-content: center;
 padding: 20px;
 box-sizing: border-box;
 z-index: 9999;
+overflow-x: hidden;
 
 /* Háttér + blur */
 background-color: rgba(0,0,0,0.85);
@@ -1151,6 +1129,8 @@ animation: overlayFadeIn 0.5s ease-out forwards;
   overflow-y: auto;
   gap: 20px;
   animation-delay: 0.5s; /* csak overlay fade után */
+  overflow-x: hidden; /* vízszintes görgetés tiltása */
+  overflow-y: auto;   /* függőleges marad */
 }
 
 .cardColumn,
@@ -1275,4 +1255,77 @@ background-color: darkred;
 /* Apply tilt effect when mouse moves over the element */
 .tilt-item:hover {
   transform: rotateY(10deg) rotateX(-10deg);
+}
+
+
+/* A nap és hold ikon alap stílusai */
+#skyBackground {
+transition: fill 1s ease;
+}
+
+#dayNightIcon {
+transition: transform 0.8s ease, opacity 0.8s ease;
+}
+
+.fade-out {
+  opacity: 0;
+  transform: scale(0.8) rotate(30deg);
+}
+
+#stars circle {
+fill: white;
+opacity: 0;
+transition: opacity 1s ease;
+}
+
+body.night #stars circle {
+  opacity: 1;
+}
+
+/* Referencia beállítása */
+#boardPanel {
+position: relative; /* minden absolute gyerek ehhez igazodik */
+}
+
+/* Közös HUD-doboz dizájn */
+.hudBox {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(120,180,255,0.2);
+  font-family: Orbitron, Inter, sans-serif;
+  font-weight: 800;
+  letter-spacing: .06em;
+  font-size: 2rem;
+  z-index: 10;
+  max-height: 60px; /* ne legyen túl magas */
+}
+
+/* Bal felső sarok */
+#diceOut {
+top: 30px;
+left: 30px;
+}
+
+/* Jobb felső sarok */
+#dayNightWrapper {
+top: 30px;
+right: 30px;
+}
+
+/* SVG méret és illesztés a day/night-hoz */
+#dayNightWrapper svg {
+width: 50px;
+height: 50px;
+  padding-top: 0px; /* kicsit feljebb húzza a belső elemeket */
+}
+
+/* A nap/hold ikon fix mérete */
+#dayNightIcon {
+width: 50px;
+height: 50px;
 }

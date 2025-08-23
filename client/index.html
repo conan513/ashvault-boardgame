@@ -96,7 +96,7 @@
     <span id="turnInfo">Connecting...</span>
     <button id="rollBtn" disabled>🎲 Roll</button>
     <button id="endTurnBtn" disabled>➡️ End Turn</button>
-    <span id="diceOut"></span>
+    <!--<span id="diceOut"></span>-->
     <select id="langSelect" style="margin-left:auto">
       <option value="en">English</option>
     </select>
@@ -113,13 +113,39 @@
       </div>
     </section>
 
-    <section id="boardPanel">
-      <div id="diceOut">
-        <span id="diceIcon">🎲</span>
-        <span id="diceNumber">?</span>
-      </div>
-      <svg id="boardSVG" viewBox="0 0 900 900"></svg>
-    </section>
+<section id="boardPanel">
+  <!-- Day/Night panel -->
+  <div id="dayNightWrapper" class="hudBox">
+    <svg id="dayNightSVG" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+      <!-- Háttér -->
+    <rect id="skyBackground" width="100%" height="100%" />
+      <!-- Extra elemek -->
+      <g id="stars"></g>
+      <!-- Nap/Hold ikon -->
+    <image id="dayNightIcon" x="0" y="0" width="50" height="50" />
+      <!-- Felirat -->
+<text id="dayNightLabel"
+      x="0" y="30"
+      font-size="18"
+      font-weight="700"
+      fill="#fff"
+      stroke="rgba(0,0,0,0.55)"
+      stroke-width="2"
+      stroke-linejoin="round"
+      style="paint-order: stroke fill">
+</text>
+    </svg>
+  </div>
+
+  <!-- Dice panel -->
+  <div id="diceOut" class="hudBox">
+    <span id="diceIcon">🎲</span>
+    <span id="diceNumber">?</span>
+  </div>
+
+  <!-- A játék tábla -->
+  <svg id="boardSVG" viewBox="0 0 900 900"></svg>
+</section>
 
     <section id="rightPanel">
       <div id="lastCard" class="panel">
@@ -174,11 +200,6 @@
 
 
 <div id="cardOverlay" style="display:none;">
-  <div class="tilt-container">
-    <div class="tilt-item card-shine">
-      <img src="..." alt="">
-    </div>
-  </div>
   <div class="cardContainer">
     <div class="cardColumn">
       <img id="playerPawn" src="" alt="Pawn">
@@ -199,21 +220,10 @@
   </div>
 </div>
 
+
 <script>
 const tilt = document.querySelector('.tilt-item');
 
-tilt.addEventListener('mousemove', (e) => {
-  const { width, height, left, top } = tilt.getBoundingClientRect();
-  const x = e.clientX - left;
-  const y = e.clientY - top;
-  const rotateX = ((y / height) - 0.5) * 15;
-  const rotateY = ((x / width) - 0.5) * -15;
-  tilt.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-});
-
-tilt.addEventListener('mouseleave', () => {
-  tilt.style.transform = 'rotateX(0) rotateY(0)';
-});
 </script>
 
 </body>

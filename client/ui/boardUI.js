@@ -177,8 +177,44 @@ function renderBoard(state) {
     if (sel) sel.classList.add("current");
   }
 
-  // --- cursor melletti tooltip bekapcsolása ---
-  enableTileHoverPopup();
+  socket.on("dayNightChanged", (cycle) => {
+    console.log("Érkezett cycle:", JSON.stringify(cycle));
+
+    const iconPathBase = cycle === "day"
+    ? "/icons/sun.png"
+    : "/icons/moon.png";
+    const iconPath = `${iconPathBase}?v=${Date.now()}`;
+
+    const svg = document.getElementById("boardSVG");
+    const svgRect = svg.getBoundingClientRect();
+
+    // Dobókocka ikon HTML eleme
+    const diceIcon = document.getElementById("diceIcon");
+    const rect = diceIcon.getBoundingClientRect();
+
+    // HTML pozícióból SVG koordináta
+    const x = rect.left - svgRect.left;
+    const y = rect.top - svgRect.top;
+
+    let icon = document.getElementById("dayNightIcon");
+    if (icon) {
+      icon.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", iconPath);
+      icon.setAttribute("x", x);
+      icon.setAttribute("y", y);
+    } else {
+      icon = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      icon.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", iconPath);
+      icon.setAttribute("width", 50);
+      icon.setAttribute("height", 50);
+      icon.setAttribute("x", x);
+      icon.setAttribute("y", y);
+      icon.id = "dayNightIcon";
+      svg.appendChild(icon);
+    }
+
+    // --- cursor melletti tooltip bekapcsolása ---
+    enableTileHoverPopup();
+  })
 }
 
 function animateMove(player, path, callback) {
@@ -231,7 +267,6 @@ function animateMove(player, path, callback) {
 
   moveNext();
 }
-
 
 function highlightTargets(targetIds, onPick) {
   clearHighlights();
@@ -335,69 +370,69 @@ function enableTileHoverPopup() {
   });
 }
 
-  // ---- PLAYER TOKEN TOOLTIP ----
-  // ---- PLAYER TOKEN TOOLTIP ----
-  const svg = document.getElementById("boardSVG"); // Győződj meg róla, hogy az svg változó helyesen van inicializálva
+// ---- PLAYER TOKEN TOOLTIP ----
+// ---- PLAYER TOKEN TOOLTIP ----
+const svg = document.getElementById("boardSVG"); // Győződj meg róla, hogy az svg változó helyesen van inicializálva
 
 
-  svg.querySelectorAll(".playerToken").forEach(token => {
-    token.addEventListener("mouseenter", () => {
-      // Ha egy másik tooltip jelen van, elrejtjük azt
-      const tileTooltip = document.getElementById("tileTooltip");
-      if (tileTooltip) tileTooltip.style.display = "none"; // Elrejtjük a cellákhoz tartozó tooltipet
+svg.querySelectorAll(".playerToken").forEach(token => {
+  token.addEventListener("mouseenter", () => {
+    // Ha egy másik tooltip jelen van, elrejtjük azt
+    const tileTooltip = document.getElementById("tileTooltip");
+    if (tileTooltip) tileTooltip.style.display = "none"; // Elrejtjük a cellákhoz tartozó tooltipet
 
-      const playerName = token.getAttribute("data-player");
-      const player = Object.values(GAME.players).find(p => p.name === playerName);
-      if (!player) return;
+    const playerName = token.getAttribute("data-player");
+    const player = Object.values(GAME.players).find(p => p.name === playerName);
+    if (!player) return;
 
-      const factionIcon = factionIcons[player.faction] || "";
+    const factionIcon = factionIcons[player.faction] || "";
 
-      // Tooltip frissítése
-      const tooltipImg = document.getElementById("tooltipImg");
-      const tooltipLabel = document.getElementById("tooltipLabel");
+    // Tooltip frissítése
+    const tooltipImg = document.getElementById("tooltipImg");
+    const tooltipLabel = document.getElementById("tooltipLabel");
 
-      tooltipImg.setAttribute("src", player.portrait || "/defaultPlayer.png");
-      tooltipImg.style.width = "120px";
-      tooltipImg.style.height = "120px";
-      tooltipImg.style.borderRadius = "12px";
+    tooltipImg.setAttribute("src", player.portrait || "/defaultPlayer.png");
+    tooltipImg.style.width = "120px";
+    tooltipImg.style.height = "120px";
+    tooltipImg.style.borderRadius = "12px";
 
-      tooltipLabel.innerHTML = `
-      <div style="text-align:center; padding:8px; min-width:200px;">
-      <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px;">
-      <img src="${factionIcon}" alt="${player.faction}" style="width:32px; height:32px;"/>
-      <h3 style="margin:0; font-size:1.2em;">${player.name}</h3>
-      </div>
+    tooltipLabel.innerHTML = `
+    <div style="text-align:center; padding:8px; min-width:200px;">
+    <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px;">
+    <img src="${factionIcon}" alt="${player.faction}" style="width:32px; height:32px;"/>
+    <h3 style="margin:0; font-size:1.2em;">${player.name}</h3>
+    </div>
 
-      <div style="margin-top:10px; font-size:0.95em; line-height:1.4;">
-      <div>❤️ HP: <strong>${player.hp}</strong></div>
-      <div>⚔️ ATK: <strong>${player.atk}</strong></div>
-      <div>🛡️ DEF: <strong>${player.def}</strong></div>
-      <div>🔮 PSY: <strong>${player.psy}</strong></div>
-      <div>💎 RES: <strong>${player.res}</strong></div>
-      </div>
-      </div>
-      `;
+    <div style="margin-top:10px; font-size:0.95em; line-height:1.4;">
+    <div>❤️ HP: <strong>${player.hp}</strong></div>
+    <div>⚔️ ATK: <strong>${player.atk}</strong></div>
+    <div>🛡️ DEF: <strong>${player.def}</strong></div>
+    <div>🔮 PSY: <strong>${player.psy}</strong></div>
+    <div>💎 RES: <strong>${player.res}</strong></div>
+    </div>
+    </div>
+    `;
 
-      // Tooltip megjelenítése
-      const tooltip = document.getElementById("tooltip");
-      tooltip.style.display = "block";
-    });
-
-    token.addEventListener("mousemove", e => {
-      const tooltip = document.getElementById("tooltip");
-      tooltip.style.left = e.clientX + 20 + "px";
-      tooltip.style.top = e.clientY + 20 + "px";
-    });
-
-    token.addEventListener("mouseleave", () => {
-      const tooltip = document.getElementById("tooltip");
-      tooltip.style.display = "none";
-      const tooltipImg = document.getElementById("tooltipImg");
-      tooltipImg.style.width = "70px";
-      tooltipImg.style.height = "70px";
-      tooltipImg.style.borderRadius = "8px";
-    });
+    // Tooltip megjelenítése
+    const tooltip = document.getElementById("tooltip");
+    tooltip.style.display = "block";
   });
+
+  token.addEventListener("mousemove", e => {
+    const tooltip = document.getElementById("tooltip");
+    tooltip.style.left = e.clientX + 20 + "px";
+    tooltip.style.top = e.clientY + 20 + "px";
+  });
+
+  token.addEventListener("mouseleave", () => {
+    const tooltip = document.getElementById("tooltip");
+    tooltip.style.display = "none";
+    const tooltipImg = document.getElementById("tooltipImg");
+    tooltipImg.style.width = "70px";
+    tooltipImg.style.height = "70px";
+    tooltipImg.style.borderRadius = "8px";
+  });
+});
 
 socket.on("playerMoved", ({ playerId, path }) => {
   const player = GAME.players[playerId];
