@@ -140,18 +140,46 @@ socket.on("diceResult", ({ dice }) => {
 });
 
 socket.on("cardDrawn", ({ playerId, card, type }) => {
+  console.log("Card Data:", card);  // Debugging
+
   if (type === "FACTION") {
     showToast(`🃏 ${shortName(playerId)} drew a faction card: ${card.name}`);
   }
 
-  const view = $("#cardView");
-  view.innerHTML = `
-  <div class="card">
-  <div class="title">${card.name}</div>
-  <p>${card.description || ""}</p>
-  ${card.image ? `<img src="${card.image}" alt="${card.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />` : ""}
-  </div>
-  `;
+  // Kártya adatok megjelenítése
+  if (card) {
+    const cardName = $("#cardName");
+    const cardFaction = $("#cardFaction");
+    const cardDescription = $("#cardDescription");
+    const cardEffect = $("#cardEffect");
+    const cardImageContainer = $("#cardImageContainer");
+
+    cardName.textContent = card.name || "No name";
+    cardFaction.textContent = card.faction || "No faction";
+    cardDescription.textContent = card.description || "No description available.";
+    cardEffect.textContent = card.effect || "No effect";
+
+    // Kép megjelenítése, ha van
+    if (card.image) {
+      cardImageContainer.innerHTML = `<img src="${card.image}" alt="${card.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />`;
+    } else {
+      cardImageContainer.innerHTML = "";
+    }
+
+    const cardOverlay = $("#cardOverlay");
+    if (cardOverlay) {
+      cardOverlay.style.display = "flex";  // Overlay megjelenítése
+      console.log("Card overlay displayed");
+    }
+  } else {
+    console.error("No card data received!");
+  }
+});
+
+
+$("#closeCardViewBtn").addEventListener("click", () => {
+  const cardOverlay = $("#cardOverlay");
+  cardOverlay.style.display = "none";  // Elrejtjük az overlay-t
 });
 
 socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); });

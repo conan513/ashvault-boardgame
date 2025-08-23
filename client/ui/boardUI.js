@@ -1,22 +1,6 @@
 let BOARD_CACHE = null;
 let HIGHLIGHTS = [];
 
-// Player tokenek tooltip kezelése
-function showPlayerTooltip(player) {
-  const tooltip = document.getElementById("playerTooltip");
-  tooltip.innerHTML = `
-  <div><strong>Player:</strong> ${player.name}</div>
-  <div><strong>Faction:</strong> ${player.faction}</div>
-  <div><strong>Position:</strong> ${player.position}</div>
-  `;
-  tooltip.style.display = 'block';
-}
-
-function hideTooltip() {
-  const tooltip = document.getElementById("playerTooltip");
-  tooltip.style.display = 'none';
-}
-
 function renderBoard(state) {
   BOARD_CACHE = state.board;
   const svg = document.getElementById("boardSVG");
@@ -102,14 +86,6 @@ function renderBoard(state) {
     label.textContent = cell.name;
     g.appendChild(label);
 
-    // Tooltip események a cellákhoz
-    g.addEventListener("mouseover", function(event) {
-      showTooltip(cell);
-    });
-    g.addEventListener("mouseout", function(event) {
-      hideTooltip();
-    });
-
     svg.appendChild(g);
   }
 
@@ -172,14 +148,6 @@ function renderBoard(state) {
       txt.textContent = p.name.slice(0, 2).toUpperCase();
       txt.setAttribute("pointer-events", "none");
       token.appendChild(txt);
-
-      // Tooltip események
-      token.addEventListener("mouseover", function() {
-        showPlayerTooltip(p);
-      });
-      token.addEventListener("mouseout", function() {
-        hideTooltip();
-      });
 
       // KATTINTÁS ÁTENGEDÉSE
       token.addEventListener("click", function(e) {
@@ -334,9 +302,11 @@ function enableTileHoverPopup() {
   const tooltipImg = tooltip.querySelector("img");
   const tooltipLabel = document.getElementById("tileTooltipLabel");
 
-  // ---- CELL TOOLTIP ----
   svg.querySelectorAll(".cell").forEach(cell => {
     cell.addEventListener("mouseenter", () => {
+      // Ha a cellákhoz tartozó tooltip jelenik meg, elrejtjük a playerTooltip-ot
+      document.getElementById("playerTooltip").style.display = "none";
+
       const icon = cell.querySelector("image");
       const label = cell.querySelector("text");
 
@@ -363,15 +333,28 @@ function enableTileHoverPopup() {
       tooltip.style.display = "none";
     });
   });
+}
 
   // ---- PLAYER TOKEN TOOLTIP ----
+  // ---- PLAYER TOKEN TOOLTIP ----
+  const svg = document.getElementById("boardSVG"); // Győződj meg róla, hogy az svg változó helyesen van inicializálva
+
+
   svg.querySelectorAll(".playerToken").forEach(token => {
     token.addEventListener("mouseenter", () => {
+      // Ha egy másik tooltip jelen van, elrejtjük azt
+      const tileTooltip = document.getElementById("tileTooltip");
+      if (tileTooltip) tileTooltip.style.display = "none"; // Elrejtjük a cellákhoz tartozó tooltipet
+
       const playerName = token.getAttribute("data-player");
       const player = Object.values(GAME.players).find(p => p.name === playerName);
       if (!player) return;
 
       const factionIcon = factionIcons[player.faction] || "";
+
+      // Tooltip frissítése
+      const tooltipImg = document.getElementById("tooltipImg");
+      const tooltipLabel = document.getElementById("tooltipLabel");
 
       tooltipImg.setAttribute("src", player.portrait || "/defaultPlayer.png");
       tooltipImg.style.width = "120px";
@@ -395,22 +378,26 @@ function enableTileHoverPopup() {
       </div>
       `;
 
+      // Tooltip megjelenítése
+      const tooltip = document.getElementById("tooltip");
       tooltip.style.display = "block";
     });
 
     token.addEventListener("mousemove", e => {
+      const tooltip = document.getElementById("tooltip");
       tooltip.style.left = e.clientX + 20 + "px";
       tooltip.style.top = e.clientY + 20 + "px";
     });
 
     token.addEventListener("mouseleave", () => {
+      const tooltip = document.getElementById("tooltip");
       tooltip.style.display = "none";
+      const tooltipImg = document.getElementById("tooltipImg");
       tooltipImg.style.width = "70px";
       tooltipImg.style.height = "70px";
       tooltipImg.style.borderRadius = "8px";
     });
   });
-}
 
 socket.on("playerMoved", ({ playerId, path }) => {
   const player = GAME.players[playerId];

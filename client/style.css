@@ -1102,3 +1102,96 @@ font-family: 'Arial', sans-serif;
 text-shadow: 1px 1px 2px black;
 pointer-events: none;
 }
+
+/* Overlay háttér */
+#cardOverlay {
+display: flex;
+justify-content: center;
+align-items: center;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.7); /* Átlátszó háttér */
+backdrop-filter: blur(10px); /* Blur hatás */
+z-index: 9999; /* Legfelső réteg */
+animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Kártya megjelenése */
+.card-view {
+  background: rgba(255, 255, 255, 0.85); /* Átlátszó fehér háttér */
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Finom árnyék */
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-in-out;
+}
+
+/* Kártya neve */
+.card-name {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 10px 0;
+  color: #333;
+  text-transform: capitalize;
+}
+
+/* Frakció és egyéb információk */
+.card-faction,
+.card-description,
+.card-effect {
+  font-size: 1em;
+  color: #666;
+  margin: 5px 0;
+  line-height: 1.6;
+}
+
+/* Kép container */
+.card-image-container {
+  margin: 15px 0;
+}
+
+.card-image-container img {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+/* Kép hover effektus */
+.card-image-container img:hover {
+  transform: scale(1.05);
+}
+
+/* Bezáró gomb */
+.close-btn {
+  padding: 12px 25px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 30px; /* Lekerekített gomb */
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.close-btn:hover {
+  background-color: #0056b3;
+  transform: scale(1.05); /* Finom nagyítás hover állapotban */
+}
+
+/* Animációk */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
