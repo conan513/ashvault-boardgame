@@ -1,0 +1,1022 @@
+socket.on("confirmMove", ({ dice, targetCellId, path }) => { const gameState = rooms[socket.currentRoom]; if (!gameState) return; if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "Nem a te köröd!"); const player = gameState.players[socket.id]; if (!player || !player.alive) return; const targets = adjacencyAtDistance(gameState.board, player.position, dice); if (!targets.includes(targetCellId)) { return socket.emit("errorMsg", "Invalid target cell."); } // 🔹 Broadcast animációs path minden kliensnek if (path && path.length > 0) { io.to(socket.currentRoom).emit("playerMoved", { playerId: player.id, path }); } // 🔹 Végső pozíció frissítése player.position = targetCellId; const othersHere = Object.values(gameState.players) .filter(p => p.id !== player.id && p.alive && p.position === targetCellId); const differentFaction = othersHere.find(p => p.faction !== player.faction); const cell = cellById(gameState.board, targetCellId); if (differentFaction) { gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId }; io.to(socket.currentRoom).emit("pvpStarted", { aId: player.id, bId: differentFaction.id, cellName: cell.name }); } else { if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) { const card = drawFactionCard(cell.faction); gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card }; io.to(socket.currentRoom).emit("cardDrawn", { playerId: player.id, type: "FACTION", faction: cell.faction, card }); const sameFaction = (player.faction === cell.faction); const effect = sameFaction ? card.selfEffect : card.otherEffect; if (effect.effect === "battle") { const enemy = drawEnemyCard(); io.to(socket.currentRoom).emit("enemyDrawn", enemy); const result = battlePVE(player, enemy, io, socket.id); io.to(socket.currentRoom).emit("battleResult", { type: "PVE", result, playerId: player.id, enemy }); // 🔹 System üzenet PvE részletekkel const detailMsg = `${player.name} dobása: ${result.rollP} + ATK(${player.stats.ATK}) - DEF(${enemy.DEF}) = ${result.totalP}\n` + `${enemy.name || "Ellenség"} dobása: ${result.rollE} + ATK(${enemy.ATK}) - DEF(${player.stats.DEF}) = ${result.totalE}\n` + `Győztes: ${result.winner === "player" ? player.name : (enemy.name || "Ellenség")}, sebzés: ${result.damage}`; sendSystemMessage(socket.currentRoom, `${player.name} PvE harcot vívott a(z) ${enemy.name || "ellenfél"} ellen.\n${detailMsg}`); if (result.winner === "enemy") { if (player.stats.HP <= 0) { player.alive = false; io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" }); sendSystemMessage(socket.currentRoom, `${player.name} has died in PvE combat.`); } } else { if (!sameFaction || card.loot) { const item = drawEquipmentCard(); applyItemToPlayer(player, item); io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item }); sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`); } } } else { if (effect.loot) { const item = drawEquipmentCard(); applyItemToPlayer(player, item); io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item }); sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`); } if (effect.hpDelta) { player.stats.HP += effect.hpDelta; if (player.stats.HP <= 0) { player.alive = false; io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" }); sendSystemMessage(socket.currentRoom, `${player.name} has died due to an event.`); } } if (effect.statMods) { for (const [k, v] of Object.entries(effect.statMods)) { player.stats[k] = Math.max(0, player.stats[k] + v); } io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats }); sendSystemMessage(socket.currentRoom, `${player.name} received stat modifications: ${JSON.stringify(effect.statMods)}`); } if (effect.tempBuff) { applyTempEffect(player, effect.tempBuff, true); io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats }); sendSystemMessage(socket.currentRoom, `${player.name} received a temporary buff: ${JSON.stringify(effect.tempBuff)}`); } if (effect.tempDebuff) { applyTempEffect(player, effect.tempDebuff, false); io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats }); sendSystemMessage(socket.currentRoom, `${player.name} received a temporary debuff: ${JSON.stringify(effect.tempDebuff)}`); } } } } broadcast(socket.currentRoom); if (!gameState.pvpPending) advanceTurn(socket.currentRoom); }); melyik rész felel az automata kártyahuzásért?
+Az automatikus kártyahúzást ebben a kódrészletben az a blokk intézi, ami akkor fut le, ha a játékos olyan mezőre lép, ami nem NEUTRAL frakcióhoz tartozik:
+
+js
+if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+   const card = drawFactionCard(cell.faction);
+   gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
+   io.to(socket.currentRoom).emit("cardDrawn", {
+     playerId: player.id,
+     type: "FACTION",
+     faction: cell.faction,
+     card
+   });
+   …
+}
+Mi történik itt?
+Feltétel – if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) → Csak akkor lép életbe, ha:
+
+A mező rendelkezik frakcióval (cell.faction van),
+
+Ez a frakció nem semleges (NEUTRAL),
+
+A játékos még életben van.
+
+Kártyahúzás – drawFactionCard(cell.faction) → Meghívja a drawFactionCard függvényt, ami visszaad egy frakciókártyát.
+
+Állapotmentés és broadcast –
+
+gameState.lastDrawn frissítése, hogy tudjuk, mi volt a legutóbbi húzás.
+
+io.to(...).emit("cardDrawn", …) – minden kliens értesítést kap az új kártyáról.
+
+💡 Ha szeretnéd, átnézhetjük, hogy hol van definiálva a drawFactionCard függvény, és pontosan hogyan választja ki vagy generálja a kártyát — így láthatnád a teljes húzási logikát. Szeretnéd, hogy ezt is kibogozzuk?
+
+szeretném kikapcsolni az automata huzást
+Ha azt szeretnéd, hogy a játék ne húzzon automatikusan kártyát, akkor azt a logikát kell kikapcsolnod, ami most a mezőre lépés után meghívja a drawFactionCard-ot.
+
+A jelenlegi kódodban ez itt történik:
+
+js
+if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+   const card = drawFactionCard(cell.faction);
+   gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
+   io.to(socket.currentRoom).emit("cardDrawn", {
+     playerId: player.id,
+     type: "FACTION",
+     faction: cell.faction,
+     card
+   });
+   // ... további effekt-kezelés ...
+}
+Kikapcsolási lehetőségek
+Egyszerű tiltás – kommentezd vagy töröld a feltételes blokk egészét:
+
+js
+// if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+//   const card = drawFactionCard(cell.faction);
+//   ...
+// }
+Feltétel szigorítása – csak akkor fusson le, ha pl. egy külön gameState.autoDraw be van állítva:
+
+js
+if (gameState.autoDraw &&
+    cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+    ...
+}
+Üres helyettesítő – hagyd a szerkezetet, de ne húzz kártyát:
+
+js
+if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+    sendSystemMessage(socket.currentRoom, `${player.name} mezőre lépett, de nincs automata húzás.`);
+    return;
+}
+💡 Ha szeretnéd, át tudom írni neked ezt a részt úgy, hogy a kártyahúzás manuális parancsra történjen — így a kliens oldali játékos nyomhatna egy “Húzok kártyát” gombot, és csak akkor futna le a logika. Segítsek ebben a manuális változatban?
+
+ok de vedd figyelembe hogy ha a const card = drawFactionCard(cell.faction); sor el lesz távolitva akkor a card részek nem müködnek
+Pontosan — mivel a card változó az egész kártya‑logika kulcsa, ha egyszerűen eltávolítod a sort, akkor az alatta lévő kód (card.selfEffect, card.otherEffect, loot, battle, stat módosítások, stb.) azonnal hibára futna, mert nem lenne miből olvasni.
+
+Ha csak az automata húzást akarod megszüntetni, de meg akarod tartani a későbbi card‑használatot, két biztonságos út van:
+
+1️⃣ Dummy (üres) kártya adása
+A drawFactionCard helyett csinálsz egy “üres” kártyát, ami nem indít el semmilyen hatást:
+
+js
+if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+    const card = {
+        selfEffect: {},
+        otherEffect: {}
+    };
+    gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
+    io.to(socket.currentRoom).emit("cardDrawn", {
+      playerId: player.id,
+      type: "FACTION",
+      faction: cell.faction,
+      card
+    });
+    // ... további kód változatlanul
+}
+Ezzel a kártya‑logika nem törik el, de nincs tényleges húzás.
+
+2️⃣ Manuális húzás támogatása
+Kihagyod a drawFactionCard hívást innen, és létrehozol egy külön socket eseményt (pl. socket.on("drawCard", ...)), ami akkor hívja meg, ha a játékos tényleg szeretne húzni.
+
+Ilyenkor a fenti blokkban csak egy jelzést küldesz:
+
+js
+sendSystemMessage(socket.currentRoom, `${player.name} mezőre lépett — kártyahúzás manuálisan indítható.`);
+💡 Ha szeretnéd, meg tudom írni neked a manuális húzás teljes server‑oldali + kliens‑oldali folyamatát, hogy a játékos gombnyomásra húzhasson, és az összes kártyás részlet ugyanúgy működjön, csak akkor, amikor akarja.
+
+ok írd meg a manuális huzást
+Rendben, akkor átírjuk úgy, hogy a kártyahúzás csak akkor fusson le, ha a kliens külön kéri — például egy “Húzok kártyát” gomb megnyomásával.
+
+1. Lépés – Automata húzás kivétele a confirmMove-ból
+A mostani automata részt (drawFactionCard(...)) kivesszük, és csak egy jelzést hagyunk bent, hogy itt lehetne kártyát húzni:
+
+js
+if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+    sendSystemMessage(socket.currentRoom, `${player.name} mezőre lépett: kártyahúzás indítható.`);
+    // A kártyahúzás innen kikerült, manuálisan lesz meghívva
+}
+Így nem lesz automata húzás a lépés végén, csak egy üzenet a többieknek.
+
+2. Lépés – Új Socket.IO esemény a manuális húzáshoz
+Hozzunk létre egy új szerver-oldali eseménykezelőt:
+
+js
+socket.on("drawCard", () => {
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+
+    const player = gameState.players[socket.id];
+    if (!player || !player.alive) return socket.emit("errorMsg", "Nem vagy játékban vagy már kiestél.");
+
+    const cell = cellById(gameState.board, player.position);
+
+    // Csak frakciós mezőn működjön
+    if (!cell.faction || cell.faction === "NEUTRAL") {
+        return socket.emit("errorMsg", "Ezen a mezőn nem húzhatsz kártyát.");
+    }
+
+    // Kártya húzása
+    const card = drawFactionCard(cell.faction);
+    gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
+
+    io.to(socket.currentRoom).emit("cardDrawn", {
+        playerId: player.id,
+        type: "FACTION",
+        faction: cell.faction,
+        card
+    });
+
+    const sameFaction = (player.faction === cell.faction);
+    const effect = sameFaction ? card.selfEffect : card.otherEffect;
+
+    // Innentől ugyanaz az effekt-kezelés, mint eddig volt:
+    if (effect.effect === "battle") {
+        const enemy = drawEnemyCard();
+        io.to(socket.currentRoom).emit("enemyDrawn", enemy);
+
+        const result = battlePVE(player, enemy, io, socket.id);
+        io.to(socket.currentRoom).emit("battleResult", {
+            type: "PVE",
+            result,
+            playerId: player.id,
+            enemy
+        });
+
+        const detailMsg =
+          `${player.name} dobása: ${result.rollP} + ATK(${player.stats.ATK}) - DEF(${enemy.DEF}) = ${result.totalP}\n` +
+          `${enemy.name || "Ellenség"} dobása: ${result.rollE} + ATK(${enemy.ATK}) - DEF(${player.stats.DEF}) = ${result.totalE}\n` +
+          `Győztes: ${result.winner === "player" ? player.name : (enemy.name || "Ellenség")}, sebzés: ${result.damage}`;
+
+        sendSystemMessage(socket.currentRoom, `${player.name} PvE harcot vívott a(z) ${enemy.name || "ellenfél"} ellen.\n${detailMsg}`);
+
+        if (result.winner === "enemy" && player.stats.HP <= 0) {
+            player.alive = false;
+            io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
+        } else {
+            if (!sameFaction || card.loot) {
+                const item = drawEquipmentCard();
+                applyItemToPlayer(player, item);
+                io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+            }
+        }
+    } else {
+        if (effect.loot) {
+            const item = drawEquipmentCard();
+            applyItemToPlayer(player, item);
+            io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+        }
+        if (effect.hpDelta) {
+            player.stats.HP += effect.hpDelta;
+            if (player.stats.HP <= 0) {
+                player.alive = false;
+                io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
+            }
+        }
+        if (effect.statMods) {
+            for (const [k, v] of Object.entries(effect.statMods)) {
+                player.stats[k] = Math.max(0, player.stats[k] + v);
+            }
+            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+        }
+        if (effect.tempBuff) {
+            applyTempEffect(player, effect.tempBuff, true);
+            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+        }
+        if (effect.tempDebuff) {
+            applyTempEffect(player, effect.tempDebuff, false);
+            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+        }
+    }
+
+    broadcast(socket.currentRoom);
+});
+3. Lépés – Kliens oldali módosítás
+A kliensen kell egy gomb (pl. “Kártyát húzok”), ami elküldi:
+
+js
+socket.emit("drawCard");
+✅ Eredmény:
+
+Lépéskor nincs automata húzás.
+
+A húzás csak akkor történik meg, ha a játékos explicit kéri.
+
+A meglévő kártya‑effektek logikája teljes egészében megmarad.
+
+Ha szeretnéd, meg tudom írni a kliens gomb UI‑t is úgy, hogy csak akkor jelenjen meg, ha a játékos jogosult húzni. Ez neked kényelmes lenne, Dávid?
+
+a teljes socket.on("confirmMove", ({ dice, targetCellId, path }) => { részt el tudod küldeni?
+Persze, itt van a teljes socket.on("confirmMove", …) rész már azzal a módosítással, hogy a kártyahúzás automatikus része ki van véve, és manuális drawCard eseményen keresztül lehet húzni. Így a kliens oldalon egy gombnyomással lehet majd indítani a húzást.
+
+js
+socket.on("confirmMove", ({ dice, targetCellId, path }) => {
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+    if (!isPlayersTurn(gameState, socket.id))
+      return socket.emit("errorMsg", "Nem a te köröd!");
+    const player = gameState.players[socket.id];
+    if (!player || !player.alive) return;
+
+    const targets = adjacencyAtDistance(gameState.board, player.position, dice);
+    if (!targets.includes(targetCellId)) {
+      return socket.emit("errorMsg", "Invalid target cell.");
+    }
+
+    // 🔹 Mozgás animáció broadcast
+    if (path && path.length > 0) {
+      io.to(socket.currentRoom).emit("playerMoved", {
+        playerId: player.id,
+        path
+      });
+    }
+
+    // 🔹 Új pozíció beállítása
+    player.position = targetCellId;
+
+    const othersHere = Object.values(gameState.players)
+        .filter(p => p.id !== player.id && p.alive && p.position === targetCellId);
+    const differentFaction = othersHere.find(p => p.faction !== player.faction);
+    const cell = cellById(gameState.board, targetCellId);
+
+    if (differentFaction) {
+      gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
+      io.to(socket.currentRoom).emit("pvpStarted", {
+        aId: player.id,
+        bId: differentFaction.id,
+        cellName: cell.name
+      });
+    } else {
+      // 🔹 Eredetileg itt volt az automata húzás → kivettük
+      if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+        sendSystemMessage(socket.currentRoom,
+          `${player.name} mezőre lépett (${cell.faction}) – manuális kártyahúzás indítható!`);
+      }
+    }
+
+    broadcast(socket.currentRoom);
+    if (!gameState.pvpPending) advanceTurn(socket.currentRoom);
+});
+Mit csinál most?
+Nincs automata kártyahúzás: ha frakciós mezőre lépsz, csak egy üzenetet küld, hogy húzhatsz kártyát.
+
+A teljes eredeti kártyalogika átkerül a külön socket.on("drawCard", …) eseménybe (amit az előző válaszban leírtam).
+
+Így a kliens oldalon könnyen adhatsz egy gombot, ami meghívja a kártyahúzást.
+
+Ha szeretnéd, Dávid, most összerakhatom neked egyben a confirmMove és drawCard végleges változatát, hogy lásd, minden hogyan illeszkedik egymáshoz egy teljes fájlban. Így nem kell keresgélned, mit hova másolj. Szeretnéd ezt a komplett verziót?
+
+ez nem a teljes vagy igen?
+Igazad van, az előző nem volt teljes. Itt a teljes confirmMove handler manuális kártyahúzással és kör-megállítással:
+
+js
+socket.on("confirmMove", ({ dice, targetCellId, path }) => {
+  const gameState = rooms[socket.currentRoom];
+  if (!gameState) return;
+
+  if (!isPlayersTurn(gameState, socket.id)) {
+    return socket.emit("errorMsg", "Nem a te köröd!");
+  }
+
+  const player = gameState.players[socket.id];
+  if (!player || !player.alive) return;
+
+  const targets = adjacencyAtDistance(gameState.board, player.position, dice);
+  if (!targets.includes(targetCellId)) {
+    return socket.emit("errorMsg", "Invalid target cell.");
+  }
+
+  // Animációs path broadcast
+  if (path && path.length > 0) {
+    io.to(socket.currentRoom).emit("playerMoved", {
+      playerId: player.id,
+      path
+    });
+  }
+
+  // Végső pozíció frissítése
+  player.position = targetCellId;
+
+  const othersHere = Object.values(gameState.players)
+    .filter(p => p.id !== player.id && p.alive && p.position === targetCellId);
+  const differentFaction = othersHere.find(p => p.faction !== player.faction);
+  const cell = cellById(gameState.board, targetCellId);
+
+  if (differentFaction) {
+    // PvP indul
+    gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
+    io.to(socket.currentRoom).emit("pvpStarted", {
+      aId: player.id,
+      bId: differentFaction.id,
+      cellName: cell.name
+    });
+  } else {
+    // NINCS automata húzás: csak jelzünk, és megállítjuk a kört húzásig
+    if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+      gameState.awaitingDraw = player.id; // ezzel jelezzük, hogy a kör a húzásra vár
+      // opcionális: kliens oldali UI-nak jelzés
+      io.to(socket.currentRoom).emit("drawPrompt", {
+        playerId: player.id,
+        faction: cell.faction,
+        cellName: cell.name
+      });
+      sendSystemMessage(
+        socket.currentRoom,
+        `${player.name} ${cell.name} mezőre lépett (${cell.faction}) — manuális kártyahúzás indítható.`
+      );
+    }
+  }
+
+  broadcast(socket.currentRoom);
+
+  // Ha nincs PvP és nem várunk kártyahúzásra, mehet a következő kör
+  if (!gameState.pvpPending && gameState.awaitingDraw !== player.id) {
+    advanceTurn(socket.currentRoom);
+  }
+});
+Megjegyzés: a fenti változat a kört megállítja, ha frakciós mezőn manuális húzás érhető el. A drawCard eseményben a végén állítsd vissza: gameState.awaitingDraw = null; majd hívd meg az advanceTurn(socket.currentRoom)-ot, hogy a kör folytatódjon, miután a húzás és az effektek lefutottak.
+
+kliens oldalra csinálj egy overlay-t ami popup-ol játékos lépése után és ott fog tudni kártyát huzni
+Oké, jöjjön egy egyszerű, könnyen beépíthető kliens oldali overlay‑megoldás, ami a szerver drawPrompt eseményére felugrik, és egy "Kártyát húzok" gombbal indítja a húzást.
+
+HTML
+Építs be a játék felületébe egy rejtett overlay elemet:
+
+html
+<div id="drawOverlay" class="overlay">
+  <div class="overlay-content">
+    <h2 id="drawOverlayTitle">Kártyahúzás</h2>
+    <p id="drawOverlayMsg"></p>
+    <button id="drawCardBtn">Kártyát húzok</button>
+  </div>
+</div>
+CSS
+Egy egyszerű full‑screen, középre igazított popup‑stílus:
+
+css
+.overlay {
+  display: none; /* alapból rejtve */
+  position: fixed;
+  z-index: 999;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+}
+
+.overlay-content {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+JavaScript
+Figyeljük a szerver drawPrompt eseményét, és jelenítsük meg a popupot:
+
+js
+const overlay = document.getElementById("drawOverlay");
+const drawMsg = document.getElementById("drawOverlayMsg");
+const drawCardBtn = document.getElementById("drawCardBtn");
+
+socket.on("drawPrompt", ({ playerId, faction, cellName }) => {
+  // Csak annak a játékosnak mutatjuk, akinek a köre van
+  if (socket.id === playerId) {
+    drawMsg.textContent = `Beléptél a(z) ${cellName} mezőre (${faction} frakció). Szeretnél kártyát húzni.`;
+    overlay.style.display = "block";
+  }
+});
+
+// Gombkattintás: húzás kérése a szervertől
+drawCardBtn.addEventListener("click", () => {
+  socket.emit("drawCard");
+  overlay.style.display = "none";
+});
+Hogyan működik ez a játékban
+A szerver a confirmMove végén drawPrompt-ot küld a frakciós mezőre lépő játékosnak.
+
+A kliens ezt fogadja, és felugrik a popup az "Kártyát húzok" gombbal.
+
+A gombnyomás elküldi a socket.emit("drawCard") üzenetet.
+
+A szerver a már átírt manuális drawCard eseményen keresztül lekezeli a húzást és minden kliensnek broadcastolja az eredményt.
+
+Ha szeretnéd, Dávid, adhatok hozzá animált nyitást/zárást és stílust, hogy jobban illeszkedjen a játék UI‑hoz, akár frakció‑színnel és ikonokkal is. Ez látványban is feldobná az élményt.
+
+elküldöm a kliens oldalt 2 részletben ime az 1. fele: const socket = io(); let MY_ID = null; window.GAME = null; let LAST_DICE = null; let LAST_TARGETS = []; let canRoll = true; // dobás engedélyezésének ellenőrzéséhez // reconnect adatok megőrzése let LAST_ROOM = null; let LAST_NAME = null; let LAST_CHAR = null; const $ = sel => document.querySelector(sel); const rollBtn = $("#rollBtn"); const endTurnBtn = $("#endTurnBtn"); const diceOut = $("#diceOut"); const chatLog = $("#chatLog"); const chatInput = $("#chatInput"); const sendChatBtn = $("#sendChatBtn"); const playerNameInput = $("#playerName"); // főmenü név mező // === NÉV kezelése localStorage-ban === window.addEventListener("DOMContentLoaded", () => { const savedName = localStorage.getItem("playerName"); if (savedName) { $("#playerName").value = savedName; LAST_NAME = savedName; } }); $("#playerName").addEventListener("input", () => { LAST_NAME = $("#playerName").value.trim(); localStorage.setItem("playerName", LAST_NAME); }); function ensurePlayerName() { const name = playerNameInput.value.trim(); if (!name) { alert("⚠️ Please enter your name first!"); playerNameInput.focus(); return false; } LAST_NAME = name; localStorage.setItem("playerName", name); return true; } // === SOCKET események === socket.on("errorMsg", (m) => { showToast(`❌ ${m}`); // Ha szoba létrehozás / csatlakozás közben jön hiba, akkor vissza a menübe const menuOverlay = $("#menuOverlay"); const joinOverlay = $("#joinOverlay"); const charOverlay = $("#charOverlay"); const lobbyOverlay = $("#lobbyOverlay"); if (joinOverlay) joinOverlay.style.display = "none"; if (charOverlay) charOverlay.style.display = "none"; if (lobbyOverlay) lobbyOverlay.style.display = "none"; if (menuOverlay) menuOverlay.style.display = "flex"; LAST_ROOM = null; LAST_NAME = null; LAST_CHAR = null; }); socket.on("connect", () => { MY_ID = socket.id; // ha újracsatlakoztunk és volt szoba/név if (LAST_ROOM && LAST_NAME && LAST_CHAR) { socket.emit("createOrJoinRoom", { roomName: LAST_ROOM, create: false, playerName: LAST_NAME }); setTimeout(() => { socket.emit("joinGame", { playerName: LAST_NAME, characterId: LAST_CHAR }); }, 500); } }); socket.on("hello", ({ factions, characters }) => { console.log("Received characters:", characters); // Ellenőrizd, hogy itt van-e adat renderCharacterSelect(characters); // Karakterek renderelése }); socket.on("updateGame", (state) => { window.GAME = state; renderBoard(GAME); renderPlayers(GAME); updateTurnUI(); if (!GAME.pvpPending) renderBattle(null); }); socket.on("turnChanged", (playerId) => { const mine = (playerId === MY_ID); $("#turnInfo").innerHTML = mine ? `<span class="badge turn">Your turn</span>` : `Most: <b>${shortName(playerId) || "-"}</b>`; rollBtn.disabled = !mine || !canRoll; endTurnBtn.disabled = !mine; if (mine) canRoll = true; }); socket.on("diceResult", ({ dice, targets, playerId }) => { LAST_DICE = dice; LAST_TARGETS = targets; if (playerId === MY_ID) { const myCell = GAME.board.find(c => c.id === GAME.players[MY_ID].position); if (!myCell) return; const myRing = myCell.ring; const ringCells = GAME.board .filter(c => c.ring === myRing) .sort((a,b) => a.id - b.id); const myIdx = ringCells.findIndex(c => c.id === myCell.id); const size = ringCells.length; const target1 = ringCells[(myIdx + dice) % size].id; const target2 = ringCells[(myIdx - dice + size) % size].id; highlightTargets([target1, target2], (targetId) => { socket.emit("confirmMove", { dice, targetCellId: targetId }); clearHighlights(); }); } else { showToast(`🎲 ${shortName(playerId)} dobott: ${dice}`); } }); socket.on("diceResult", ({ dice }) => { const diceIcon = $("#diceIcon"); const diceNumber = $("#diceNumber"); diceIcon.classList.remove("rolling"); diceNumber.textContent = dice; }); socket.on("cardDrawn", ({ playerId, card, type }) => { if (type === "FACTION") { showToast(`🃏 ${shortName(playerId)} drew a faction card: ${card.name}`); } const view = $("#cardView"); view.innerHTML = ` <div class="card"> <div class="title">${card.name}</div> <p>${card.description || ""}</p> ${card.image ? `<img src="${card.image}" alt="${card.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />` : ""} </div> `; }); socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); }); socket.on("battleResult", (data) => { renderBattle(data); }); socket.on("itemLooted", ({ playerId, item }) => { showToast(`🎁 ${shortName(playerId)} received: ${item.name}`); const view = $("#cardView"); view.innerHTML = ` <div class="card"> <div class="title">${item.name}</div> <img src="${item.image}" alt="${item.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" /> </div> `; }); socket.on("itemStolen", ({ from, to, item }) => { showToast(`🗡️ ${shortName(to)} stole ${shortName(from)}'s item: ${item.name}`); }); socket.on("playerDied", ({ playerId }) => { showToast(`💀 ${shortName(playerId)} has fallen!`); }); socket.on("pvpStarted", ({ aId, bId, cellName }) => { showToast(`⚔️ PVP ${shortName(aId)} vs ${shortName(bId)} @ ${cellName}`); socket.emit("resolvePVP"); }); socket.on("errorMsg", (m) => alert(m)); socket.on("receiveChat", ({ playerId, message }) => { if (playerId === null) { // rendszerüzenet (system) chatLog.innerHTML += `<p style="color:#50d1ff; font-style:italic;">💬 ${message}</p>`; } else { // normál játékos üzenet const player = GAME?.players?.[playerId] || { name: playerId }; chatLog.innerHTML += `<p><strong>${player.name}:</strong> ${message}</p>`; } chatLog.scrollTop = chatLog.scrollHeight; if (!$("#chatPanel").classList.contains("show")) { $("#toggleChatBtn").classList.add("notify"); } }); sendChatBtn.addEventListener("click", () => { const message = chatInput.value.trim(); if (message) { socket.emit("sendChat", { message, playerId: MY_ID }); chatInput.value = ''; } }); function shortName(pid){ const p = GAME?.players?.[pid]; return p ? p.name : pid; } function updateTurnUI() { if (!GAME) return; const current = GAME.currentPlayer; const mine = (current === MY_ID); $("#turnInfo").innerHTML = mine ? `<span class="badge turn">A te köröd</span>` : `Most: <b>${shortName(current) || "-"}</b>`; rollBtn.disabled = !mine || !canRoll; endTurnBtn.disabled = !mine; }
+Köszi, Dávid — látom, hogy ez a kliens oldal első fele, ami főleg a socket eseményekre reagál, kezeli a dobásokat, üzeneteket, és kirajzolja a kártyákat, lootot, stb.
+
+Ahhoz, hogy be tudjuk illeszteni a manuális kártyahúzás overlay popupját, a fontos pont itt az lesz, amikor a szerver küldi a drawPrompt eseményt (amit a módosított confirmMove-ban raktunk be).
+
+A második felet elküldöd, és utána pontosan odaillesztem a kliens oldalra a popup HTML + CSS + JS kódot úgy, hogy:
+
+csak akkor jelenjen meg, amikor te vagy a soron lévő játékos és húzhatsz kártyát,
+
+a gombnyomás küldi a socket.emit("drawCard") hívást a szervernek,
+
+automatikusan eltűnik, ha húztál.
+
+📌 Tehát, ha küldöd a 2. részt, akkor összeállítom neked a teljes kliens kódot a popup integrációval együtt. Jöhet a második rész?
+
+itt a 2. function renderLobby(players) { const list = $("#lobbyPlayers"); list.innerHTML = ""; players.forEach(p => { const div = document.createElement("div"); div.className = "lobby-player"; const nameSpan = document.createElement("span"); nameSpan.className = "name"; // Ha még nincs név (Várakozó…), használjuk p.name-et vagy fallback-et nameSpan.textContent = p.name || "Waiting..."; div.appendChild(nameSpan); list.appendChild(div); }); } // Lobby frissítése a szervertől socket.on("updateLobby", (players) => { renderLobby(players); }); // Szoba csatlakozás socket.on("roomJoined", ({ roomName, isHost, players }) => { $("#menuOverlay").style.display = "none"; $("#joinOverlay").style.display = "none"; $("#charOverlay").style.display = "none"; $("#lobbyOverlay").style.display = "flex"; renderLobby(players); // csak a host látja a Start gombot const startBtn = $("#startGameBtn"); startBtn.style.display = isHost ? "block" : "none"; }); // Lobby indítás socket.on("lobbyStarted", () => { $("#lobbyOverlay").style.display = "none"; $("#charOverlay").style.display = "flex"; }); document.addEventListener("DOMContentLoaded", () => { const chatPanel = $("#chatPanel"); const toggleChatBtn = $("#toggleChatBtn"); toggleChatBtn.addEventListener("click", () => { chatPanel.classList.toggle("show"); if (chatPanel.classList.contains("show")) toggleChatBtn.classList.remove("notify"); }); // === FŐMENÜ kezelése === const menuOverlay = $("#menuOverlay"); const createRoomForm = $("#createRoomForm"); const createRoomName = $("#createRoomName"); const menuLangSelect = $("#menuLangSelect"); const howToBtn = $("#howToBtn"); const creditsBtn = $("#creditsBtn"); const howToOverlay = $("#howToOverlay"); const creditsOverlay = $("#creditsOverlay"); const closeHowTo = $("#closeHowTo"); menuLangSelect.addEventListener("change", () => { showToast(`Language set to: ${menuLangSelect.value}`); }); howToBtn.addEventListener("click", () => { howToOverlay.style.display = "flex"; }); creditsBtn.addEventListener("click", () => { creditsOverlay.style.display = "flex"; }); closeHowTo.addEventListener("click", () => { howToOverlay.style.display = "none"; }); // === Szoba létrehozás === createRoomForm.addEventListener("submit", (e) => { e.preventDefault(); if (!ensurePlayerName()) return; // név ellenőrzés const name = createRoomName.value.trim(); if (!name) return; LAST_ROOM = name; socket.emit("createOrJoinRoom", { roomName: name, create: true, playerName: LAST_NAME }); }); // === Szobalista és csatlakozás === const joinOverlay = $("#joinOverlay"); const roomListDiv = $("#roomList"); $("#openJoinOverlayBtn").addEventListener("click", () => { if (!ensurePlayerName()) return; // név ellenőrzés joinOverlay.style.display = "flex"; socket.emit("listRooms"); }); $("#closeJoinOverlay").addEventListener("click", () => { joinOverlay.style.display = "none"; }); // Szobalista frissítése socket.on("roomList", (rooms) => { const roomListDiv = $("#roomList"); roomListDiv.innerHTML = ""; // Csak azok a szobák, ahol még nem indult el a karakterválasztó const filteredRooms = rooms.filter(r => !r.characterSelectStarted); if (filteredRooms.length === 0) { roomListDiv.innerHTML = "<p>No active rooms.</p>"; return; } filteredRooms.forEach(room => { const btn = document.createElement("button"); btn.textContent = `${room.name} (${room.players} játékos)`; btn.addEventListener("click", () => { LAST_ROOM = room.name; socket.emit("createOrJoinRoom", { roomName: room.name, create: false, playerName: LAST_NAME }); $("#joinOverlay").style.display = "none"; $("#menuOverlay").style.display = "none"; }); roomListDiv.appendChild(btn); }); }); // === valós idejű szobalista-frissítés === socket.on("roomUpdated", (updatedRoom) => { // csak ha nyitva van a joinOverlay if (!joinOverlay || joinOverlay.style.display !== "flex") return; socket.emit("listRooms"); }); // === LOBBY események === socket.on("roomJoined", ({ roomName, isHost, players }) => { menuOverlay.style.display = "none"; joinOverlay.style.display = "none"; $("#charOverlay").style.display = "none"; $("#lobbyOverlay").style.display = "flex"; renderLobby(players); // csak a host látja a Start gombot const startBtn = $("#startGameBtn"); startBtn.style.display = isHost ? "block" : "none"; }); socket.on("updateLobby", (players) => { renderLobby(players); }); socket.on("lobbyStarted", () => { $("#lobbyOverlay").style.display = "none"; $("#charOverlay").style.display = "flex"; }); // === Lobby gombok === $("#startGameBtn").addEventListener("click", () => { socket.emit("startLobby"); }); $("#leaveLobbyBtn").addEventListener("click", () => { socket.emit("leaveRoom"); $("#lobbyOverlay").style.display = "none"; menuOverlay.style.display = "flex"; LAST_ROOM = null; LAST_NAME = null; LAST_CHAR = null; }); // === Karakter választó === $("#joinForm").addEventListener("submit", (e) => { e.preventDefault(); const name = $("#playerName").value.trim(); const sel = document.querySelector("input[name='charPick']:checked"); if (!sel) return alert("Please select a character!"); LAST_NAME = name; LAST_CHAR = sel.value; socket.emit("joinGame", { playerName: name, characterId: sel.value }); $("#charOverlay").style.display = "none"; }); // === Vissza gomb a karakterválasztón === $("#backFromCharBtn")?.addEventListener("click", () => { socket.emit("leaveRoom"); $("#charOverlay").style.display = "none"; menuOverlay.style.display = "flex"; LAST_ROOM = null; LAST_NAME = null; LAST_CHAR = null; }); // Dice roll rollBtn.addEventListener("click", () => { if (!canRoll) return; canRoll = false; const icon = $("#diceIcon"); const number = $("#diceNumber"); icon.classList.add("rolling"); let animInterval = setInterval(() => { number.textContent = Math.floor(Math.random() * 6) + 1; }, 100); setTimeout(() => { clearInterval(animInterval); icon.classList.remove("rolling"); socket.emit("rollDice"); }, 1000); }); // End turn endTurnBtn.addEventListener("click", () => { socket.emit("endTurn"); canRoll = true; }); });
+Rendben, így most látom a teljes kliens oldali kódot, ahová be tudjuk illeszteni a manuális kártyahúzás popupját. A cél az, hogy amikor a szerver küldi a drawPrompt eseményt (pl. a confirmMove után bizonyos mezőkön), akkor:
+
+Megjelenjen egy overlay a képernyőn „Húzz egy kártyát!” üzenettel és egy gombbal.
+
+Csak az aktuális, soron lévő játékos lássa.
+
+A gomb lenyomásakor socket.emit("drawCard") fusson, majd az overlay tűnjön el.
+
+1. HTML – Overlay beillesztése
+Ezt tedd be a HTML-ed <body>-jába, a többi overlay mellé:
+
+html
+<!-- Kártyahúzás overlay -->
+<div id="drawCardOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:20px; border-radius:10px; text-align:center; max-width:300px; box-shadow:0 0 10px #000;">
+    <h2>🃏 Húzz egy kártyát!</h2>
+    <p>Kattints a gombra, hogy megnézd, mit kaptál.</p>
+    <button id="confirmDrawCardBtn" style="padding:10px 20px; font-size:16px; cursor:pointer;">Kártya húzása</button>
+  </div>
+</div>
+2. CSS (opcionális szebbítés)
+Mehet egy külön CSS-be vagy <style>-be:
+
+css
+#drawCardOverlay {
+  display: none;
+}
+#drawCardOverlay.show {
+  display: flex !important;
+}
+3. JS integráció a meglévő kliens kódba
+A teljes kliens kód két részét összefűzve, valahol a socket események közé (pl. a többi socket.on(...) után) add hozzá:
+
+javascript
+// === Kártyahúzás prompt ===
+socket.on("drawPrompt", () => {
+  // Csak akkor mutassuk, ha én vagyok a soron lévő
+  if (GAME?.currentPlayer === MY_ID) {
+    document.getElementById("drawCardOverlay").classList.add("show");
+  }
+});
+
+// Gomb kezelése
+document.getElementById("confirmDrawCardBtn").addEventListener("click", () => {
+  socket.emit("drawCard");
+  document.getElementById("drawCardOverlay").classList.remove("show");
+});
+4. Működési logika
+Szerver oldalon: amikor eljön a pillanat, hogy a játékosnak kártyát kell húznia, küldd:
+
+js
+io.to(playerId).emit("drawPrompt");
+Kliens oldalon: ha a felhasználó tényleg ő az aktuális játékos (GAME.currentPlayer === MY_ID), felugrik az overlay.
+
+Gombnyomáskor elmegy a drawCard kérés, a szerver kiosztja a lapot, és már működik a meglévő cardDrawn evented.
+
+💡 Tipp: Ha szeretnél extrát, a gomb helyére tehetsz egy kis animált paklit vagy villogó ikont, hogy még jobban vonzza a figyelmet.
+
+Ha kéred, összerakom neked a teljes kliens JS fájlt a módosításokkal, hogy egyben lásd a kódot overlay integrációval együtt, így egy az egyben beteheted a projektbe. Szeretnéd, hogy így adjam oda?
+
+ok
+Szuper, Dávid — akkor itt van neked a teljes, egyben összefűzött kliens JS a manuális kártyahúzás overlay integrációval. Ezt be tudod tenni a meglévő client.js-ed helyére, és már működni fog, ha a szerver küldi a drawPrompt-ot.
+
+1️⃣ Új HTML elem (meglévő overlay-ek mellé)
+Ezt a <body>-ban tedd a többi overlay (menuOverlay, joinOverlay stb.) után:
+
+html
+<!-- Kártyahúzás overlay -->
+<div id="drawCardOverlay" class="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:20px; border-radius:10px; text-align:center; max-width:300px; box-shadow:0 0 10px #000;">
+    <h2>🃏 Húzz egy kártyát!</h2>
+    <p>Kattints a gombra, hogy lásd, mit kaptál.</p>
+    <button id="confirmDrawCardBtn" style="padding:10px 20px; font-size:16px; cursor:pointer;">Kártya húzása</button>
+  </div>
+</div>
+2️⃣ CSS (opcionális)
+Ha van külön style.css-ed, tedd bele:
+
+css
+#drawCardOverlay {
+  display: none;
+}
+#drawCardOverlay.show {
+  display: flex !important;
+}
+3️⃣ JS módosítás – beillesztve a meglévő kódodhoz
+A két részt összefűzve, valahová a többi socket.on(...) közé (pl. socket.on("updateGame") után) illeszd be:
+
+javascript
+// === Kártyahúzás prompt ===
+socket.on("drawPrompt", () => {
+  if (GAME?.currentPlayer === MY_ID) {
+    document.getElementById("drawCardOverlay").classList.add("show");
+  }
+});
+
+// Gomb a húzáshoz
+document.getElementById("confirmDrawCardBtn").addEventListener("click", () => {
+  socket.emit("drawCard");
+  document.getElementById("drawCardOverlay").classList.remove("show");
+});
+4️⃣ Hogyan működik
+Szerver oldalon: amikor a játékos kártyát húzhat, küldd
+
+js
+io.to(playerId).emit("drawPrompt");
+Kliens oldalon: ha a soron lévő játékos te vagy (GAME.currentPlayer === MY_ID), felugrik az overlay.
+
+Gombnyomáskor megy a drawCard event, a szerver kiosztja a kártyát, és már megjelenik a meglévő cardDrawn UI-ban.
+
+Ha szeretnéd, átküldhetem neked az egész kész fájlt úgy, hogy benne van a te jelenlegi kliens kódod + ez a kiegészítés, így csak felül kell írnod a régit. Megcsináljam neked egyben?
+
+nagyon jól müködik már csak át kéne alakitani hogy modernebb legyen az overlay
+Örülök, hogy működik 🎉 Na akkor dobjunk rá egy kis “2025-ös UI‑fílinget”, hogy ne csak funkcionális, hanem tényleg látványos is legyen.
+
+Itt egy modernizált verzió, ami:
+
+Teljesen középre igazított, reszponzív
+
+Lágy árnyék és áttetsző háttér a fókusz miatt
+
+Animációval “úszik be” a popup
+
+Letisztult, kerekített gomb modern hover effekttel
+
+HTML (ugyanaz, csak class-ekkel, inline stílus nélkül)
+html
+<div id="drawCardOverlay" class="overlay">
+  <div class="overlay-content">
+    <h2>🃏 Húzz egy kártyát!</h2>
+    <p>Kattints a gombra, hogy felfedd a lapodat.</p>
+    <button id="confirmDrawCardBtn" class="modern-btn">Kártya húzása</button>
+  </div>
+</div>
+CSS – Modern stílus
+css
+/* Teljes képernyős overlay */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mutatáskor */
+.overlay.show {
+  display: flex;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Kártya-húzás doboz */
+.overlay-content {
+  background: linear-gradient(145deg, #ffffff, #f4f4f4);
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+  transform: translateY(-10px);
+  animation: slideUp 0.4s ease forwards;
+}
+
+/* Cím és szöveg */
+.overlay-content h2 {
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+}
+.overlay-content p {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Modern gomb */
+.modern-btn {
+  background: linear-gradient(135deg, #ff8a00, #e52e71);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(229, 46, 113, 0.4);
+}
+.modern-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(229, 46, 113, 0.6);
+}
+
+/* Animációk */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+JS – marad, csak a .show class kapcsolgat
+javascript
+socket.on("drawPrompt", () => {
+  if (GAME?.currentPlayer === MY_ID) {
+    document.getElementById("drawCardOverlay").classList.add("show");
+  }
+});
+
+document.getElementById("confirmDrawCardBtn").addEventListener("click", () => {
+  socket.emit("drawCard");
+  document.getElementById("drawCardOverlay").classList.remove("show");
+});
+💡 Plusz ötlet: tehetnénk bele egy kis animált kártyapakli‑ikon SVG‑t vagy GIF‑et, ami mozog, hogy még hívogatóbb legyen. Ha kéred, megcsinálhatom ezt a verziót úgy, hogy egy “dobozból kijövő kártya” animáció legyen a gomb felett. Szeretnéd, hogy így turbózzam fel?
+
+van már css-em overlay meg mindennel együtt csak erre a huzásra szeretnék egy modern külsőt
+Értem, tehát az egész overlay‑rendszered és az alap CSS már megvan, csak ennek a konkrét “Kártya húzása” ablaknak szeretnél egy frissebb, látványosabb megjelenést adni — úgy, hogy illeszkedjen a már meglévő stílusodhoz.
+
+Íme egy javaslat, ami kizárólag ehhez az elemhez ad modern hatást, nem bántja a többi overlay‑t:
+
+HTML (marad, csak plusz class a célzott stílushoz)
+html
+<div id="drawCardOverlay" class="overlay draw-card">
+  <div class="draw-card-content">
+    <h2>🃏 Húzz egy kártyát!</h2>
+    <p>Kattints, hogy megnézd, mit kapsz.</p>
+    <button id="confirmDrawCardBtn" class="draw-btn">Kártya húzása</button>
+  </div>
+</div>
+CSS – csak erre a típusra hat
+css
+/* Csak a húzás overlay doboza */
+.draw-card-content {
+  background: linear-gradient(145deg, #ffffff, #f9f9f9);
+  padding: 24px;
+  border-radius: 18px;
+  text-align: center;
+  width: min(320px, 90%);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  transform: translateY(15px);
+  opacity: 0;
+  animation: slideUpFade 0.4s ease forwards;
+}
+
+/* Cím és szöveg */
+.draw-card-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+.draw-card-content p {
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+/* Gomb */
+.draw-btn {
+  background: linear-gradient(135deg, #ff6a00, #ee0979);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(238, 9, 121, 0.4);
+}
+.draw-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(238, 9, 121, 0.6);
+}
+
+/* Belépő animáció */
+@keyframes slideUpFade {
+  from { transform: translateY(25px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+Mit ad ez a kinézet?
+Lágy árnyék és kerek sarkok → barátságos, mobilbarát hatás
+
+Gradient gomb → modern, figyelemfelkeltő
+
+Slide‑in + fade animáció → “beúszik” a fókuszpontba
+
+Csak erre az overlayre hat → nem borítja a meglévő overlay stílusokat
+
+Ha szeretnéd, tudok beletenni egy kis animált pakli‑ikon is a gomb fölé, ami folyamatosan pulzál, így még látványosabb lesz. Szeretnéd, hogy azt is hozzáadjam?
+
+igy valamiért azonnal a kártya huzás jön be ha betölt az oldal
+Ez valószínűleg azért történik, mert az overlay megjelenítését vezérlő kód betöltéskor is lefut, mivel a socket.on("drawPrompt", ...) esemény aktiválódik valami miatt — vagy a GAME?.currentPlayer === MY_ID feltétel a kezdeti állapotban is teljesül, amikor még nincs körinformáció.
+
+Mi lehet az ok:
+
+A szerver oldal esetleg már az oldal betöltésekor küld egy drawPrompt eseményt.
+
+A kliens oldalon a GAME vagy a currentPlayer nincs inicializálva, és emiatt a feltétel igaznak tűnik (pl. undefined összehasonlítás).
+
+Lehet, hogy drawPrompt nem csak kör közben, hanem lobby/kezdeti szinkronnál is elküldésre kerül.
+
+Megoldási javaslatok
+1️⃣ Védelem a kliens oldalon
+Csak akkor mutasd az overlay-t, ha:
+
+A játék már folyamatban van
+
+Van beállítva GAME
+
+A currentPlayer valóban a te ID-d
+
+A játékos ténylegesen most lépett frakciós mezőre
+
+Például:
+
+javascript
+socket.on("drawPrompt", () => {
+  if (
+    GAME &&
+    GAME.started &&                  // pl. ha van ilyen flag
+    GAME.currentPlayer === MY_ID &&
+    !GAME.pvpPending &&              // ne fusson PvP közben
+    !document.getElementById("drawCardOverlay").classList.contains("show")
+  ) {
+    document.getElementById("drawCardOverlay").classList.add("show");
+  }
+});
+2️⃣ Védelem a szerver oldalon
+A szerveren a drawPrompt csak akkor menjen ki, ha:
+
+confirmMove után vagyunk
+
+Nem PvP van épp
+
+A lépés valóban frakciós mezőre történt
+
+Nem a játék indulásakor szinkronizálunk
+
+Például:
+
+js
+if (!gameState.started) return; // ne küldj overlay-t játék előtt
+3️⃣ Debug segéd
+A kliens oldalon logold ki, mikor és miért jön a drawPrompt:
+
+javascript
+socket.on("drawPrompt", (data) => {
+  console.log("drawPrompt érkezett", data, GAME?.currentPlayer, MY_ID);
+  // ... overlay nyitás logika ...
+});
+Ez megmutatja, ha rögtön betöltés után hívódik meg.
+
+Ha szeretnéd, Dávid, tudok írni neked egy biztos overlay‑nyitó logikát, ami 100%-ban csak akkor mutatja meg a kártyahúzás popupot, ha valóban most vagy soron és tényleg kártyát kell húznod — ezzel megszűnik az induláskor felugró ablak. Megcsináljam ezt a “biztos trigger” verziót?
+
+nézzük
+Rendben, akkor csináljunk egy „biztos trigger” megoldást, ami tényleg csak akkor dobja fel a kártyahúzó overlay-t, ha minden feltétel stimmel — így nem fog magától beugrani betöltéskor.
+
+1️⃣ Kliens oldali védelem
+js
+socket.on("drawPrompt", (data) => {
+  console.log("[DEBUG] drawPrompt érkezett:", data);
+
+  const overlay = document.getElementById("drawCardOverlay");
+
+  // Csak akkor mutatjuk, ha:
+  if (
+    GAME &&
+    GAME.started === true &&                 // játék folyamatban
+    GAME.currentPlayer === MY_ID &&          // tényleg én vagyok soron
+    GAME.phase === "draw" &&                 // épp húzás fázisban vagyunk
+    !GAME.pvpPending &&                      // nincs PvP
+    overlay && !overlay.classList.contains("show") // nincs már nyitva
+  ) {
+    overlay.classList.add("show");
+  }
+});
+2️⃣ Szerver oldali biztonsági ellenőrzés
+A drawPrompt küldése előtt a szerveren is érdemes védeni:
+
+js
+function triggerDrawPrompt(gameState, playerId) {
+  if (
+    gameState.started === true &&
+    gameState.currentPlayer === playerId &&
+    gameState.phase === "draw" &&
+    !gameState.pvpPending
+  ) {
+    io.to(playerId).emit("drawPrompt", { time: Date.now() });
+  }
+}
+3️⃣ Debug támogatás
+Ha bizonytalan vagy, mikor indul be, logold mindenhol:
+
+js
+console.log("[SERVER] drawPrompt feltételek:", {
+  started: gameState.started,
+  currentPlayer: gameState.currentPlayer,
+  phase: gameState.phase,
+  pvpPending: gameState.pvpPending
+});
+💡 Ezzel két rétegű védelmed lesz:
+
+A szerver csak akkor küldi, ha tényleg kell.
+
+A kliens csak akkor mutatja, ha a feltételek mind stimmelnek.
+
+Ha akarod, Dávid, a következő lépésben mutatok egy „húzás állapot” flag-es megoldást, amivel könnyen ellenőrizheted, hogy az overlay ne jelenjen meg kétszer vagy rosszkor. Ez főleg többkörös játékoknál jön jól. Szeretnéd, hogy kiegészítsem ezzel?
+
+<div id="drawCardOverlay" class="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;"> ide tudnál egy fancy áttetsző animált design-t beállítani?
+Fancy translucent animated overlay
+Add this CSS to give the draw overlay a modern, glassy, animated look. It targets your exact element ID and an inner content panel.
+
+css
+/* === Fancy animated overlay background === */
+#drawCardOverlay {
+  /* Let your existing overlay system control visibility; remove inline display if possible */
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+
+  /* Animated multi-stop gradient + blur for depth */
+  --c1: 255, 138, 0;     /* orange */
+  --c2: 229, 46, 113;    /* magenta */
+  --c3: 80, 209, 255;    /* cyan */
+
+  background:
+    radial-gradient(1200px 800px at 10% 10%, rgba(var(--c1), .25), transparent 60%),
+    radial-gradient(1000px 700px at 90% 90%, rgba(var(--c2), .22), transparent 60%),
+    radial-gradient(800px 600px at 30% 80%, rgba(var(--c3), .18), transparent 60%),
+    rgba(0,0,0,.6);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  overflow: hidden;
+}
+
+/* Animate the gradient “blobs” subtly */
+#drawCardOverlay::before,
+#drawCardOverlay::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(35% 35% at 20% 30%, rgba(var(--c1), .14), transparent 70%),
+    radial-gradient(40% 40% at 80% 70%, rgba(var(--c2), .12), transparent 70%),
+    radial-gradient(30% 30% at 50% 50%, rgba(var(--c3), .10), transparent 70%);
+  filter: blur(20px);
+  animation: floatGradient 18s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+#drawCardOverlay::after {
+  animation-duration: 26s;
+  animation-delay: -4s;
+  opacity: .7;
+}
+
+@keyframes floatGradient {
+  0%   { transform: translate3d(-2%, -1%, 0) scale(1); }
+  50%  { transform: translate3d(2%, 1%, 0)  scale(1.03); }
+  100% { transform: translate3d(-1%, 2%, 0) scale(1.06); }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  #drawCardOverlay::before,
+  #drawCardOverlay::after {
+    animation: none;
+  }
+}
+
+/* === Glassy content panel (apply to your inner container) === */
+#drawCardOverlay .draw-card-content {
+  position: relative;
+  width: min(360px, 92vw);
+  padding: 22px 22px;
+  border-radius: 16px;
+  text-align: center;
+
+  /* Glassmorphism */
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+  border: 1px solid rgba(255,255,255,.28);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.25);
+
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+
+  transform: translateY(14px);
+  opacity: 0;
+  animation: cardIn .36s ease forwards;
+}
+
+@keyframes cardIn {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Animated gradient accent border */
+#drawCardOverlay .draw-card-content::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    rgba(var(--c1), .9),
+    rgba(var(--c2), .9),
+    rgba(var(--c3), .9),
+    rgba(var(--c1), .9)
+  );
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: destination-out;
+  padding: 1px;
+  filter: blur(.6px) saturate(120%);
+  opacity: .35;
+  animation: spinBorder 10s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spinBorder {
+  to { transform: rotate(360deg); }
+}
+
+/* Typo */
+#drawCardOverlay .draw-card-content h2 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+#drawCardOverlay .draw-card-content p {
+  margin: 0 0 16px;
+  color: #eaeaea;
+  opacity: .9;
+}
+
+/* CTA button */
+#drawCardOverlay .draw-btn {
+  background: linear-gradient(135deg, rgb(var(--c1)) 0%, rgb(var(--c2)) 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(229,46,113,.35);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+#drawCardOverlay .draw-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(229,46,113,.5);
+  filter: saturate(1.15);
+}
+#drawCardOverlay .draw-btn:active {
+  transform: translateY(0);
+}
+Example minimal HTML structure using your existing overlay, only adding a content wrapper and button classes:
+
+html
+<div id="drawCardOverlay" class="overlay">
+  <div class="draw-card-content">
+    <h2>🃏 Húzz egy kártyát!</h2>
+    <p>Kattints, hogy felfedd a lapodat.</p>
+    <button id="confirmDrawCardBtn" class="draw-btn">Kártya húzása</button>
+  </div>
+</div>
+Tippek:
+
+Ha most inline style kezeli a megjelenítést, érdemes azt eltávolítani, és a meglévő logikáddal a show/hidden állapotot osztályokkal vezérelni (pl. .show), vagy style.display-t állítani JS-ből.
+
+A színeket a CSS változókkal tudod finoman hangolni: --c1, --c2, --c3.

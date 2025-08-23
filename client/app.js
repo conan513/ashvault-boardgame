@@ -92,6 +92,45 @@ socket.on("updateGame", (state) => {
   if (!GAME.pvpPending) renderBattle(null);
 });
 
+// === TILT FUNKCIÓ ===
+// container = az a doboz, amin belül mozog az egér
+// item = maga a mozgatni/dönteni kívánt elem (pl. pawn kép vagy kártya kép)
+function attachTilt(container, item, options = {}) {
+  const maxTilt = options.maxTilt ?? 10; // fokban a döntés mértéke
+  const scale   = options.scale ?? 1;    // nagyítás (1 = nincs)
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const noHover = window.matchMedia('(hover: none)').matches;
+  if (!container || !item || reduceMotion || noHover) return;
+
+  container.classList.add('tilt-container');
+  item.classList.add('tilt-item');
+
+  let rafId;
+
+  function onMove(e) {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rotateX = ((y - cy) / cy) * maxTilt;   // fel/le
+      const rotateY = ((x - cx) / cx) * -maxTilt;  // bal/jobb
+      item.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`;
+    });
+  }
+
+  function onLeave() {
+    if (rafId) cancelAnimationFrame(rafId);
+    item.style.transform = 'rotateX(0) rotateY(0) scale(1)';
+  }
+
+  container.addEventListener('mousemove', onMove);
+  container.addEventListener('mouseleave', onLeave);
+}
+
 socket.on("turnChanged", (playerId) => {
   const mine = (playerId === MY_ID);
   $("#turnInfo").innerHTML = mine
@@ -285,6 +324,39 @@ socket.on("lobbyStarted", () => {
   $("#charOverlay").style.display = "flex";
 });
 
+function showCardOverlay() {
+  const overlay = document.getElementById("cardOverlay");
+  overlay.style.display = "flex"; // Make the overlay visible
+  setTimeout(() => {
+    overlay.classList.add('show'); // Trigger animation after display
+  }, 10); // Slight delay to allow display change to take effect
+}
+
+function hideCardOverlay() {
+  const overlay = document.getElementById("cardOverlay");
+  overlay.classList.remove('show'); // Remove shine effect
+  setTimeout(() => {
+    overlay.style.display = "none"; // Hide the overlay after animation ends
+  }, 500); // 500ms to match animation duration
+}
+
+document.getElementById("closeCardViewBtn").addEventListener("click", hideCardOverlay);
+
+
+document.querySelectorAll('.tilt-item').forEach(tilt => {
+  tilt.addEventListener('mousemove', (e) => {
+    const { width, height, left, top } = tilt.getBoundingClientRect();
+    const x = e.clientX - left;
+    const y = e.clientY - top;
+    const rotateX = ((y / height) - 0.5) * 15;
+    const rotateY = ((x / width) - 0.5) * -15;
+    tilt.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  });
+  tilt.addEventListener('mouseleave', () => {
+    tilt.style.transform = 'rotateX(0) rotateY(0)';
+  });
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   const closeCardViewBtn = document.getElementById("closeCardViewBtn");
   if (closeCardViewBtn) {
@@ -294,6 +366,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const playerNameEl = $("#playerName");
   if (playerNameEl) playerNameEl.textContent = playerName;
+
+  // Pawn tilt
+  const pawnContainer = document.querySelector('.cardColumn');
+  const pawnImg = document.getElementById('playerPawn');
+  attachTilt(pawnContainer, pawnImg, { maxTilt: 10, scale: 1 });
+
+  // Kártya tilt
+  const cardContainer = document.getElementById('cardImageContainer');
+  const cardImg = cardContainer?.querySelector('img');
+  attachTilt(cardContainer, cardImg, { maxTilt: 8, scale: 1 });
 
     // === FŐMENÜ kezelése ===
     const menuOverlay = $("#menuOverlay");

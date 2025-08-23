@@ -174,24 +174,47 @@
 
 
 <div id="cardOverlay" style="display:none;">
+  <div class="tilt-container">
+    <div class="tilt-item card-shine">
+      <img src="..." alt="">
+    </div>
+  </div>
   <div class="cardContainer">
     <div class="cardColumn">
-      <img id="playerPawn" src="pawn.png" alt="Pawn">
+      <img id="playerPawn" src="" alt="Pawn">
     </div>
     <div class="cardImageAndDesc">
-      <div id="cardImageContainer">
-        <img src="card.png" alt="Card">
+      <div id="cardImageContainer" class="cardShine">
+        <img src="" alt="Card">
       </div>
       <div class="cardDescriptionBlock">
-        <div id="cardName">Kártya neve</div>
-        <div id="cardFaction">Frakció</div>
-        <div id="cardDescription">Leírás…</div>
-        <div id="cardEffect">Hatás…</div>
+        <div id="playerName"></div>
+        <div id="cardName"></div>
+        <div id="cardFaction"></div>
+        <div id="cardDescription"></div>
+        <div id="cardEffect"></div>
         <button id="closeCardViewBtn">Bezár</button>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+const tilt = document.querySelector('.tilt-item');
+
+tilt.addEventListener('mousemove', (e) => {
+  const { width, height, left, top } = tilt.getBoundingClientRect();
+  const x = e.clientX - left;
+  const y = e.clientY - top;
+  const rotateX = ((y / height) - 0.5) * 15;
+  const rotateY = ((x / width) - 0.5) * -15;
+  tilt.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+});
+
+tilt.addEventListener('mouseleave', () => {
+  tilt.style.transform = 'rotateX(0) rotateY(0)';
+});
+</script>
 
 </body>
 </html>

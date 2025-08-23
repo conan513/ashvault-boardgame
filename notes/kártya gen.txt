@@ -1,4 +1,19 @@
-[
+készíts kártya képeket 2:3 képarányban dark fantasy, sötét, képregényszerű, erősen kontrasztos
+
+normál kék keret
+kereten kivüli rész fekete
+tartalma ne legyen annyira sötét
+kép tartalma sorrendben:
+felül a frakcio neve (sötétebb kék háttérrel)
+elválasztva kártyára utaló kép
+evlálasztva alatta a kártya neve (háttér ugyan olyan mint a frakció névnél)
+elválasztva kártya leírása leírás (papír színü háttér)
+self és other effekt legalulra elválasztva a leírástól és egymástól is
+teljes self háttere legyen halvány zöld
+teljes other háttere legyen halvány piros
+
+mellékelt képhez hasonlóan csináld meg a ok2
+
   {
     "id": "ok1",
     "faction": "Order of Knights",
@@ -6,7 +21,7 @@
     "description": "Forged in the fires of ancient vows, the shield deflects all harm for the loyal, or weighs heavy upon the arms of the faithless. (Self: DEF +1; Other: ATK -1 for 3 turns)",
     "selfEffect": { "statMods": { "DEF": 1 } },
     "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
-    "image": "/images/cards/ok/ok1.jpg"
+    "image": "/images/cards/ok/ok1.png"
   },
   {
     "id": "ok2",
@@ -15,7 +30,7 @@
     "description": "The lost banner rallies allies to valor, or saps the courage of foes who behold it. (Self: HP +1; Other: effect: battle)",
     "selfEffect": { "statMods": { "HP": 1 } },
     "otherEffect": { "effect": "battle" },
-    "image": "/images/cards/ok/ok2.jpg"
+    "image": "/images/cards/ok/ok2.png"
   },
   {
     "id": "ok3",
@@ -24,7 +39,7 @@
     "description": "Blessed steel sharpens the arm of kin, or rends the armor of the unworthy. (Self: tempBuff ATK +1 for 3 turns; Other: tempDebuff DEF -1 for 2 turns)",
     "selfEffect": { "tempBuff": { "stats": ["ATK"], "amount": 1, "duration": 3 } },
     "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 2 } },
-    "image": "/images/cards/ok/ok3.jpg"
+    "image": "/images/cards/ok/ok3.png"
   },
   {
     "id": "ok4",
@@ -33,7 +48,7 @@
     "description": "The vow fortifies the heart of brothers, or chills the marrow of their enemies. (Self: HP +1; Other: RES -1)",
     "selfEffect": { "statMods": { "HP": 1 } },
     "otherEffect": { "statMods": { "RES": -1 } },
-    "image": "/images/cards/ok/ok4.jpg"
+    "image": "/images/cards/ok/ok4.png"
   },
   {
     "id": "ok5",
@@ -42,7 +57,7 @@
     "description": "The sacred seal bestows blessing upon the loyal, or calls the guilty to trial by steel. (Self: loot; Other: effect: battle)",
     "selfEffect": { "loot": true },
     "otherEffect": { "effect": "battle" },
-    "image": "/images/cards/ok/ok5.jpg"
+    "image": "/images/cards/ok/ok5.png"
   },
   {
     "id": "ok6",
@@ -51,7 +66,7 @@
     "description": "A brief rest renews the sworn, but denies respite to the foe. (Self: HP +1; Other: ATK -1)",
     "selfEffect": { "statMods": { "HP": 1 } },
     "otherEffect": { "statMods": { "ATK": -1 } },
-    "image": "/images/cards/ok/ok6.jpg"
+    "image": "/images/cards/ok/ok6.png"
   },
   {
     "id": "ok7",
@@ -60,7 +75,7 @@
     "description": "The steady march empowers allied lines, or breaks the formation of the enemy. (Self: tempBuff DEF +2 for 2 turns; Other: tempDebuff RES -1 for 3 turns)",
     "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 2, "duration": 2 } },
     "otherEffect": { "tempDebuff": { "stat": "RES", "amount": -1, "duration": 3 } },
-    "image": "/images/cards/ok/ok7.jpg"
+    "image": "/images/cards/ok/ok7.png"
   },
   {
     "id": "ok8",
@@ -69,7 +84,5 @@
     "description": "Ancient words heal the blood of knights, or ignite strife among the enemy host. (Self: HP +1; Other: effect: battle)",
     "selfEffect": { "statMods": { "HP": 1 } },
     "otherEffect": { "effect": "battle" },
-    "image": "/images/cards/ok/ok8.jpg"
+    "image": "/images/cards/ok/ok8.png"
   }
-
-]

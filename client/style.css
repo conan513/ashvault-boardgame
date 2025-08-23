@@ -158,6 +158,7 @@ button[disabled] {
   border-radius: var(--radius);
   background: #0f1521;
   box-shadow: var(--shadow);
+  transform-style: preserve-3d;
 }
 
 .card img {
@@ -1105,81 +1106,117 @@ pointer-events: none;
 
 /* Overlay háttér */
 #cardOverlay {
-display: flex;
-justify-content: center;
-align-items: center;
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background-color: rgba(0, 0, 0, 0.7); /* Átlátszó háttér */
-backdrop-filter: blur(10px); /* Blur hatás */
-z-index: 9999; /* Legfelső réteg */
-animation: fadeIn 0.3s ease-in-out;
-}
-
-/* Kártya megjelenése */
-/* Teljes képernyős overlay */
-#cardOverlay {
+overflow-x: hidden;
 position: fixed;
 inset: 0;
-background-color: rgba(0,0,0,0.85);
 display: flex;
 align-items: center;
 justify-content: center;
 padding: 20px;
 box-sizing: border-box;
 z-index: 9999;
+
+/* Háttér + blur */
+background-color: rgba(0,0,0,0.85);
+backdrop-filter: blur(10px);
+
+/* Kezdő állapot + animáció */
+opacity: 0;
+animation: overlayFadeIn 0.5s ease-out forwards;
 }
 
-/* Fő konténer */
+/* === ANIMÁCIÓK === */
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ==== KONTAINER ÉS OSZLOPOK ==== */
 .cardContainer {
   display: flex;
-  flex-direction: column; /* Mobil default */
+  flex-direction: column; /* mobil */
   width: 100%;
   max-width: 1400px;
   height: 100%;
   overflow-y: auto;
   gap: 20px;
+  animation-delay: 0.5s; /* csak overlay fade után */
 }
 
-/* Pawn és kártya konténerek */
-.cardColumn {
+.cardColumn,
+.cardImageAndDesc {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+}
+
+.cardColumn {
+  animation: slideInLeft 0.4s ease-out forwards;
+  animation-delay: 0.5s;
 }
 
 .cardImageAndDesc {
-  flex: 1.2; /* kicsit szélesebb, mint a pawn oszlop */
-  display: flex;
+  flex: 1.2;
   flex-direction: column;
-  align-items: center;
   max-height: 100%;
   box-sizing: border-box;
+  animation: slideInRight 0.4s ease-out forwards;
+  animation-delay: 0.5s;
 }
 
-/* Pawn kép */
+/* ==== KÉPEK (TELJESEN ÁTLÁTSZÓ HÁTTÉR) ==== */
+/* Pawn */
 #playerPawn {
-max-width: 100%;
-max-height: 80vh; /* mindig a képernyőn belül marad */
-height: auto;
-object-fit: contain;
+max-height: 80vh;
 }
 
-/* Kártyakép */
+/* Kártya konténer */
+#cardImageContainer {
+perspective: 1000px;
+position: relative;
+}
+
+/* Kártya kép – közös stílusok egy helyen */
 #cardImageContainer img {
 max-width: 100%;
-max-height: 60vh; /* marad hely a szövegnek */
-height: auto;
+max-height: 60vh;               /* alap érték */
 object-fit: contain;
+background: transparent;
+backdrop-filter: none;
+-webkit-backdrop-filter: none;
+border: none;
 border-radius: 12px;
-box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+box-shadow: none;
+transform-style: preserve-3d;
+transition: transform 0.15s ease;
 }
 
-/* Leírás */
+/* Asztali mód – csak ami eltér */
+@media (min-width: 768px) {
+  .cardContainer {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 60px;
+  }
+  #cardImageContainer img {
+  max-height: 70vh; /* csak ez változik */
+  }
+}
+
+
+/* ==== LEÍRÁS BLOKK ==== */
 .cardDescriptionBlock {
   width: 100%;
   max-width: 600px;
@@ -1207,7 +1244,7 @@ font-size: 1rem;
 line-height: 1.5;
 }
 
-/* Bezáró gomb */
+/* ==== BEZÁRÓ GOMB ==== */
 #closeCardViewBtn {
 margin-top: 10px;
 background-color: crimson;
@@ -1216,20 +1253,26 @@ border: none;
 padding: 10px 20px;
 border-radius: 6px;
 cursor: pointer;
+font-size: 1rem;
 }
 #closeCardViewBtn:hover {
 background-color: darkred;
 }
 
-/* Asztali nézet */
-@media (min-width: 768px) {
-  .cardContainer {
-    flex-direction: row; /* Egymás mellett */
-    align-items: stretch;
-    gap: 60px; /* nagyobb tér pawn és kártya között */
-  }
+/* Tilt effect */
+.tilt-container {
+  perspective: 1000px;
+  position: relative;
+}
 
-  .cardImageAndDesc {
-    justify-content: flex-start; /* szöveg a kártya alatt marad */
-  }
+/* Tilt item with transform effect */
+.tilt-item {
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out;
+  display: inline-block;
+}
+
+/* Apply tilt effect when mouse moves over the element */
+.tilt-item:hover {
+  transform: rotateY(10deg) rotateX(-10deg);
 }
