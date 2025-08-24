@@ -9,8 +9,8 @@ const tpDeck = require("./decks/temple.json");
 const vlDeck = require("./decks/village.json");
 const tvDeck = require("./decks/tavern.json");
 
-
-let decksState = {};
+let decksState = {};    // aktív húzópaklik
+let discardsState = {}; // dobópaklik
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -21,50 +21,62 @@ function shuffle(arr) {
   return a;
 }
 
-// Inicializál egy adott paklit
+// Eredeti teljes pakli betöltése és keverése
 function initDeck(faction) {
+  let src;
   switch (faction) {
-    case "Order of Knights": decksState[faction] = shuffle(okDeck); break;
-    case "The Hollow Grove": decksState[faction] = shuffle(hgDeck); break;
-    case "Cyber Dwarves":    decksState[faction] = shuffle(cdDeck); break;
-    case "Graveborn":        decksState[faction] = shuffle(gbDeck); break;
+    case "Order of Knights": src = okDeck; break;
+    case "The Hollow Grove": src = hgDeck; break;
+    case "Cyber Dwarves":    src = cdDeck; break;
+    case "Graveborn":        src = gbDeck; break;
 
-    // ÚJ speciális area paklik
-    case "Graveyard":        decksState[faction] = shuffle(gyDeck); break;
-    case "Temple":           decksState[faction] = shuffle(tpDeck); break;
-    case "Village":          decksState[faction] = shuffle(vlDeck); break;
-    case "Tavern":           decksState[faction] = shuffle(tvDeck); break;
+    case "Graveyard":        src = gyDeck; break;
+    case "Temple":           src = tpDeck; break;
+    case "Village":          src = vlDeck; break;
+    case "Tavern":           src = tvDeck; break;
 
-    case "Equipment":        decksState[faction] = shuffle(eqDeck); break;
-    case "Enemies":          decksState[faction] = shuffle(enDeck); break;
+    case "Equipment":        src = eqDeck; break;
+    case "Enemies":          src = enDeck; break;
   }
+  decksState[faction]   = shuffle(src);
+  discardsState[faction] = [];
 }
 
-// Húzás adott frakcióból
-function drawFactionCard(faction) {
+// Dobópakli visszakeverése húzópakliba
+function reshuffleDeck(faction) {
+  if (!discardsState[faction] || discardsState[faction].length === 0) return;
+  // keverjük a dobópaklit
+  const shuffledDiscard = shuffle(discardsState[faction]);
+  // hozzáadjuk a húzópaklihoz
+  decksState[faction].push(...shuffledDiscard);
+  // ürítjük a dobópaklit
+  discardsState[faction] = [];
+}
+
+// Húzás bármilyen pakliból
+function drawCard(faction) {
+  // ha nincs húzópakli → dobópakli visszakeverés
   if (!decksState[faction] || decksState[faction].length === 0) {
-    initDeck(faction);
+    reshuffleDeck(faction);
+    // ha még így sincs lap → teljes újrainit
+    if (!decksState[faction] || decksState[faction].length === 0) {
+      initDeck(faction);
+    }
   }
   return decksState[faction].shift();
 }
 
-// Húzás item pakliból
-function drawEquipmentCard() {
-  if (!decksState["Equipment"] || decksState["Equipment"].length === 0) {
-    initDeck("Equipment");
-  }
-  return decksState["Equipment"].shift();
+// Lap eldobása (pl. elhasználás után)
+function discardCard(faction, card) {
+  if (!discardsState[faction]) discardsState[faction] = [];
+  discardsState[faction].push(card);
 }
 
-// Húzás enemy pakliból
-function drawEnemyCard() {
-  if (!decksState["Enemies"] || decksState["Enemies"].length === 0) {
-    initDeck("Enemies");
-  }
-  return decksState["Enemies"].shift();
-}
+// Speciális draw segédfüggvények
+function drawFactionCard(faction) { return drawCard(faction); }
+function drawEquipmentCard()      { return drawCard("Equipment"); }
+function drawEnemyCard()          { return drawCard("Enemies"); }
 
-// Összes pakli resetelése (pl. új játék induláskor)
 function resetDecksState() {
   initDeck("Order of Knights");
   initDeck("The Hollow Grove");
@@ -80,4 +92,10 @@ function resetDecksState() {
   initDeck("Enemies");
 }
 
-module.exports = { drawFactionCard, drawEquipmentCard, drawEnemyCard, resetDecksState };
+module.exports = {
+  drawFactionCard,
+  drawEquipmentCard,
+  drawEnemyCard,
+  discardCard,
+  resetDecksState
+};

@@ -239,6 +239,89 @@ io.on("connection", (socket) => {
     io.to(roomName).emit("updateLobby", Object.values(gameState.waitingForCharacters));
   });
 
+  socket.on("activateCard", () => {
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState || !gameState.lastDrawn) return;
+
+    const { playerId, type, faction, card } = gameState.lastDrawn;
+    const player = gameState.players[playerId];
+    if (!player || !player.alive) return;
+
+    const sameFaction = (player.faction === faction);
+    const effect = sameFaction ? card.selfEffect : card.otherEffect;
+
+    if (effect.effect === "battle") {
+      const enemy = drawEnemyCard();
+      io.to(socket.currentRoom).emit("enemyDrawn", enemy);
+
+      const result = battlePVE(player, enemy, io, socket.id);
+      io.to(socket.currentRoom).emit("battleResult", {
+        type: "PVE",
+        result,
+        playerId: player.id,
+        enemy
+      });
+
+      const detailMsg =
+      `${player.name} dobása: ${result.rollP} + ATK(${player.stats.ATK}) - DEF(${enemy.DEF}) = ${result.totalP}\n` +
+      `${enemy.name || "Ellenség"} dobása: ${result.rollE} + ATK(${enemy.ATK}) - DEF(${player.stats.DEF}) = ${result.totalE}\n` +
+      `Győztes: ${result.winner === "player" ? player.name : (enemy.name || "Ellenség")}, sebzés: ${result.damage}`;
+
+      sendSystemMessage(socket.currentRoom, `${player.name} PvE harcot vívott a(z) ${enemy.name || "ellenfél"} ellen.\n${detailMsg}`);
+
+      if (result.winner === "enemy") {
+        if (player.stats.HP <= 0) {
+          player.alive = false;
+          io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
+          sendSystemMessage(socket.currentRoom, `${player.name} has died in PvE combat.`);
+        }
+      } else {
+        if (!sameFaction || card.loot) {
+          const item = drawEquipmentCard();
+          applyItemToPlayer(player, item);
+          io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+          sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`);
+        }
+      }
+    } else {
+      if (effect.loot) {
+        const item = drawEquipmentCard();
+        applyItemToPlayer(player, item);
+        io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+        sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`);
+      }
+      if (effect.hpDelta) {
+        player.stats.HP += effect.hpDelta;
+        if (player.stats.HP <= 0) {
+          player.alive = false;
+          io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
+          sendSystemMessage(socket.currentRoom, `${player.name} has died due to an event.`);
+        }
+      }
+      if (effect.statMods) {
+        for (const [k, v] of Object.entries(effect.statMods)) {
+          player.stats[k] = Math.max(0, player.stats[k] + v);
+        }
+        io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+        sendSystemMessage(socket.currentRoom, `${player.name} received stat modifications: ${JSON.stringify(effect.statMods)}`);
+      }
+      if (effect.tempBuff) {
+        applyTempEffect(player, effect.tempBuff, true);
+        io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+        sendSystemMessage(socket.currentRoom, `${player.name} received a temporary buff: ${JSON.stringify(effect.tempBuff)}`);
+      }
+      if (effect.tempDebuff) {
+        applyTempEffect(player, effect.tempDebuff, false);
+        io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+        sendSystemMessage(socket.currentRoom, `${player.name} received a temporary debuff: ${JSON.stringify(effect.tempDebuff)}`);
+      }
+    }
+
+    gameState.lastDrawn = null;
+    broadcast(socket.currentRoom);
+  });
+
+
 
 
   // Host elindítja a lobbyt → mehet karakterválasztás
@@ -395,6 +478,7 @@ io.on("connection", (socket) => {
 
 
   // Mozgás megerősítése
+  // Mozgás megerősítése
   socket.on("confirmMove", ({ dice, targetCellId, path }) => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
@@ -408,7 +492,7 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "Invalid target cell.");
     }
 
-    // 🔹 Broadcast animációs path minden kliensnek
+    // Lépés animáció broadcast
     if (path && path.length > 0) {
       io.to(socket.currentRoom).emit("playerMoved", {
         playerId: player.id,
@@ -416,7 +500,7 @@ io.on("connection", (socket) => {
       });
     }
 
-    // 🔹 Végső pozíció frissítése
+    // 🔹 Pozíció frissítése
     player.position = targetCellId;
 
     const othersHere = Object.values(gameState.players)
@@ -425,6 +509,7 @@ io.on("connection", (socket) => {
     const cell = cellById(gameState.board, targetCellId);
 
     if (differentFaction) {
+      // PvP indul
       gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
       io.to(socket.currentRoom).emit("pvpStarted", {
         aId: player.id,
@@ -432,10 +517,19 @@ io.on("connection", (socket) => {
         cellName: cell.name
       });
     } else {
+      // --- KÁRTYÁS MEZŐ ---
       if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
         const card = drawFactionCard(cell.faction);
-        gameState.lastDrawn = { type: "FACTION", faction: cell.faction, card };
-        io.to(socket.currentRoom).emit("cardDrawn", {
+        // Elmentjük, de nem aktiváljuk itt
+        gameState.lastDrawn = {
+          type: "FACTION",
+          faction: cell.faction,
+          card,
+          playerId: player.id
+        };
+
+        // Csak elküldjük a kliensnek, hogy megjelenítse
+        io.to(socket.id).emit("cardDrawn", {
           playerId: player.id,
           playerName: player.characterName,
           pawn: player.pawn,
@@ -443,86 +537,13 @@ io.on("connection", (socket) => {
           faction: cell.faction,
           card
         });
-
-        const sameFaction = (player.faction === cell.faction);
-        const effect = sameFaction ? card.selfEffect : card.otherEffect;
-
-        if (effect.effect === "battle") {
-          const enemy = drawEnemyCard();
-          io.to(socket.currentRoom).emit("enemyDrawn", enemy);
-
-          const result = battlePVE(player, enemy, io, socket.id);
-          io.to(socket.currentRoom).emit("battleResult", {
-            type: "PVE",
-            result,
-            playerId: player.id,
-            enemy
-          });
-
-          const detailMsg =
-          `${player.name} dobása: ${result.rollP} + ATK(${player.stats.ATK}) - DEF(${enemy.DEF}) = ${result.totalP}\n` +
-          `${enemy.name || "Ellenség"} dobása: ${result.rollE} + ATK(${enemy.ATK}) - DEF(${player.stats.DEF}) = ${result.totalE}\n` +
-          `Győztes: ${result.winner === "player" ? player.name : (enemy.name || "Ellenség")}, sebzés: ${result.damage}`;
-
-          sendSystemMessage(socket.currentRoom, `${player.name} PvE harcot vívott a(z) ${enemy.name || "ellenfél"} ellen.\n${detailMsg}`);
-
-          if (result.winner === "enemy") {
-            if (player.stats.HP <= 0) {
-              player.alive = false;
-              io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
-              sendSystemMessage(socket.currentRoom, `${player.name} has died in PvE combat.`);
-            }
-          } else {
-            if (!sameFaction || card.loot) {
-              const item = drawEquipmentCard();
-              applyItemToPlayer(player, item);
-              io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
-              sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`);
-            }
-          }
-        } else {
-          if (effect.loot) {
-            const item = drawEquipmentCard();
-            applyItemToPlayer(player, item);
-            io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
-            sendSystemMessage(socket.currentRoom, `${player.name} looted an item: ${item.name}`);
-          }
-          if (effect.hpDelta) {
-            player.stats.HP += effect.hpDelta;
-            if (player.stats.HP <= 0) {
-              player.alive = false;
-              io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
-              sendSystemMessage(socket.currentRoom, `${player.name} has died due to an event.`);
-            }
-          }
-          if (effect.statMods) {
-            for (const [k, v] of Object.entries(effect.statMods)) {
-              player.stats[k] = Math.max(0, player.stats[k] + v);
-            }
-            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
-            sendSystemMessage(socket.currentRoom, `${player.name} received stat modifications: ${JSON.stringify(effect.statMods)}`);
-          }
-          if (effect.tempBuff) {
-            applyTempEffect(player, effect.tempBuff, true);
-            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
-            sendSystemMessage(socket.currentRoom, `${player.name} received a temporary buff: ${JSON.stringify(effect.tempBuff)}`);
-          }
-          if (effect.tempDebuff) {
-            applyTempEffect(player, effect.tempDebuff, false);
-            io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
-            sendSystemMessage(socket.currentRoom, `${player.name} received a temporary debuff: ${JSON.stringify(effect.tempDebuff)}`);
-          }
-        }
       }
     }
 
-    // 🔹 Kör végi logika
     broadcast(socket.currentRoom);
 
     if (!gameState.pvpPending) {
-      // Jelöljük, hogy a játékos lépett
       gameState.turnCompleted[socket.id] = true;
-
       const activePlayers = Object.keys(gameState.players);
       const allPlayersCompleted = activePlayers.every(id => gameState.turnCompleted[id]);
 
@@ -532,10 +553,80 @@ io.on("connection", (socket) => {
         gameState.turnCompleted = {};
       }
 
-      // Következő játékos
       advanceTurn(socket.currentRoom);
     }
   });
+
+  socket.on("activateCard", () => {
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState || !gameState.lastDrawn) return;
+
+    const { playerId, type, faction, card } = gameState.lastDrawn;
+    const player = gameState.players[playerId];
+    if (!player || !player.alive) return;
+
+    const sameFaction = (player.faction === faction);
+    const effect = sameFaction ? card.selfEffect : card.otherEffect;
+
+    if (effect.effect === "battle") {
+      const enemy = drawEnemyCard();
+      io.to(socket.currentRoom).emit("enemyDrawn", enemy);
+
+      const result = battlePVE(player, enemy, io, socket.id);
+      io.to(socket.currentRoom).emit("battleResult", {
+        type: "PVE",
+        result,
+        playerId: player.id,
+        enemy
+      });
+
+      if (result.winner === "enemy") {
+        if (player.stats.HP <= 0) {
+          player.alive = false;
+          io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
+        }
+      } else {
+        if (!sameFaction || card.loot) {
+          const item = drawEquipmentCard();
+          applyItemToPlayer(player, item);
+          io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+        }
+      }
+    } else {
+      if (effect.loot) {
+        const item = drawEquipmentCard();
+        applyItemToPlayer(player, item);
+        io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+      }
+      if (effect.hpDelta) {
+        player.stats.HP += effect.hpDelta;
+        if (player.stats.HP <= 0) {
+          player.alive = false;
+          io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "Event" });
+        }
+      }
+      if (effect.statMods) {
+        for (const [k, v] of Object.entries(effect.statMods)) {
+          player.stats[k] = Math.max(0, player.stats[k] + v);
+        }
+        io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+      }
+      if (effect.tempBuff) {
+        applyTempEffect(player, effect.tempBuff, true);
+        io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+      }
+      if (effect.tempDebuff) {
+        applyTempEffect(player, effect.tempDebuff, false);
+        io.to(socket.currentRoom).emit("statsChanged", { playerId: player.id, stats: player.stats });
+      }
+    }
+
+    // Effekt után töröljük a lastDrawn-t
+    gameState.lastDrawn = null;
+
+    broadcast(socket.currentRoom);
+  });
+
 
 
     // PVP megoldása

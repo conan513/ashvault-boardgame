@@ -1,3 +1,9 @@
+// pl. express routerben
+app.get("/discard/:faction", (req, res) => {
+  const faction = req.params.faction;
+  res.json(discardsState[faction] || []);
+});
+
 const socket = io();
 let MY_ID = null;
 window.GAME = null;
@@ -214,50 +220,129 @@ socket.on("diceResult", ({ dice }) => {
   diceNumber.textContent = dice;
 });
 
-socket.on("cardDrawn", ({ playerId, playerName, pawn, card, type }) => {
-  console.log("Card Data:", card);  // Debugging
+// Állapotváltozók
+const cardQueue = [];
+let isOverlayOpen = false;
+let closingInProgress = false;
+let overlaySnapshot = null;
 
-  // Bal oldali játékos infó kitöltése
+// Kártya érkezik a szervertől
+socket.on("cardDrawn", (data) => {
+  // Ha overlay nyitva van, tedd sorba
+  if (isOverlayOpen) {
+    cardQueue.push(data);
+  } else {
+    showCardInOverlay(data);
+  }
+});
+
+// Kártya megjelenítése overlay-ben
+function showCardInOverlay(data) {
+  overlaySnapshot = { ...data }; // pillanatkép
+  isOverlayOpen = true;
+
+  const { playerName, pawn, card } = data;
+
   if (playerName) $("#playerName").textContent = playerName;
   if (pawn) $("#playerPawn").src = pawn;
 
-  // Toast csak faction kártyánál
-  if (type === "FACTION") {
-    showToast(`🃏 ${playerName} drew a faction card: ${card.name}`);
-  }
-
-  // Kártyaadatok megjelenítése
   if (card) {
     $("#cardName").textContent = card.name || "No name";
     $("#cardFaction").textContent = card.faction || "No faction";
     $("#cardDescription").textContent = card.description || "No description available.";
     $("#cardEffect").textContent = card.effect || "No effect";
-
-    // Kép megjelenítése, ha van
     if (card.image) {
-      $("#cardImageContainer").innerHTML =
-      `<img src="${card.image}" alt="${card.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />`;
+      $("#cardImageContainer").innerHTML = `<img src="${card.image}" alt="${card.name}" />`;
     } else {
       $("#cardImageContainer").innerHTML = "";
     }
-
-    // Overlay megjelenítése
-    const cardOverlay = $("#cardOverlay");
-    if (cardOverlay) {
-      cardOverlay.style.display = "flex";
-      console.log("Card overlay displayed");
-    }
-  } else {
-    console.error("No card data received!");
   }
-});
 
+  openCardOverlay();
+}
 
+// Overlay nyitása
+function openCardOverlay() {
+  const overlay = $("#cardOverlay");
 
+  if (closingInProgress) {
+    overlay.style.display = "flex";
+    overlay.classList.remove("is-hiding");
+    closingInProgress = false;
+  }
+
+  overlay.classList.remove("is-hiding", "is-visible");
+  overlay.style.display = "flex";
+  overlay.style.opacity = "0";
+
+  const img = $("#cardImageContainer img");
+  if (img && !img.complete) {
+    img.onload = startFadeIn;
+  } else {
+    startFadeIn();
+  }
+
+  function startFadeIn() {
+    void overlay.offsetWidth; // reflow
+    overlay.classList.add("is-visible");
+  }
+}
+
+// Overlay bezárás gomb
 $("#closeCardViewBtn").addEventListener("click", () => {
-  const cardOverlay = $("#cardOverlay");
-  cardOverlay.style.display = "none";  // Elrejtjük az overlay-t
+  const overlay = $("#cardOverlay");
+  const cardImg = $("#cardImageContainer img");
+
+  if (cardImg) {
+    cardImg.classList.add("card-activate");
+    cardImg.addEventListener("animationend", () => {
+      cardImg.classList.remove("card-activate");
+    }, { once: true });
+  }
+
+  overlay.classList.remove("is-visible");
+  overlay.classList.add("is-hiding");
+  closingInProgress = true;
+
+  const thisCardData = overlaySnapshot;
+  overlaySnapshot = null;
+
+  // Normál aktiválás animáció végén
+  overlay.addEventListener("animationend", function handler() {
+    if (overlay.classList.contains("is-hiding")) {
+      finishClose(overlay, thisCardData);
+    }
+    overlay.removeEventListener("animationend", handler);
+  });
+
+  // Biztonsági fallback
+  setTimeout(() => {
+    if (closingInProgress) {
+      finishClose(overlay, thisCardData);
+    }
+  }, 600);
 });
+
+// Overlay végleges bezárás + aktiválás + következő kártya
+function finishClose(overlay, cardData) {
+  overlay.style.display = "none";
+  overlay.classList.remove("is-hiding");
+  closingInProgress = false;
+  isOverlayOpen = false;
+
+  if (cardData) {
+    socket.emit("activateCard", {
+      playerId: cardData.playerId,
+      type: cardData.type,
+      cardId: cardData.card?.id
+    });
+  }
+
+  if (cardQueue.length > 0) {
+    showCardInOverlay(cardQueue.shift());
+  }
+}
+
 
 socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); });
 socket.on("battleResult", (data) => { renderBattle(data); });

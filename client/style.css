@@ -999,6 +999,28 @@ opacity: 0;
 animation: overlayFadeIn 0.5s ease-out forwards;
 }
 
+/* Kilépő animáció */
+@keyframes overlayFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+#cardOverlay.fade-out {
+animation: overlayFadeOut 0.5s ease-in forwards;
+}
+
+
+/* Kártya felvillanás/pulzálás */
+.card-activate {
+  animation: activateFlash 0.6s ease;
+}
+
+@keyframes activateFlash {
+  0%   { box-shadow: 0 0 0px 0px gold; transform: scale(1); }
+  50%  { box-shadow: 0 0 20px 8px gold; transform: scale(1.05); }
+  100% { box-shadow: 0 0 0px 0px gold; transform: scale(1); }
+}
+
 /* === Egyszeri ANIMÁCIÓK === */
 @keyframes overlayFadeIn {
   from { opacity: 0; }
@@ -1244,4 +1266,42 @@ max-width: 340px !important;
 
 #tooltip img {
 width: 165px !important;
+}
+
+#cardOverlay {
+display: none;
+opacity: 0;
+position: fixed;
+inset: 0;
+z-index: 9999;
+align-items: center;
+justify-content: center;
+background: rgba(0,0,0,0.85);
+backdrop-filter: blur(10px);
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+#cardOverlay.is-visible {
+animation: fadeInOverlay 0.5s ease-out forwards;
+}
+
+@keyframes fadeOutOverlay {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+#cardOverlay.is-hiding {
+animation: fadeOutOverlay 0.5s ease-in forwards;
+}
+
+/* Kártya felvillanás */
+.card-activate {
+  animation: activateFlash 0.6s ease;
+}
+@keyframes activateFlash {
+  0%   { box-shadow: 0 0 0px 0px gold; transform: scale(1); }
+  50%  { box-shadow: 0 0 20px 8px gold; transform: scale(1.05); }
+  100% { box-shadow: 0 0 0px 0px gold; transform: scale(1); }
 }
