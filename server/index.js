@@ -17,6 +17,13 @@ const {
   resetDecksState
 } = require("./gameLoop");
 
+const {
+  specialTargetNames,
+  gatewaysOuter,
+  gatewaysInner,
+  teleportPlayerIfOnSpecial
+} = require("./board");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -479,83 +486,95 @@ io.on("connection", (socket) => {
 
   // Mozgás megerősítése
   // Mozgás megerősítése
-  socket.on("confirmMove", ({ dice, targetCellId, path }) => {
-    const gameState = rooms[socket.currentRoom];
-    if (!gameState) return;
-    if (!isPlayersTurn(gameState, socket.id))
-      return socket.emit("errorMsg", "Nem a te köröd!");
-    const player = gameState.players[socket.id];
-    if (!player || !player.alive) return;
+socket.on("confirmMove", ({ dice, targetCellId, path }) => {
+  const gameState = rooms[socket.currentRoom];
+  if (!gameState) return;
+  if (!isPlayersTurn(gameState, socket.id))
+    return socket.emit("errorMsg", "Nem a te köröd!");
 
-    const targets = adjacencyAtDistance(gameState.board, player.position, dice);
-    if (!targets.includes(targetCellId)) {
-      return socket.emit("errorMsg", "Invalid target cell.");
-    }
+  const player = gameState.players[socket.id];
+  if (!player || !player.alive) return;
 
-    // Lépés animáció broadcast
-    if (path && path.length > 0) {
-      io.to(socket.currentRoom).emit("playerMoved", {
+  const targets = adjacencyAtDistance(gameState.board, player.position, dice);
+  if (!targets.includes(targetCellId)) {
+    return socket.emit("errorMsg", "Invalid target cell.");
+  }
+
+  // Első animáció: a dobással elért celláig
+  if (path && path.length > 0) {
+    io.to(socket.currentRoom).emit("playerMoved", {
+      playerId: player.id,
+      path
+    });
+  }
+
+  // Állítsuk be a cél cellát
+  player.position = targetCellId;
+
+  // --- TELEPORT CHECK ---
+  const beforeTeleport = player.position;
+  teleportPlayerIfOnSpecial(gameState.board, player);
+  const afterTeleport = player.position;
+
+  // Ha teleportált, küldünk egy új animációs lépést a túloldalra
+  if (afterTeleport !== beforeTeleport) {
+    io.to(socket.currentRoom).emit("playerMoved", {
+      playerId: player.id,
+      path: [beforeTeleport, afterTeleport]
+    });
+  }
+
+  // PvP vagy kártyaellenőrzés az aktuális (akár teleportált) pozíció alapján
+  const cell = cellById(gameState.board, player.position);
+
+  const othersHere = Object.values(gameState.players)
+    .filter(p => p.id !== player.id && p.alive && p.position === player.position);
+  const differentFaction = othersHere.find(p => p.faction !== player.faction);
+
+  if (differentFaction) {
+    gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: player.position };
+    io.to(socket.currentRoom).emit("pvpStarted", {
+      aId: player.id,
+      bId: differentFaction.id,
+      cellName: cell.name
+    });
+  } else {
+    if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+      const card = drawFactionCard(cell.faction);
+      gameState.lastDrawn = {
+        type: "FACTION",
+        faction: cell.faction,
+        card,
+        playerId: player.id
+      };
+      io.to(socket.id).emit("cardDrawn", {
         playerId: player.id,
-        path
+        playerName: player.characterName,
+        pawn: player.pawn,
+        type: "FACTION",
+        faction: cell.faction,
+        card
       });
     }
+  }
 
-    // 🔹 Pozíció frissítése
-    player.position = targetCellId;
+  broadcast(socket.currentRoom);
 
-    const othersHere = Object.values(gameState.players)
-    .filter(p => p.id !== player.id && p.alive && p.position === targetCellId);
-    const differentFaction = othersHere.find(p => p.faction !== player.faction);
-    const cell = cellById(gameState.board, targetCellId);
+  if (!gameState.pvpPending) {
+    gameState.turnCompleted[socket.id] = true;
+    const activePlayers = Object.keys(gameState.players);
+    const allPlayersCompleted = activePlayers.every(id => gameState.turnCompleted[id]);
 
-    if (differentFaction) {
-      // PvP indul
-      gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: targetCellId };
-      io.to(socket.currentRoom).emit("pvpStarted", {
-        aId: player.id,
-        bId: differentFaction.id,
-        cellName: cell.name
-      });
-    } else {
-      // --- KÁRTYÁS MEZŐ ---
-      if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
-        const card = drawFactionCard(cell.faction);
-        // Elmentjük, de nem aktiváljuk itt
-        gameState.lastDrawn = {
-          type: "FACTION",
-          faction: cell.faction,
-          card,
-          playerId: player.id
-        };
-
-        // Csak elküldjük a kliensnek, hogy megjelenítse
-        io.to(socket.id).emit("cardDrawn", {
-          playerId: player.id,
-          playerName: player.characterName,
-          pawn: player.pawn,
-          type: "FACTION",
-          faction: cell.faction,
-          card
-        });
-      }
+    if (allPlayersCompleted) {
+      gameState.dayNightCycle = gameState.dayNightCycle === "day" ? "night" : "day";
+      io.to(socket.currentRoom).emit("dayNightChanged", gameState.dayNightCycle);
+      gameState.turnCompleted = {};
     }
 
-    broadcast(socket.currentRoom);
+    advanceTurn(socket.currentRoom);
+  }
+});
 
-    if (!gameState.pvpPending) {
-      gameState.turnCompleted[socket.id] = true;
-      const activePlayers = Object.keys(gameState.players);
-      const allPlayersCompleted = activePlayers.every(id => gameState.turnCompleted[id]);
-
-      if (allPlayersCompleted) {
-        gameState.dayNightCycle = gameState.dayNightCycle === "day" ? "night" : "day";
-        io.to(socket.currentRoom).emit("dayNightChanged", gameState.dayNightCycle);
-        gameState.turnCompleted = {};
-      }
-
-      advanceTurn(socket.currentRoom);
-    }
-  });
 
   socket.on("activateCard", () => {
     const gameState = rooms[socket.currentRoom];

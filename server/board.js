@@ -173,10 +173,35 @@ function cellById(board, id) {
   return board.find(c => c.id === id);
 }
 
+function teleportPlayerIfOnSpecial(board, player) {
+  const currentCell = cellById(board, player.position);
+  if (!currentCell) return;
+
+  // Külső -> belső
+  if (specialTargetNames.includes(currentCell.name)) {
+    const gi = gatewaysOuter.indexOf(currentCell.id);
+    if (gi >= 0) {
+      player.position = gatewaysInner[gi];
+    }
+    return;
+  }
+
+  // Belső -> külső
+  const giInner = gatewaysInner.indexOf(currentCell.id);
+  if (giInner >= 0) {
+    player.position = gatewaysOuter[giInner];
+  }
+}
+
+
 module.exports = {
   initBoard,
   assignSpecialAreas,
   neighbors,
   adjacencyAtDistance,
-  cellById
+  cellById,
+  specialTargetNames,
+  gatewaysOuter,
+  gatewaysInner,
+  teleportPlayerIfOnSpecial // <- tényleg legyen itt
 };

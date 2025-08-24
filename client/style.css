@@ -1305,3 +1305,13 @@ animation: fadeOutOverlay 0.5s ease-in forwards;
   50%  { box-shadow: 0 0 20px 8px gold; transform: scale(1.05); }
   100% { box-shadow: 0 0 0px 0px gold; transform: scale(1); }
 }
+.teleportHighlight polygon {
+  stroke: #ff4444;
+  stroke-width: 3;
+  animation: pulseTeleport 1s ease-in-out;
+}
+
+@keyframes pulseTeleport {
+  0%, 100% { fill-opacity: 1; }
+  50% { fill-opacity: 0.4; }
+}

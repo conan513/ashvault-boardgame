@@ -546,9 +546,42 @@ function initTileAndPlayerTooltips() {
 socket.on("playerMoved", ({ playerId, path }) => {
   const player = GAME.players[playerId];
   if (!player) return;
-  player.position = path[path.length-1]; // állapot frissítése
-  animateMove(player, path);             // animáció lefuttatása
+
+  const fromCellId = player.position;
+  const toCellId = path[path.length - 1];
+
+  player.position = toCellId;
+
+  // Ellenőrzés: kapu teleport történt-e
+  const fromCell = BOARD_CACHE.find(c => c.id === fromCellId);
+  const toCell = BOARD_CACHE.find(c => c.id === toCellId);
+
+  const isTeleport = specialPairs.some(([outerName, innerName]) =>
+  (fromCell?.name === outerName && toCell?.name === innerName) ||
+  (fromCell?.name === innerName && toCell?.name === outerName)
+  );
+
+  if (isTeleport) {
+    showToast(`${fromCell.name} ➡ ${toCell.name} (Teleport!)`);
+
+    // Ide opcionálisan berajzolhatunk egy animált vonalat
+    // vagy kiemelhetjük röviden a két cellát
+    highlightTeleportCells(fromCell.id, toCell.id);
+  }
+
+  animateMove(player, path);
 });
+
+function highlightTeleportCells(fromId, toId) {
+  const svg = document.getElementById("boardSVG");
+  [fromId, toId].forEach(id => {
+    const g = svg.querySelector(`.cell[data-id="${id}"]`);
+    if (g) {
+      g.classList.add("teleportHighlight");
+      setTimeout(() => g.classList.remove("teleportHighlight"), 1000);
+    }
+  });
+}
 
 
 window.renderBoard = renderBoard;
