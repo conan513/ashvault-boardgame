@@ -5,7 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
-const { initBoard, adjacencyAtDistance, cellById } = require("./board");
+const { initBoard, assignSpecialAreas, adjacencyAtDistance, cellById } = require("./board");
 const { factions } = require("./factions");
 const { characters } = require("./characters");
 const { battlePVE, battlePVP } = require("./battleSystem");
@@ -74,18 +74,21 @@ function processEndOfTurnEffects(unit) {
 }
 
 function makeGameState() {
+  const board = initBoard();
+  assignSpecialAreas(board); // kiosztja a 4 speciális frakciót
+
   return {
-    board: initBoard(),
+    board,
     players: {},
     turnOrder: [],
     currentTurnIndex: 0,
     lastDrawn: null,
     pvpPending: null,
-    waitingForCharacters: {}, // ide kerülnek lobbyban várakozók
+    waitingForCharacters: {},
     hostId: null,
     lobbyStarted: false,
-    dayNightCycle: "day", // New state for day-night cycle
-    turnCompleted: {} // Track completed turns for each player
+    dayNightCycle: "day",
+    turnCompleted: {}
   };
 }
 

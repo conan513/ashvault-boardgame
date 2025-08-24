@@ -1,0 +1,75 @@
+[
+  {
+    "id": "ok1",
+    "faction": "Order of Knights",
+    "name": "Shield of the Oathbound",
+    "description": "Forged in the fires of ancient vows, the shield deflects all harm for the loyal, or weighs heavy upon the arms of the faithless. (Self: DEF +1; Other: ATK -1 for 3 turns)",
+    "selfEffect": { "statMods": { "DEF": 1 } },
+    "otherEffect": { "tempDebuff": { "stat": "ATK", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/ok/ok1.jpg"
+  },
+  {
+    "id": "ok2",
+    "faction": "Order of Knights",
+    "name": "Banner of the Eternal King",
+    "description": "The lost banner rallies allies to valor, or saps the courage of foes who behold it. (Self: HP +1; Other: effect: battle)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ok/ok2.jpg"
+  },
+  {
+    "id": "ok3",
+    "faction": "Order of Knights",
+    "name": "Sanctified Blade",
+    "description": "Blessed steel sharpens the arm of kin, or rends the armor of the unworthy. (Self: tempBuff ATK +1 for 3 turns; Other: tempDebuff DEF -1 for 2 turns)",
+    "selfEffect": { "tempBuff": { "stats": ["ATK"], "amount": 1, "duration": 3 } },
+    "otherEffect": { "tempDebuff": { "stat": "DEF", "amount": -1, "duration": 2 } },
+    "image": "/images/cards/ok/ok3.jpg"
+  },
+  {
+    "id": "ok4",
+    "faction": "Order of Knights",
+    "name": "Oathkeeper’s Vigor",
+    "description": "The vow fortifies the heart of brothers, or chills the marrow of their enemies. (Self: HP +1; Other: RES -1)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "statMods": { "RES": -1 } },
+    "image": "/images/cards/ok/ok4.jpg"
+  },
+  {
+    "id": "ok5",
+    "faction": "Order of Knights",
+    "name": "Seal of Judgement",
+    "description": "The sacred seal bestows blessing upon the loyal, or calls the guilty to trial by steel. (Self: loot; Other: effect: battle)",
+    "selfEffect": { "loot": true },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ok/ok5.jpg"
+  },
+  {
+    "id": "ok6",
+    "faction": "Order of Knights",
+    "name": "Knight’s Respite",
+    "description": "A brief rest renews the sworn, but denies respite to the foe. (Self: HP +1; Other: ATK -1)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "statMods": { "ATK": -1 } },
+    "image": "/images/cards/ok/ok6.jpg"
+  },
+  {
+    "id": "ok7",
+    "faction": "Order of Knights",
+    "name": "Ironclad March",
+    "description": "The steady march empowers allied lines, or breaks the formation of the enemy. (Self: tempBuff DEF +2 for 2 turns; Other: tempDebuff RES -1 for 3 turns)",
+    "selfEffect": { "tempBuff": { "stats": ["DEF"], "amount": 2, "duration": 2 } },
+    "otherEffect": { "tempDebuff": { "stat": "RES", "amount": -1, "duration": 3 } },
+    "image": "/images/cards/ok/ok7.jpg"
+  },
+  {
+    "id": "ok8",
+    "faction": "Order of Knights",
+    "name": "Vow of the First King",
+    "description": "Ancient words heal the blood of knights, or ignite strife among the enemy host. (Self: HP +1; Other: effect: battle)",
+    "selfEffect": { "statMods": { "HP": 1 } },
+    "otherEffect": { "effect": "battle" },
+    "image": "/images/cards/ok/ok8.jpg"
+  }
+
+]

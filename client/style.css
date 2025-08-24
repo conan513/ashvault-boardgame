@@ -1329,3 +1329,18 @@ height: 50px;
 width: 50px;
 height: 50px;
 }
+
+/* Pulzáló ragyogás a speciális mezőkhöz */
+.cell.gy polygon,
+.cell.tp polygon,
+.cell.vl polygon,
+.cell.tv polygon {
+  stroke-width: 3;
+  animation: specialGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes specialGlow {
+  0%   { stroke: #ffd700; filter: drop-shadow(0 0 2px #ffd700); }
+  50%  { stroke: #ff8c00; filter: drop-shadow(0 0 6px #ff8c00); }
+  100% { stroke: #ffd700; filter: drop-shadow(0 0 2px #ffd700); }
+}

@@ -4,6 +4,11 @@ const gbDeck = require("./decks/graveborn.json");
 const hgDeck = require("./decks/the_hollow_grove.json");
 const eqDeck = require("./decks/equipment.json");
 const enDeck = require("./decks/enemies.json");
+const gyDeck = require("./decks/graveyard.json");
+const tpDeck = require("./decks/temple.json");
+const vlDeck = require("./decks/village.json");
+const tvDeck = require("./decks/tavern.json");
+
 
 let decksState = {};
 
@@ -23,6 +28,13 @@ function initDeck(faction) {
     case "The Hollow Grove": decksState[faction] = shuffle(hgDeck); break;
     case "Cyber Dwarves":    decksState[faction] = shuffle(cdDeck); break;
     case "Graveborn":        decksState[faction] = shuffle(gbDeck); break;
+
+    // ÚJ speciális area paklik
+    case "Graveyard":        decksState[faction] = shuffle(gyDeck); break;
+    case "Temple":           decksState[faction] = shuffle(tpDeck); break;
+    case "Village":          decksState[faction] = shuffle(vlDeck); break;
+    case "Tavern":           decksState[faction] = shuffle(tvDeck); break;
+
     case "Equipment":        decksState[faction] = shuffle(eqDeck); break;
     case "Enemies":          decksState[faction] = shuffle(enDeck); break;
   }
@@ -58,6 +70,12 @@ function resetDecksState() {
   initDeck("The Hollow Grove");
   initDeck("Cyber Dwarves");
   initDeck("Graveborn");
+
+  initDeck("Graveyard");
+  initDeck("Temple");
+  initDeck("Village");
+  initDeck("Tavern");
+
   initDeck("Equipment");
   initDeck("Enemies");
 }

@@ -58,7 +58,17 @@ function renderBoard(state) {
     const { x, y } = posFor(cell);
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     g.classList.add("cell");
-    const fcls = ({ "Order of Knights": "ok", "The Hollow Grove": "hg", "Cyber Dwarves": "cd", "Graveborn": "gb", "NEUTRAL": "ne" })[cell.faction] || "ne";
+    const fcls = ({
+      "Order of Knights": "ok",
+      "The Hollow Grove": "hg",
+      "Cyber Dwarves": "cd",
+      "Graveborn": "gb",
+      "NEUTRAL": "ne",
+      "Graveyard": "gy",
+      "Temple": "tp",
+      "Village": "vl",
+      "Tavern": "tv"
+    })[cell.faction] || "ne";
     g.classList.add(fcls);
     g.dataset.id = cell.id;
 
@@ -68,6 +78,12 @@ function renderBoard(state) {
     poly.setAttribute("fill", "rgba(30,30,40,0.8)");
     poly.setAttribute("stroke", "#555");
     g.appendChild(poly);
+    let fillColor = "rgba(30,30,40,0.8)";
+    if (cell.faction === "Graveyard") fillColor = "rgba(90,40,40,0.8)";
+    if (cell.faction === "Temple")    fillColor = "rgba(80,80,130,0.8)";
+    if (cell.faction === "Village")   fillColor = "rgba(100,80,50,0.8)";
+    if (cell.faction === "Tavern")    fillColor = "rgba(60,80,40,0.8)";
+    poly.setAttribute("fill", fillColor);
 
     // frakció ikon
     const icon = document.createElementNS("http://www.w3.org/2000/svg", "image");
@@ -370,7 +386,6 @@ function enableTileHoverPopup() {
   });
 }
 
-// ---- PLAYER TOKEN TOOLTIP ----
 // ---- PLAYER TOKEN TOOLTIP ----
 const svg = document.getElementById("boardSVG"); // Győződj meg róla, hogy az svg változó helyesen van inicializálva
 
