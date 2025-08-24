@@ -88,41 +88,6 @@ align-items: center;
 position: relative; /* ez kell, hogy a diceOut a boardhoz igazodjon */
 }
 
-/* --- Board cellák --- */
-.cell {
-  cursor: default;
-}
-
-.cell.Outer {
-  fill: transparent;
-}
-
-.cell circle {
-  stroke: #233046;
-  stroke-width: 2px;
-  fill: #0f1521;
-}
-
-.cell text {
-  fill: #9eb3d7;
-  font-size: clamp(10px, 1vw, 16px); /* min 10px, max 16px */
-  text-anchor: middle;
-  dominant-baseline: middle;
-  letter-spacing: 0.05em;
-  pointer-events: none;
-}
-
-.cell.ok circle { stroke: var(--ok); }
-.cell.hg circle { stroke: var(--hg); }
-.cell.cd circle { stroke: var(--cd); }
-.cell.gb circle { stroke: var(--gb); }
-.cell.ne circle { stroke: var(--ne); }
-
-.cell.highlight circle {
-  fill: #1e2a3f;
-  filter: drop-shadow(0 0 6px rgba(80,209,255,0.6));
-}
-
 /* --- Általános UI --- */
 #statusBar {
 display: flex;
@@ -480,27 +445,6 @@ color: white;
   user-select: none;
 }
 
-#tileTooltip {
-position: fixed;
-pointer-events: none;
-background: rgba(20, 26, 38, 0.95);
-border: 1px solid var(--border);
-border-radius: 10px;
-padding: 10px 14px;
-box-shadow: var(--shadow);
-display: none;
-z-index: 9999;
-text-align: center;
-max-width: 360px;
-}
-
-#tileTooltip img {
-width: 240px;
-height: 240px;
-display: block;
-margin: 0 auto 6px;
-}
-
 .stat {
   display: flex;
   align-items: center;
@@ -649,22 +593,6 @@ button.btn-back:hover {
 /* --- 1) Alapszínek / hangulat --- */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600;800&display=swap');
 
-/* --- 3) Board környezet / keret --- */
-#boardWrap {
-position: relative;
-margin: clamp(8px, 3vmin, 24px) auto;
-width: min(92vmin, 940px);
-aspect-ratio: 1 / 1;
-border-radius: 24px;
-background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-box-shadow:
-0 0 0 1px var(--panel-line),
-0 10px 40px rgba(0,0,0,0.45),
-inset 0 0 60px rgba(100,160,255,0.06);
-backdrop-filter: blur(6px);
-z-index: 1;
-}
-
 /* --- 4) Az SVG tábla --- */
 #boardSVG {
 background: radial-gradient(ellipse at center, #111722 0%, #0b0f15 100%);
@@ -676,22 +604,6 @@ height: 100%;
 display: block;
 filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
 backdrop-filter: blur(10px);
-}
-
-/* körgyűrűk */
-#boardSVG circle {
-paint-order: stroke;
-stroke: var(--ring);
-stroke-width: 3;
-fill: none;
-filter: drop-shadow(0 0 6px rgba(60,120,220,0.15));
-}
-
-/* sugárvonalak */
-#boardSVG line {
-stroke: #1a2535;
-stroke-width: 2;
-opacity: 0.85;
 }
 
 /* --- 5) Cellák (hexek) --- */
@@ -715,9 +627,24 @@ opacity: 0.85;
 .cell.ne polygon { stroke: color-mix(in oklab, var(--ne) 60%, #b8c2d4); filter: drop-shadow(0 0 3px rgba(150,170,195,0.25)); }
 
 /* hover feedback – profi, visszafogott */
+@keyframes flashBorder {
+  0%, 100% { stroke: #ffcc00; stroke-width: 4; }
+  50%     { stroke: #ffffff; stroke-width: 6; }
+}
+
 .cell:hover polygon {
-  fill: rgba(26, 34, 48, 0.92);
-  filter: drop-shadow(0 0 10px rgba(120, 180, 255, 0.22));  /* világító effekt */
+  stroke: #ffd700;
+  stroke-width: 4;
+  fill: rgba(255, 255, 200, 0.65);
+  filter: drop-shadow(0 0 8px #ffd700);
+  transition: all 0.2s ease-in-out;
+}
+
+.cell:hover text {
+  fill: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 0 0 4px #000;
 }
 
 /* aktuális játékos mező */
@@ -780,35 +707,6 @@ margin-top: clamp(8px, 2vmin, 18px);
 width: min(92vmin, 940px);
 display: flex; gap: 10px; flex-wrap: wrap;
 justify-content: center;
-}
-
-/* --- 8) Tooltipok (cella + játékos) – üveg panel --- */
-#tileTooltip, #playerTooltip {
-position: fixed;
-z-index: 9999;
-display: none;
-padding: 10px;
-border-radius: 14px;
-background: var(--panel);
-border: 1px solid var(--panel-line);
-box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-backdrop-filter: blur(8px) saturate(1.1);
-color: var(--fg);
-}
-#tileTooltip img, #playerTooltip img {
-display: block;
-object-fit: cover;
-box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-}
-
-/* tippek címkéje */
-#tileTooltipLabel {
-margin-top: 8px;
-text-align: center;
-font-family: Orbitron, Inter, sans-serif;
-font-weight: 700;
-font-size: 14px;
-letter-spacing: .04em;
 }
 
 /* --- 9) Felugró értesítés (toast) – ha osztályt akarsz használni --- */
@@ -1092,43 +990,43 @@ justify-content: center;
 padding: 20px;
 box-sizing: border-box;
 z-index: 9999;
-overflow-x: hidden;
-
-/* Háttér + blur */
 background-color: rgba(0,0,0,0.85);
 backdrop-filter: blur(10px);
 
-/* Kezdő állapot + animáció */
+
+/* Kezdő állapot + egyszeri belépő animáció */
 opacity: 0;
 animation: overlayFadeIn 0.5s ease-out forwards;
 }
 
-/* === ANIMÁCIÓK === */
+/* === Egyszeri ANIMÁCIÓK === */
 @keyframes overlayFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 @keyframes slideInLeft {
   from { opacity: 0; transform: translateX(-50px); }
-  to   { opacity: 1; transform: translateX(0); }
+  to { opacity: 1; transform: translateX(0); }
 }
-
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(50px); }
-  to   { opacity: 1; transform: translateX(0); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ==== KONTAINER ÉS OSZLOPOK ==== */
 .cardContainer {
   display: flex;
-  flex-direction: column; /* mobil */
+  flex-direction: column;
   width: 100%;
   max-width: 1400px;
   height: 100%;
   overflow-y: auto;
   gap: 20px;
-  animation-delay: 0.5s; /* csak overlay fade után */
+  animation-delay: 0.5s;
   overflow-x: hidden; /* vízszintes görgetés tiltása */
   overflow-y: auto;   /* függőleges marad */
 }
@@ -1143,8 +1041,7 @@ animation: overlayFadeIn 0.5s ease-out forwards;
 }
 
 .cardColumn {
-  animation: slideInLeft 0.4s ease-out forwards;
-  animation-delay: 0.5s;
+  animation: slideInLeft 0.4s ease-out 0.5s forwards;
 }
 
 .cardImageAndDesc {
@@ -1152,38 +1049,31 @@ animation: overlayFadeIn 0.5s ease-out forwards;
   flex-direction: column;
   max-height: 100%;
   box-sizing: border-box;
-  animation: slideInRight 0.4s ease-out forwards;
-  animation-delay: 0.5s;
+  animation: slideInRight 0.4s ease-out 0.5s forwards;
 }
 
-/* ==== KÉPEK (TELJESEN ÁTLÁTSZÓ HÁTTÉR) ==== */
-/* Pawn */
+/* ==== KÉPEK ==== */
 #playerPawn {
 max-height: 80vh;
 }
 
-/* Kártya konténer */
 #cardImageContainer {
 perspective: 1000px;
 position: relative;
 }
 
-/* Kártya kép – közös stílusok egy helyen */
 #cardImageContainer img {
 max-width: 100%;
-max-height: 60vh;               /* alap érték */
+max-height: 60vh;
 object-fit: contain;
 background: transparent;
-backdrop-filter: none;
--webkit-backdrop-filter: none;
 border: none;
 border-radius: 12px;
 box-shadow: none;
 transform-style: preserve-3d;
-transition: transform 0.15s ease;
 }
 
-/* Asztali mód – csak ami eltér */
+/* Asztali */
 @media (min-width: 768px) {
   .cardContainer {
     flex-direction: row;
@@ -1191,10 +1081,9 @@ transition: transform 0.15s ease;
     gap: 60px;
   }
   #cardImageContainer img {
-  max-height: 70vh; /* csak ez változik */
+  max-height: 70vh;
   }
 }
-
 
 /* ==== LEÍRÁS BLOKK ==== */
 .cardDescriptionBlock {
@@ -1239,55 +1128,36 @@ font-size: 1rem;
 background-color: darkred;
 }
 
-/* Tilt effect */
+/* ==== TILT hatás – folyamatos átmenet nélkül ==== */
 .tilt-container {
   perspective: 1000px;
   position: relative;
 }
-
-/* Tilt item with transform effect */
 .tilt-item {
   transform-style: preserve-3d;
-  transition: transform 0.2s ease-out;
   display: inline-block;
 }
-
-/* Apply tilt effect when mouse moves over the element */
+/* Hoverre állandó szög, nincs transition */
 .tilt-item:hover {
   transform: rotateY(10deg) rotateX(-10deg);
 }
 
-
-/* A nap és hold ikon alap stílusai */
-#skyBackground {
-transition: fill 1s ease;
-}
-
-#dayNightIcon {
-transition: transform 0.8s ease, opacity 0.8s ease;
-}
+/* ==== Égbolt ikon – állandó transition ELTÁVOLÍTVA ==== */
 
 .fade-out {
   opacity: 0;
   transform: scale(0.8) rotate(30deg);
 }
-
 #stars circle {
 fill: white;
 opacity: 0;
-transition: opacity 1s ease;
 }
-
 body.night #stars circle {
   opacity: 1;
 }
 
-/* Referencia beállítása */
-#boardPanel {
-position: relative; /* minden absolute gyerek ehhez igazodik */
-}
-
-/* Közös HUD-doboz dizájn */
+/* ==== HUD === */
+#boardPanel { position: relative; }
 .hudBox {
   position: absolute;
   display: inline-flex;
@@ -1302,45 +1172,76 @@ position: relative; /* minden absolute gyerek ehhez igazodik */
   letter-spacing: .06em;
   font-size: 2rem;
   z-index: 10;
-  max-height: 60px; /* ne legyen túl magas */
+  max-height: 60px;
 }
-
-/* Bal felső sarok */
-#diceOut {
-top: 30px;
-left: 30px;
-}
-
-/* Jobb felső sarok */
-#dayNightWrapper {
-top: 30px;
-right: 30px;
-}
-
-/* SVG méret és illesztés a day/night-hoz */
+#diceOut { top: 30px; left: 30px; }
+#dayNightWrapper { top: 30px; right: 30px; }
 #dayNightWrapper svg {
 width: 50px;
 height: 50px;
-  padding-top: 0px; /* kicsit feljebb húzza a belső elemeket */
+padding-top: 0px;
 }
-
-/* A nap/hold ikon fix mérete */
 #dayNightIcon {
 width: 50px;
 height: 50px;
 }
 
-/* Pulzáló ragyogás a speciális mezőkhöz */
-.cell.gy polygon,
-.cell.tp polygon,
-.cell.vl polygon,
-.cell.tv polygon {
-  stroke-width: 3;
-  animation: specialGlow 1.8s ease-in-out infinite;
+/* ==== TOOLTIPEK – extra nagy verzió ==== */
+.tooltip-box {
+  position: absolute;
+  display: none;
+  z-index: 1000;
+  pointer-events: none;
+  background: rgba(20, 28, 42, 0.95);
+  border: 1px solid #3a4a68;
+  border-radius: 8px;        /* kicsit kompaktabb */
+  padding: 12px;             /* arányos belső tér */
+  color: #fff;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 13px;           /* olvasható méret */
+  line-height: 1.6;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  animation: fadeIn 0.15s ease-out forwards;
+  text-align: center;
+  max-width: 300px;          /* kisebb ablak */
 }
 
-@keyframes specialGlow {
-  0%   { stroke: #ffd700; filter: drop-shadow(0 0 2px #ffd700); }
-  50%  { stroke: #ff8c00; filter: drop-shadow(0 0 6px #ff8c00); }
-  100% { stroke: #ffd700; filter: drop-shadow(0 0 2px #ffd700); }
+.tooltip-box img {
+  display: block;
+  margin: 0 auto 10px auto;
+  background: #222;
+  max-width: 100%;
+  height: auto;
+  width: 130px;              /* kisebb kép */
+  border-radius: 8px;
+}
+
+.tooltip-label {
+  font-weight: bold;
+  font-size: 15px;           /* olvasható cím */
+  color: #ffdc7c;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+#tooltip img {
+width: 150px;              /* player tooltip */
+border-radius: 10px;
+}
+
+@media (min-width: 1024px) {
+  .tooltip-box {
+    font-size: 14px;
+    max-width: 340px;
+  }
+  #tooltip img {
+  width: 165px;
+  }
+}
+
+#tooltip {
+max-width: 340px !important;
+}
+
+#tooltip img {
+width: 165px !important;
 }

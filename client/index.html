@@ -187,18 +187,6 @@
   <button id="leaveLobbyBtn">❌ Kilépés</button>
 </div>
 
-  <div id="tileTooltip">
-    <img src="" alt="Faction Logo" />
-    <div id="tileTooltipLabel"></div>
-  </div>
-  <div id="playerTooltip" style="position: absolute; display: none; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px; border-radius: 5px;"></div>
-
-  <div id="tooltip">
-  <img id="tooltipImg" />
-  <div id="tooltipLabel"></div>
-</div>
-
-
 <div id="cardOverlay" style="display:none;">
   <div class="cardContainer">
     <div class="cardColumn">
@@ -220,6 +208,17 @@
   </div>
 </div>
 
+<!-- TILE TOOLTIP -->
+<div id="tileTooltip" class="tooltip-box">
+  <img src="" alt="">
+  <div id="tileTooltipLabel" class="tooltip-label"></div>
+</div>
+
+<!-- PLAYER TOOLTIP -->
+<div id="tooltip" class="tooltip-box">
+  <img id="tooltipImg" src="" alt="">
+  <div id="tooltipLabel" class="tooltip-label"></div>
+</div>
 
 <script>
 const tilt = document.querySelector('.tilt-item');
