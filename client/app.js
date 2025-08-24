@@ -1,9 +1,3 @@
-// pl. express routerben
-app.get("/discard/:faction", (req, res) => {
-  const faction = req.params.faction;
-  res.json(discardsState[faction] || []);
-});
-
 const socket = io();
 let MY_ID = null;
 window.GAME = null;
@@ -220,48 +214,68 @@ socket.on("diceResult", ({ dice }) => {
   diceNumber.textContent = dice;
 });
 
-// Állapotváltozók
+// ===== Állapotkezelés =====
 const cardQueue = [];
 let isOverlayOpen = false;
 let closingInProgress = false;
 let overlaySnapshot = null;
 
-// Kártya érkezik a szervertől
-socket.on("cardDrawn", (data) => {
-  // Ha overlay nyitva van, tedd sorba
+// ===== Közös kártya-hozzáadás =====
+function enqueueCardDraw(data) {
   if (isOverlayOpen) {
     cardQueue.push(data);
   } else {
     showCardInOverlay(data);
   }
-});
+}
 
-// Kártya megjelenítése overlay-ben
+// ===== Overlay renderelése =====
 function showCardInOverlay(data) {
-  overlaySnapshot = { ...data }; // pillanatkép
+  overlaySnapshot = { ...data };
   isOverlayOpen = true;
 
   const { playerName, pawn, card } = data;
 
-  if (playerName) $("#playerName").textContent = playerName;
+  $("#playerName").textContent = playerName || "";
   if (pawn) $("#playerPawn").src = pawn;
 
   if (card) {
     $("#cardName").textContent = card.name || "No name";
-    $("#cardFaction").textContent = card.faction || "No faction";
-    $("#cardDescription").textContent = card.description || "No description available.";
-    $("#cardEffect").textContent = card.effect || "No effect";
+    $("#cardFaction").textContent = card.faction || "";
+
+    // Leírás
+    $("#cardDescription").textContent = card.description || "";
+
+    // Effect
+    $("#cardEffect").textContent = card.effect || "";
+
+    // 🆕 Statok (ha vannak)
+    const statsEl = $("#cardStats");
+    if (statsEl) {
+      if (card.stats && Object.keys(card.stats).length > 0) {
+        statsEl.innerHTML = `
+        ${card.stats.attack !== undefined ? `<div>ATK: ${card.stats.attack}</div>` : ""}
+        ${card.stats.defense !== undefined ? `<div>DEF: ${card.stats.defense}</div>` : ""}
+        ${card.stats.health !== undefined ? `<div>HP: ${card.stats.health}</div>` : ""}
+        `;
+      } else {
+        statsEl.innerHTML = ""; // lootnál üres marad
+      }
+    }
+
+    // Kép
     if (card.image) {
-      $("#cardImageContainer").innerHTML = `<img src="${card.image}" alt="${card.name}" />`;
+      $("#cardImageContainer").innerHTML =
+      `<img src="${card.image}" alt="${card.name}" />`;
     } else {
       $("#cardImageContainer").innerHTML = "";
     }
   }
-
   openCardOverlay();
 }
 
-// Overlay nyitása
+
+// ===== Overlay nyitás =====
 function openCardOverlay() {
   const overlay = $("#cardOverlay");
 
@@ -283,12 +297,12 @@ function openCardOverlay() {
   }
 
   function startFadeIn() {
-    void overlay.offsetWidth; // reflow
+    void overlay.offsetWidth;
     overlay.classList.add("is-visible");
   }
 }
 
-// Overlay bezárás gomb
+// ===== Overlay zárás =====
 $("#closeCardViewBtn").addEventListener("click", () => {
   const overlay = $("#cardOverlay");
   const cardImg = $("#cardImageContainer img");
@@ -307,7 +321,6 @@ $("#closeCardViewBtn").addEventListener("click", () => {
   const thisCardData = overlaySnapshot;
   overlaySnapshot = null;
 
-  // Normál aktiválás animáció végén
   overlay.addEventListener("animationend", function handler() {
     if (overlay.classList.contains("is-hiding")) {
       finishClose(overlay, thisCardData);
@@ -315,7 +328,7 @@ $("#closeCardViewBtn").addEventListener("click", () => {
     overlay.removeEventListener("animationend", handler);
   });
 
-  // Biztonsági fallback
+  // biztosíték, ha nincs animationend
   setTimeout(() => {
     if (closingInProgress) {
       finishClose(overlay, thisCardData);
@@ -323,7 +336,6 @@ $("#closeCardViewBtn").addEventListener("click", () => {
   }, 600);
 });
 
-// Overlay végleges bezárás + aktiválás + következő kártya
 function finishClose(overlay, cardData) {
   overlay.style.display = "none";
   overlay.classList.remove("is-hiding");
@@ -343,19 +355,54 @@ function finishClose(overlay, cardData) {
   }
 }
 
+// ===== Socket események =====
 
-socket.on("enemyDrawn", (enemy) => { renderEnemy(enemy); });
-socket.on("battleResult", (data) => { renderBattle(data); });
-socket.on("itemLooted", ({ playerId, item }) => {
-  showToast(`🎁 ${shortName(playerId)} received: ${item.name}`);
-  const view = $("#cardView");
-  view.innerHTML = `
-  <div class="card">
-  <div class="title">${item.name}</div>
-  <img src="${item.image}" alt="${item.name}" style="max-width:100%; border-radius:6px; margin-top:6px;" />
-  </div>
-  `;
+// Faction card
+socket.on("cardDrawn", (data) => {
+  enqueueCardDraw(data);
 });
+
+// Enemy (statokkal)
+socket.on("enemyDrawn", (enemy) => {
+  enqueueCardDraw({
+    type: "enemy",
+    playerId: enemy.playerId,
+    card: {
+      id: enemy.id,
+      name: enemy.name,
+      faction: enemy.faction || "Enemy",
+      description: enemy.description,
+      effect: enemy.effect,
+      stats: enemy.stats || {
+        attack: enemy.attack,
+        defense: enemy.defense,
+        health: enemy.health
+      },
+      image: enemy.image
+    }
+  });
+});
+
+// Loot (nincs stats)
+socket.on("itemLooted", ({ playerId, item }) => {
+  enqueueCardDraw({
+    type: "loot",
+    playerId,
+    card: {
+      id: item.id,
+      name: item.name,
+      faction: "Loot",
+      description: item.description,
+      effect: item.effect,
+      // stats mező kimarad vagy üres objektum
+      stats: {},
+      image: item.image
+    }
+  });
+});
+
+
+socket.on("battleResult", (data) => { renderBattle(data); });
 socket.on("itemStolen", ({ from, to, item }) => { showToast(`🗡️ ${shortName(to)} stole ${shortName(from)}'s item: ${item.name}`); });
 socket.on("playerDied", ({ playerId }) => { showToast(`💀 ${shortName(playerId)} has fallen!`); });
 socket.on("pvpStarted", ({ aId, bId, cellName }) => {
