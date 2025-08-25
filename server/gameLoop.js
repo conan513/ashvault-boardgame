@@ -8,6 +8,7 @@ const gyDeck = require("./decks/graveyard.json");
 const tpDeck = require("./decks/temple.json");
 const vlDeck = require("./decks/village.json");
 const tvDeck = require("./decks/tavern.json");
+const acDeck = require("./decks/ashen_circle.json"); // Ashen Circle
 
 let decksState = {};    // aktív húzópaklik
 let discardsState = {}; // dobópaklik
@@ -34,6 +35,9 @@ function initDeck(faction) {
     case "Temple":           src = tpDeck; break;
     case "Village":          src = vlDeck; break;
     case "Tavern":           src = tvDeck; break;
+
+    // ÚJ eset:
+    case "Ashen Circle":     src = acDeck; break;
 
     case "Equipment":        src = eqDeck; break;
     case "Enemies":          src = enDeck; break;
@@ -87,6 +91,9 @@ function resetDecksState() {
   initDeck("Temple");
   initDeck("Village");
   initDeck("Tavern");
+
+  // ÚJ
+  initDeck("Ashen Circle");
 
   initDeck("Equipment");
   initDeck("Enemies");

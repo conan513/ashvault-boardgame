@@ -109,7 +109,7 @@ function initBoard() {
       id: i,
       ring: "INNER",
       name: nameForCell(i),
-               faction: factionForIndex(i),
+               faction: "Ashen Circle", // ← fixen beállítva
                desc: descInner[i - 24]
     });
   }

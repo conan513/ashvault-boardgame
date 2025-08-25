@@ -495,10 +495,10 @@ socket.on("confirmMove", ({ dice, targetCellId, path }) => {
   const player = gameState.players[socket.id];
   if (!player || !player.alive) return;
 
-  const targets = adjacencyAtDistance(gameState.board, player.position, dice);
+  /*const targets = adjacencyAtDistance(gameState.board, player.position, dice);
   if (!targets.includes(targetCellId)) {
     return socket.emit("errorMsg", "Invalid target cell.");
-  }
+  }*/
 
   // Első animáció: a dobással elért celláig
   if (path && path.length > 0) {

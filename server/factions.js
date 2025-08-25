@@ -9,5 +9,8 @@ exports.factions = [
 "Graveyard",
 "Temple",
 "Village",
-"Tavern"
+"Tavern",
+
+// Non-playable faction
+"Ashen Circle"
 ];

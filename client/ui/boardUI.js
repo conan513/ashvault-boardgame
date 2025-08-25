@@ -14,7 +14,8 @@ const factionIcons = {
   "Graveyard": "./icons/gy.png",
   "Temple": "./icons/tp.png",
   "Village": "./icons/vl.png",
-  "Tavern": "./icons/tv.png"
+  "Tavern": "./icons/tv.png",
+  "Ashen Circle": "./icons/ac.png"
 };
 
 // Játékos bábuk ikonjai (tooltipnél vagy tokeneknél)
@@ -25,6 +26,16 @@ const pawnIcons = {
   "Graveborn": "./images/characters/gh.png",
   "NEUTRAL": "./images/characters/ne.png"
 };
+
+
+// --- Csak speciális INNER ↔ OUTER ---
+
+const specialPairs = [
+  ["Butcher’s Moor", "Dark Reliquary"],
+["Caelis Gate", "Inner Keep"],
+["Ironstep Gate", "Core Reactor"],
+["Whispering Thicket", "Spirit Hollow"]
+];
 
 function renderBoard(state) {
   BOARD_CACHE = state.board;
@@ -80,14 +91,6 @@ function renderBoard(state) {
     );
   });
 
-  // --- Csak speciális INNER ↔ OUTER ---
-
-  const specialPairs = [
-    ["Butcher’s Moor", "Dark Reliquary"],
-    ["Caelis Gate", "Inner Keep"],
-    ["Ironstep Gate", "Core Reactor"],
-    ["Whispering Thicket", "Spirit Hollow"]
-  ];
 
   function centerOfCellByName(name) {
     const cell = state.board.find(c => c.name === name);
@@ -134,7 +137,8 @@ function renderBoard(state) {
       "Graveyard": "gy",
       "Temple": "tp",
       "Village": "vl",
-      "Tavern": "tv"
+      "Tavern": "tv",
+      "Ashen Circle": "ac"
     })[cell.faction] || "ne";
     g.classList.add(fcls);
     g.dataset.id = cell.id;
