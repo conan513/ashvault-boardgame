@@ -348,19 +348,23 @@ function animateMove(player, path, callback) {
   moveNext();
 }
 
-function highlightTargets(targetIds, onPick) {
+function highlightTargets(targetIds) {
   clearHighlights();
   const svg = document.getElementById("boardSVG");
+
   for (const id of targetIds) {
     const g = svg.querySelector(`.cell[data-id="${id}"]`);
     if (!g) continue;
     g.classList.add("highlight");
+
     const handler = () => {
       const me = GAME.players[MY_ID];
       const myCell = GAME.board.find(c => c.id === me.position);
-      const ringCells = GAME.board.filter(c => c.ring === myCell.ring).sort((a, b) => a.id - b.id);
+      const ringCells = GAME.board
+      .filter(c => c.ring === myCell.ring)
+      .sort((a, b) => a.id - b.id);
+
       const myIdx = ringCells.findIndex(c => c.id === myCell.id);
-      const targetIdx = ringCells.findIndex(c => c.id === id);
       const N = ringCells.length;
 
       let pathRight = [];
@@ -378,15 +382,44 @@ function highlightTargets(targetIds, onPick) {
         chosenPath = pathLeft;
       }
 
-      animateMove(me, chosenPath, () => {
-        socket.emit("confirmMove", { dice: LAST_DICE, targetCellId: id, path: chosenPath });
-        clearHighlights();
+      // 🔹 Itt már nem hívjuk az animateMove-ot,
+      // hanem elküldjük a szervernek a mozgási szándékot
+      socket.emit("requestMove", {
+        playerId: MY_ID,
+        path: chosenPath,
+        targetCellId: id,
+        dice: LAST_DICE
       });
+
+      clearHighlights();
     };
+
     g.addEventListener("click", handler, { once: true });
     HIGHLIGHTS.push({ g, handler });
   }
 }
+
+
+socket.on("playerStartMove", ({ playerId, path, targetCellId, dice }) => {
+  const player = GAME.players[playerId];
+  if (!player) return;
+
+  if (playerId === MY_ID) {
+    // Saját lépés – animáció vége után megy a véglegesítés
+    animateMove(player, path, () => {
+      socket.emit("confirmMove", {
+        dice,
+        targetCellId,
+        path
+      });
+    });
+  } else {
+    // Más játékos – csak animáció
+    animateMove(player, path);
+  }
+});
+
+
 
 function clearHighlights() {
   for (const h of HIGHLIGHTS) {

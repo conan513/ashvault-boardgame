@@ -484,7 +484,24 @@ io.on("connection", (socket) => {
   });
 
 
-  // Mozgás megerősítése
+  socket.on("requestMove", ({ playerId, path, targetCellId, dice }) => {
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+    if (!isPlayersTurn(gameState, socket.id)) return;
+
+    const player = gameState.players[playerId];
+    if (!player || !player.alive) return;
+
+    // Azonnali mozgás broadcast
+    io.to(socket.currentRoom).emit("playerStartMove", {
+      playerId,
+      path,
+      targetCellId,
+      dice
+    });
+  });
+
+
   // Mozgás megerősítése
 socket.on("confirmMove", ({ dice, targetCellId, path }) => {
   const gameState = rooms[socket.currentRoom];
@@ -499,14 +516,6 @@ socket.on("confirmMove", ({ dice, targetCellId, path }) => {
   if (!targets.includes(targetCellId)) {
     return socket.emit("errorMsg", "Invalid target cell.");
   }*/
-
-  // Első animáció: a dobással elért celláig
-  if (path && path.length > 0) {
-    io.to(socket.currentRoom).emit("playerMoved", {
-      playerId: player.id,
-      path
-    });
-  }
 
   // Állítsuk be a cél cellát
   player.position = targetCellId;
