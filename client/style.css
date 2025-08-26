@@ -1305,13 +1305,17 @@ animation: fadeOutOverlay 0.5s ease-in forwards;
   50%  { box-shadow: 0 0 20px 8px gold; transform: scale(1.05); }
   100% { box-shadow: 0 0 0px 0px gold; transform: scale(1); }
 }
-.teleportHighlight polygon {
-  stroke: #ff4444;
-  stroke-width: 3;
-  animation: pulseTeleport 1s ease-in-out;
+.teleport-effect {
+  animation: teleportFlash 0.5s ease-out;
 }
 
-@keyframes pulseTeleport {
-  0%, 100% { fill-opacity: 1; }
-  50% { fill-opacity: 0.4; }
+@keyframes teleportFlash {
+  0% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0; filter: brightness(2); }
+  100% { opacity: 1; filter: brightness(1); }
+}
+
+.path-highlight {
+  box-shadow: 0 0 10px 3px yellow;
+  border-radius: 8px;
 }

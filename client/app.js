@@ -336,26 +336,6 @@ $("#closeCardViewBtn").addEventListener("click", () => {
   }, 600);
 });
 
-function finishClose(overlay, cardData) {
-  overlay.style.display = "none";
-  overlay.classList.remove("is-hiding");
-  closingInProgress = false;
-  isOverlayOpen = false;
-
-  if (cardData) {
-    socket.emit("activateCard", {
-      playerId: cardData.playerId,
-      type: cardData.type,
-      cardId: cardData.card?.id
-    });
-  }
-
-  if (cardQueue.length > 0) {
-    showCardInOverlay(cardQueue.shift());
-  }
-}
-
-// ===== Socket események =====
 
 // Faction card
 socket.on("cardDrawn", (data) => {
@@ -402,7 +382,16 @@ socket.on("itemLooted", ({ playerId, item }) => {
 });
 
 
-socket.on("battleResult", (data) => { renderBattle(data); });
+socket.on("battleResult", (data) => {
+  hideCardOverlay();
+  renderBattle(data);
+
+  // Biztos reset
+  overlaySnapshot = null;
+  isOverlayOpen = false;
+});
+
+
 socket.on("itemStolen", ({ from, to, item }) => { showToast(`🗡️ ${shortName(to)} stole ${shortName(from)}'s item: ${item.name}`); });
 socket.on("playerDied", ({ playerId }) => { showToast(`💀 ${shortName(playerId)} has fallen!`); });
 socket.on("pvpStarted", ({ aId, bId, cellName }) => {
@@ -500,13 +489,105 @@ function showCardOverlay() {
   }, 10); // Slight delay to allow display change to take effect
 }
 
-function hideCardOverlay() {
-  const overlay = document.getElementById("cardOverlay");
-  overlay.classList.remove('show'); // Remove shine effect
+function hideCardOverlay(cardData) {
+  const overlay = $("#cardOverlay");
+  overlay.classList.remove('show');
   setTimeout(() => {
-    overlay.style.display = "none"; // Hide the overlay after animation ends
-  }, 500); // 500ms to match animation duration
+    overlay.style.display = "none";
+    closingInProgress = false;
+    isOverlayOpen = false;
+
+    // FONTOS: reset snapshot
+    overlaySnapshot = null;
+
+    // Kártya aktiválás, ha nem battleRoll
+    if (cardData && cardData.type && cardData.type.toLowerCase() !== "battleroll") {
+      socket.emit("activateCard", {
+        playerId: cardData.playerId,
+        type: cardData.type,
+        cardId: cardData.card?.id
+      });
+    }
+
+    if (cardQueue.length > 0) {
+      showCardInOverlay(cardQueue.shift());
+    }
+  }, 500);
 }
+
+
+
+function showBattleRollOverlay(data) {
+  // Biztos nullázás induláskor
+  closingInProgress = false;
+  isOverlayOpen = false;
+  overlaySnapshot = null;
+
+  overlaySnapshot = { ...data, type: "battleRoll" };
+  isOverlayOpen = true;
+
+  const overlay = document.getElementById("cardOverlay");
+  const playerNameEl = document.getElementById("playerName");
+  const pawnEl       = document.getElementById("playerPawn");
+  const cardNameEl   = document.getElementById("cardName");
+  const cardFactionEl = document.getElementById("cardFaction");
+  const cardDescEl   = document.getElementById("cardDescription");
+  const cardEffectEl = document.getElementById("cardEffect");
+  const cardStatsEl  = document.getElementById("cardStats");
+  const cardImageEl  = document.getElementById("cardImageContainer");
+
+  // --- Védett DOM frissítések ---
+  if (playerNameEl) playerNameEl.textContent = "Csata kezdődik!";
+  if (pawnEl) pawnEl.src = "";
+  if (cardNameEl) {
+    cardNameEl.textContent = data.type === "PVE"
+    ? `${shortName(data.playerId)} vs ${data.enemy.name}`
+    : `${shortName(data.aId)} vs ${shortName(data.bId)}`;
+  }
+  if (cardFactionEl) cardFactionEl.textContent = data.type;
+  if (cardDescEl) cardDescEl.textContent = "Kattints a dobás gombra a csata indításához.";
+  if (cardEffectEl) {
+    cardEffectEl.innerHTML = `<button id="battleRollBtn">🎲 Dobás</button>`;
+  } else {
+    console.warn("[showBattleRollOverlay] #cardEffect nem található a DOM-ban!");
+  }
+  if (cardStatsEl) cardStatsEl.innerHTML = "";
+  if (cardImageEl) cardImageEl.innerHTML = "";
+
+  openCardOverlay();
+
+  // Gomb esemény bekötése, ha van cardEffect
+  const rollBtn = document.getElementById("battleRollBtn");
+  if (rollBtn) {
+    rollBtn.onclick = () => {
+      console.log("Dobás gomb kattintva, küldöm manualRoll:", data.id);
+      rollBtn.disabled = true;
+      rollBtn.textContent = "Dobás folyamatban...";
+      socket.emit("manualRoll", { battleId: data.id });
+    };
+  }
+}
+
+function finishClose() {
+  const cardData = overlaySnapshot;
+
+  // Ha van érvényes kártyaadat és nem harci dobás overlayről van szó:
+  if (cardData && cardData.type && cardData.type.toLowerCase() !== "battleroll") {
+    socket.emit("activateCard", {
+      playerId: cardData.playerId,
+      type: cardData.type,
+      cardId: cardData.card?.id
+    });
+  }
+
+  // Overlay állapot teljes reset
+  overlaySnapshot = null;
+  isOverlayOpen = false;
+
+  // UI bezárás
+  hideOverlayUI();
+}
+
 
 document.getElementById("closeCardViewBtn").addEventListener("click", hideCardOverlay);
 
@@ -708,4 +789,24 @@ document.addEventListener("DOMContentLoaded", () => {
       socket.emit("endTurn");
       canRoll = true;
     });
+});
+
+socket.on("battleStart", (battleData) => {
+  console.log("[battleStart] új harc érkezett:", battleData);
+
+  // --- Állapotok reset ---
+  closingInProgress = false;
+  isOverlayOpen = false;
+  overlaySnapshot = null;
+
+  // Töröljük a kártya-queue-t is, ha biztos új csata jön
+  cardQueue.length = 0;
+
+  // Overlay megnyitása
+  showBattleRollOverlay(battleData);
+});
+
+socket.once("battleResult", (data) => {
+  hideCardOverlay(); // bezár, resetel és feldolgozza a queue-t
+  renderBattle(data);
 });

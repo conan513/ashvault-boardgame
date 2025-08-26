@@ -300,14 +300,25 @@ function renderBoard(state) {
 function animateMove(player, path, callback) {
   const svg = document.getElementById("boardSVG");
   const token = svg.querySelector(`.playerToken[data-player-id="${player.id}"]`);
-  if (!token) {
+  if (!token || !path || !path.length) {
     if (callback) callback();
     return;
   }
 
   let step = 0;
+  const stepDuration = 400; // ms
+
+  // === Extra: útvonal kiemelés ===
+  highlightPath(path);
+
+  // === Extra: teleport effekt nagy ugrásnál ===
+  if (path.length === 2 && Math.abs(path[0] - path[1]) > 10) {
+    playTeleportEffect(token);
+  }
+
   function moveNext() {
     if (step >= path.length) {
+      clearHighlight(path);
       if (callback) callback();
       return;
     }
@@ -337,16 +348,46 @@ function animateMove(player, path, callback) {
     token.animate([
       { transform: `translate(${oldX}px, ${oldY}px)` },
                   { transform: `translate(${x}px, ${y}px)` }
-    ], { duration: 400, fill: "forwards" });
+    ], { duration: stepDuration, fill: "forwards" });
 
     token.setAttribute("transform", `translate(${x}, ${y})`);
 
+    // === Extra: lépéshang minden mozgásnál ===
+    playStepSound();
+
     step++;
-    setTimeout(moveNext, 400);
+    setTimeout(moveNext, stepDuration);
   }
 
   moveNext();
 }
+
+// === Extra effektek ===
+function playStepSound() {
+  const audio = new Audio("/sounds/step.mp3");
+  audio.volume = 0.4;
+  audio.play().catch(() => {});
+}
+
+function playTeleportEffect(tokenEl) {
+  tokenEl.classList.add("teleport-effect");
+  setTimeout(() => tokenEl.classList.remove("teleport-effect"), 500);
+}
+
+function highlightPath(path) {
+  path.forEach(cellId => {
+    const cell = document.getElementById(`cell-${cellId}`);
+    if (cell) cell.classList.add("path-highlight");
+  });
+}
+
+function clearHighlight(path) {
+  path.forEach(cellId => {
+    const cell = document.getElementById(`cell-${cellId}`);
+    if (cell) cell.classList.remove("path-highlight");
+  });
+}
+
 
 function highlightTargets(targetIds) {
   clearHighlights();
