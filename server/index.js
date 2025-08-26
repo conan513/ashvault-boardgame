@@ -5,7 +5,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
-const { initBoard, assignSpecialAreas, adjacencyAtDistance, cellById } = require("./board");
+const board = require('./board');
+const { initBoard, assignSpecialAreas, adjacencyAtDistance, cellById } = board;
 const { factions } = require("./factions");
 const { characters } = require("./characters");
 const { battlePVE, battlePVP } = require("./battleSystem");
@@ -34,6 +35,61 @@ const io = new Server(server, { cors: { origin: "*" } });
 
 /** ---- TÖBB SZOBÁS JÁTÉK ---- **/
 let rooms = {}; // roomName -> gameState
+
+// --- Helpers: room summary & broadcasting ---
+function buildRoomSummary(state, name) {
+  return {
+    name,
+    players: Object.keys(state.players || {}).length,
+    characterSelectStarted: !!state.characterSelectStarted
+  };
+}
+
+// --- Helpers: room summary & broadcasting ---
+function buildRoomSummary(state, name) {
+  return {
+    name,
+    players: Object.keys(state.players || {}).length,
+    characterSelectStarted: !!state.characterSelectStarted
+  };
+}
+
+function broadcastRoomList() {
+  const list = Object.entries(rooms).map(([name, state]) => buildRoomSummary(state, name));
+  io.emit("roomList", list);
+}
+
+// --- Helper: centralize day/night toggle ---
+function checkAndRotateDayNight(gameState, roomName) {
+  if (!gameState) return;
+  const activePlayers = Object.keys(gameState.players || {});
+  const allDone = activePlayers.length > 0 && activePlayers.every(id => gameState.turnCompleted && gameState.turnCompleted[id]);
+  if (allDone) {
+    gameState.dayNightCycle = gameState.dayNightCycle === "day" ? "night" : "day";
+    io.to(roomName).emit("dayNightChanged", gameState.dayNightCycle);
+    gameState.turnCompleted = {};
+  }
+}
+
+// --- Improved tryDeleteRoom: removes empty rooms and broadcasts updated list ---
+function tryDeleteRoom(roomName) {
+  try {
+    const room = io.sockets.adapter.rooms.get(roomName);
+    if (!room || room.size === 0) {
+      delete rooms[roomName];
+      broadcastRoomList();
+    }
+  } catch (e) {
+    // fallback: if adapter doesn't support .get, attempt older API
+    if (!io.sockets.adapter.rooms[roomName] || io.sockets.adapter.rooms[roomName].length === 0) {
+      delete rooms[roomName];
+      broadcastRoomList();
+    }
+  }
+}
+
+
+
 
 // ---- TEMP BUFF/DEBUFF RENDSZER ----
 function applyTempEffect(unit, effect, isBuff) {
@@ -194,21 +250,11 @@ io.on("connection", (socket) => {
   }
 
   // Szobák listázása – csak elérhető szobák
-  socket.on("listRooms", () => {
-    const list = Object.entries(rooms)
-    .filter(([name, state]) => {
-      // csak azok a szobák, ahol még van várakozó játékos karakterválasztóra
-      return Object.keys(state.waitingForCharacters || {}).length > 0;
-    })
-    .map(([name, state]) => ({
-      name,
-      players: Object.keys(state.players).length
-    }));
-
-    socket.emit("roomList", list);
-  });
-
-  // Szoba létrehozás / csatlakozás
+  socket.on('listRooms', () => {
+  const list = Object.entries(rooms).map(([name, state]) => buildRoomSummary(state, name));
+  socket.emit('roomList', list);
+});
+// Szoba létrehozás / csatlakozás
   socket.on("createOrJoinRoom", ({ roomName, create, playerName }) => {
     if (create) {
       if (rooms[roomName]) {
@@ -338,7 +384,7 @@ io.on("connection", (socket) => {
       players: Object.keys(r.players).length,
                                                         characterSelectStarted: !!r.characterSelectStarted
     }));
-    io.emit("roomList", updatedRooms);
+    broadcastRoomList();
   });
 
   // Kilépés lobbyból
@@ -457,10 +503,8 @@ io.on("connection", (socket) => {
 
     if (allPlayersCompleted) {
       // Switch the day-night cycle
-      gameState.dayNightCycle = gameState.dayNightCycle === "day" ? "night" : "day";
-      io.to(socket.currentRoom).emit("dayNightChanged", gameState.dayNightCycle);
-
-      // Reset the turn completion status
+      checkAndRotateDayNight(gameState, socket.currentRoom);
+// Reset the turn completion status
       gameState.turnCompleted = {};
     }
 
@@ -567,9 +611,8 @@ socket.on("confirmMove", ({ dice, targetCellId, path }) => {
     const allPlayersCompleted = activePlayers.every(id => gameState.turnCompleted[id]);
 
     if (allPlayersCompleted) {
-      gameState.dayNightCycle = gameState.dayNightCycle === "day" ? "night" : "day";
-      io.to(socket.currentRoom).emit("dayNightChanged", gameState.dayNightCycle);
-      gameState.turnCompleted = {};
+      checkAndRotateDayNight(gameState, socket.currentRoom);
+gameState.turnCompleted = {};
     }
 
     advanceTurn(socket.currentRoom);

@@ -207,12 +207,7 @@ socket.on("diceResult", ({ dice, targets, playerId }) => {
   }
 });
 
-socket.on("diceResult", ({ dice }) => {
-  const diceIcon = $("#diceIcon");
-  const diceNumber = $("#diceNumber");
-  diceIcon.classList.remove("rolling");
-  diceNumber.textContent = dice;
-});
+;
 
 // ===== Állapotkezelés =====
 const cardQueue = [];
@@ -429,7 +424,7 @@ socket.on("pvpStarted", ({ aId, bId, cellName }) => {
   showToast(`⚔️ PVP ${shortName(aId)} vs ${shortName(bId)} @ ${cellName}`);
   socket.emit("resolvePVP");
 });
-socket.on("errorMsg", (m) => alert(m));
+;
 
 socket.on("receiveChat", ({ playerId, message }) => {
   if (playerId === null) {
@@ -759,26 +754,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // === LOBBY események ===
-    socket.on("roomJoined", ({ roomName, isHost, players }) => {
-      menuOverlay.style.display = "none";
-      joinOverlay.style.display = "none";
-      $("#charOverlay").style.display = "none";
-      $("#lobbyOverlay").style.display = "flex";
-      renderLobby(players);
+    ;
 
-      // csak a host látja a Start gombot
-      const startBtn = $("#startGameBtn");
-      startBtn.style.display = isHost ? "block" : "none";
-    });
+    ;
 
-    socket.on("updateLobby", (players) => {
-      renderLobby(players);
-    });
-
-    socket.on("lobbyStarted", () => {
-      $("#lobbyOverlay").style.display = "none";
-      $("#charOverlay").style.display = "flex";
-    });
+    ;
 
     // === Lobby gombok ===
     $("#startGameBtn").addEventListener("click", () => {
