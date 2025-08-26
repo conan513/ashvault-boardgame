@@ -229,27 +229,21 @@ function enqueueCardDraw(data) {
   }
 }
 
-// ===== Overlay renderelése =====
+// ===== Overlay megjelenítés =====
 function showCardInOverlay(data) {
   overlaySnapshot = { ...data };
   isOverlayOpen = true;
 
   const { playerName, pawn, card } = data;
-
   $("#playerName").textContent = playerName || "";
-  if (pawn) $("#playerPawn").src = pawn;
+  $("#playerPawn").src = pawn || "";
 
   if (card) {
     $("#cardName").textContent = card.name || "No name";
     $("#cardFaction").textContent = card.faction || "";
-
-    // Leírás
     $("#cardDescription").textContent = card.description || "";
-
-    // Effect
     $("#cardEffect").textContent = card.effect || "";
 
-    // 🆕 Statok (ha vannak)
     const statsEl = $("#cardStats");
     if (statsEl) {
       if (card.stats && Object.keys(card.stats).length > 0) {
@@ -259,11 +253,10 @@ function showCardInOverlay(data) {
         ${card.stats.health !== undefined ? `<div>HP: ${card.stats.health}</div>` : ""}
         `;
       } else {
-        statsEl.innerHTML = ""; // lootnál üres marad
+        statsEl.innerHTML = "";
       }
     }
 
-    // Kép
     if (card.image) {
       $("#cardImageContainer").innerHTML =
       `<img src="${card.image}" alt="${card.name}" />`;
@@ -271,12 +264,18 @@ function showCardInOverlay(data) {
       $("#cardImageContainer").innerHTML = "";
     }
   }
-  openCardOverlay();
+
+  // Sima overlay, gomb látszik
+  openCardOverlay(false);
 }
 
 
-// ===== Overlay nyitás =====
-function openCardOverlay() {
+
+function openCardOverlay(hideCloseBtn = false) {
+  // Bezárás gomb állapota a paraméter alapján
+  document.querySelectorAll('#cardOverlay .close-btn, #closeCardViewBtn')
+  .forEach(btn => btn.style.display = hideCloseBtn ? "none" : "");
+
   const overlay = $("#cardOverlay");
 
   if (closingInProgress) {
@@ -297,11 +296,41 @@ function openCardOverlay() {
   }
 
   function startFadeIn() {
-    void overlay.offsetWidth;
+    void overlay.offsetWidth; // reflow trükk
     overlay.classList.add("is-visible");
   }
 }
 
+// ===== Overlay nyitás (animációval) =====
+function openCardOverlay() {
+  // Alaphelyzetbe állítás overlay nyitáskor
+  document.querySelectorAll('#cardOverlay .close-btn, #closeCardViewBtn')
+  .forEach(btn => btn.style.display = ""); // vagy "block", ha az a default
+
+  const overlay = $("#cardOverlay");
+
+  if (closingInProgress) {
+    overlay.style.display = "flex";
+    overlay.classList.remove("is-hiding");
+    closingInProgress = false;
+  }
+
+  overlay.classList.remove("is-hiding", "is-visible");
+  overlay.style.display = "flex";
+  overlay.style.opacity = "0";
+
+  const img = $("#cardImageContainer img");
+  if (img && !img.complete) {
+    img.onload = startFadeIn;
+  } else {
+    startFadeIn();
+  }
+
+  function startFadeIn() {
+    void overlay.offsetWidth; // reflow trükk
+    overlay.classList.add("is-visible");
+  }
+}
 // ===== Overlay zárás =====
 $("#closeCardViewBtn").addEventListener("click", () => {
   const overlay = $("#cardOverlay");
@@ -336,7 +365,6 @@ $("#closeCardViewBtn").addEventListener("click", () => {
   }, 600);
 });
 
-
 // Faction card
 socket.on("cardDrawn", (data) => {
   enqueueCardDraw(data);
@@ -365,21 +393,24 @@ socket.on("enemyDrawn", (enemy) => {
 
 // Loot (nincs stats)
 socket.on("itemLooted", ({ playerId, item }) => {
+  const looter = GAME?.players?.[playerId];
+
   enqueueCardDraw({
     type: "loot",
     playerId,
+    pawn: looter?.pawn || "",   // 🔹 A helyes pawn átadása
     card: {
       id: item.id,
       name: item.name,
       faction: "Loot",
       description: item.description,
       effect: item.effect,
-      // stats mező kimarad vagy üres objektum
       stats: {},
       image: item.image
     }
   });
 });
+
 
 
 socket.on("battleResult", (data) => {
@@ -515,10 +546,7 @@ function hideCardOverlay(cardData) {
   }, 500);
 }
 
-
-
 function showBattleRollOverlay(data) {
-  // Biztos nullázás induláskor
   closingInProgress = false;
   isOverlayOpen = false;
   overlaySnapshot = null;
@@ -526,19 +554,29 @@ function showBattleRollOverlay(data) {
   overlaySnapshot = { ...data, type: "battleRoll" };
   isOverlayOpen = true;
 
-  const overlay = document.getElementById("cardOverlay");
-  const playerNameEl = document.getElementById("playerName");
-  const pawnEl       = document.getElementById("playerPawn");
-  const cardNameEl   = document.getElementById("cardName");
-  const cardFactionEl = document.getElementById("cardFaction");
-  const cardDescEl   = document.getElementById("cardDescription");
-  const cardEffectEl = document.getElementById("cardEffect");
-  const cardStatsEl  = document.getElementById("cardStats");
-  const cardImageEl  = document.getElementById("cardImageContainer");
+  const playerNameEl   = $("#playerName");
+  const pawnEl         = $("#playerPawn");
+  const cardNameEl     = $("#cardName");
+  const cardFactionEl  = $("#cardFaction");
+  const cardDescEl     = $("#cardDescription");
+  const cardEffectEl   = $("#cardEffect");
+  const cardStatsEl    = $("#cardStats");
+  const cardImageEl    = $("#cardImageContainer");
 
-  // --- Védett DOM frissítések ---
   if (playerNameEl) playerNameEl.textContent = "Csata kezdődik!";
-  if (pawnEl) pawnEl.src = "";
+
+  if (pawnEl) {
+    if (data?.pawn) {
+      pawnEl.src = data.pawn;
+    } else if (data?.playerId && GAME?.players?.[data.playerId]?.pawn) {
+      pawnEl.src = GAME.players[data.playerId].pawn;
+    } else if (data?.aId && GAME?.players?.[data.aId]?.pawn) {
+      pawnEl.src = GAME.players[data.aId].pawn;
+    } else {
+      pawnEl.src = "";
+    }
+  }
+
   if (cardNameEl) {
     cardNameEl.textContent = data.type === "PVE"
     ? `${shortName(data.playerId)} vs ${data.enemy.name}`
@@ -546,21 +584,32 @@ function showBattleRollOverlay(data) {
   }
   if (cardFactionEl) cardFactionEl.textContent = data.type;
   if (cardDescEl) cardDescEl.textContent = "Kattints a dobás gombra a csata indításához.";
+
   if (cardEffectEl) {
-    cardEffectEl.innerHTML = `<button id="battleRollBtn">🎲 Dobás</button>`;
-  } else {
-    console.warn("[showBattleRollOverlay] #cardEffect nem található a DOM-ban!");
+    const amIPlayerA = data?.aId && data.aId === MY_ID;
+    const amIPlayerB = data?.bId && data.bId === MY_ID;
+    const amIPve     = data?.playerId && data.playerId === MY_ID;
+
+    if (amIPlayerA || amIPlayerB || amIPve) {
+      cardEffectEl.innerHTML = `<button id="battleRollBtn">🎲 Dobás</button>`;
+    } else {
+      cardEffectEl.innerHTML = `<span>Várakozás a másik játékos dobására...</span>`;
+    }
   }
+
+  // --- Tisztítás ---
   if (cardStatsEl) cardStatsEl.innerHTML = "";
   if (cardImageEl) cardImageEl.innerHTML = "";
 
-  openCardOverlay();
+  // Battle overlay: gomb rejtve (LEGUTOLSÓ LÉPÉSKÉNT!)
+  openCardOverlay(false); // nyitás animációval
+  document.querySelectorAll('#cardOverlay .close-btn, #closeCardViewBtn')
+  .forEach(btn => btn.style.display = "none");
 
-  // Gomb esemény bekötése, ha van cardEffect
+  // --- Dobás gomb esemény ---
   const rollBtn = document.getElementById("battleRollBtn");
   if (rollBtn) {
     rollBtn.onclick = () => {
-      console.log("Dobás gomb kattintva, küldöm manualRoll:", data.id);
       rollBtn.disabled = true;
       rollBtn.textContent = "Dobás folyamatban...";
       socket.emit("manualRoll", { battleId: data.id });

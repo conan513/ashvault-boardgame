@@ -609,6 +609,7 @@ socket.on("manualRoll", ({ battleId }) => {
         io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
       }
     }
+    broadcast(socket.currentRoom);
 
     delete gameState.pendingBattle;
   }
