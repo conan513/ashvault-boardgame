@@ -208,7 +208,10 @@ function sanitizeGameStateForClients(state) {
       inventory: p.inventory,
       alive: p.alive,
       activeBuffs: p.activeBuffs || [],
-      activeDebuffs: p.activeDebuffs || []
+      activeDebuffs: p.activeDebuffs || [],
+      level: p.level || 1,
+      exp: p.exp || 0,
+      levelUpAvailable: !!p.levelUpAvailable
     };
   }
   return {
@@ -252,6 +255,54 @@ io.on("connection", (socket) => {
   // Szobák listázása – csak elérhető szobák
   socket.on('listRooms', () => {
   const list = Object.entries(rooms).map(([name, state]) => buildRoomSummary(state, name));
+
+// --- Level up assign handler ---
+socket.on('levelUpAssign', ({ stat }) => {
+  try {
+    console.log('[levelUpAssign] received', socket.id, stat);
+    // determine room
+    let roomName = socket.currentRoom;
+    if (!roomName) {
+      // find room containing this player
+      for (const [rn, gs] of Object.entries(rooms)) {
+        if (gs.players && gs.players[socket.id]) {
+          roomName = rn; break;
+        }
+      }
+    }
+    if (!roomName) return socket.emit('errorMsg', 'No room');
+    const gameState = rooms[roomName];
+    if (!gameState) return socket.emit('errorMsg', 'No game state');
+    const player = gameState.players[socket.id];
+    if (!player) return socket.emit('errorMsg', 'Player not found');
+    if (!player.levelUpAvailable) return socket.emit('errorMsg', 'No level-up available');
+
+    // normalize stat (allow lowercase)
+    stat = String(stat || '').toUpperCase();
+
+    // apply stat
+    if (!player.stats || !Object.prototype.hasOwnProperty.call(player.stats, stat)) {
+      console.log('[levelUpAssign] invalid stat', stat, 'player.stats=', player.stats);
+      return socket.emit('errorMsg', 'Invalid stat');
+    }
+    player.stats[stat] = (player.stats[stat] || 0) + 1;
+    console.log('[levelUpAssign] applied stat', stat, 'new value', player.stats[stat]);
+
+    // consume exp needed and increase level
+    const need = 2 + (player.level || 1);
+    player.exp = Math.max(0, (player.exp || 0) - need);
+    player.level = (player.level || 1) + 1;
+    player.levelUpAvailable = false;
+
+    // notify room
+    io.to(roomName).emit('playerLevelUpdated', { playerId: player.id, level: player.level, exp: player.exp, stats: player.stats });
+    broadcast(roomName);
+  } catch (e) {
+    console.error('levelUpAssign err', e);
+    socket.emit('errorMsg', 'Level up failed');
+  }
+});
+
   socket.emit('roomList', list);
 });
 // Szoba létrehozás / csatlakozás
@@ -316,11 +367,16 @@ io.on("connection", (socket) => {
         card
       };
 
-      io.to(socket.currentRoom).emit("battleStart", {
-        type: "PVE",
-        id: Date.now(), // biztosan legyen
-                                     playerId: player.id,
-                                     enemy
+      io.to(socket.currentRoom).emit('battleStart', {
+        type: 'PVE',
+        id: Date.now(),
+        aId: player.id,
+        aName: player.name,
+        aStats: player.stats,
+        bId: 'ENEMY_'+(enemy.id||'0'),
+        bName: enemy.name || enemy.title || 'Enemy',
+        bStats: enemy.stats || {},
+        enemy
       });
 
     } else {
@@ -445,6 +501,9 @@ io.on("connection", (socket) => {
       alive: true,
       activeBuffs: [],
       activeDebuffs: []
+    , level: 1
+    , exp: 0
+    , levelUpAvailable: false
     };
 
     gameState.turnOrder.push(socket.id);
@@ -575,13 +634,17 @@ socket.on("confirmMove", ({ dice, targetCellId, path }) => {
     gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: player.position };
 
     // Csak indulási adatokat küldünk, nem számolunk azonnal
-    io.to(socket.currentRoom).emit("battleStart", {
-      type: "PVP",
-      id: Date.now(),
-                                   aId: player.id,
-                                   bId: differentFaction.id,
-                                   cellId: cell.name
-    }); // ← itt zárjuk le az emit hívást
+    io.to(socket.currentRoom).emit('battleStart', {
+        type: 'PVP',
+        id: Date.now(),
+        aId: player.id,
+        aName: player.name,
+        aStats: player.stats,
+        bId: differentFaction.id,
+        bName: differentFaction.name || differentFaction.characterName || 'Opponent',
+        bStats: differentFaction.stats || {},
+        cellId: pending.cellId
+      }); // ← itt zárjuk le az emit hívást
   }
   else {
     if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
@@ -639,6 +702,22 @@ socket.on("manualRoll", ({ battleId }) => {
       enemy
     });
 
+// --- Award EXP for PVE winner ---
+try {
+  const winnerId = player.id;
+  if (gameState.players[winnerId]) {
+    const p = gameState.players[winnerId];
+    p.exp = (p.exp || 0) + 1;
+    const need = 2 + (p.level || 1); // level1 needs 3 (2+1), level2 needs 4,...
+    if (p.exp >= need) {
+      p.levelUpAvailable = true;
+      io.to(socket.currentRoom).emit('levelUpAvailable', { playerId: winnerId, level: p.level, exp: p.exp, expNeeded: need });
+    }
+    broadcast(socket.currentRoom);
+  }
+} catch (e) { console.error('exp award PVE err', e); }
+
+
     // Loot/HP logika
     if (result.winner === "enemy") {
       if (player.stats.HP <= 0) {
@@ -650,6 +729,22 @@ socket.on("manualRoll", ({ battleId }) => {
         const item = drawEquipmentCard();
         applyItemToPlayer(player, item);
         io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
+
+// --- Award EXP for PVP winner ---
+try {
+  const winner = result.winner === 'A' ? A : B;
+  if (winner && gameState.players[winner.id]) {
+    const p = gameState.players[winner.id];
+    p.exp = (p.exp || 0) + 1;
+    const need = 2 + (p.level || 1);
+    if (p.exp >= need) {
+      p.levelUpAvailable = true;
+      io.to(socket.currentRoom).emit('levelUpAvailable', { playerId: winner.id, level: p.level, exp: p.exp, expNeeded: need });
+    }
+    broadcast(socket.currentRoom);
+  }
+} catch (e) { console.error('exp award PVP err', e); }
+
       }
     }
     broadcast(socket.currentRoom);
@@ -684,6 +779,22 @@ socket.on("manualRoll", ({ battleId }) => {
     if (loser.stats.HP <= 0) {
       loser.alive = false;
       io.to(socket.currentRoom).emit("playerDied", { playerId: loser.id, cause: "PVP" });
+
+// --- Award EXP for PVP winner ---
+try {
+  const winner = result.winner === 'A' ? A : B;
+  if (winner && gameState.players[winner.id]) {
+    const p = gameState.players[winner.id];
+    p.exp = (p.exp || 0) + 1;
+    const need = 2 + (p.level || 1);
+    if (p.exp >= need) {
+      p.levelUpAvailable = true;
+      io.to(socket.currentRoom).emit('levelUpAvailable', { playerId: winner.id, level: p.level, exp: p.exp, expNeeded: need });
+    }
+    broadcast(socket.currentRoom);
+  }
+} catch (e) { console.error('exp award PVP err', e); }
+
     }
 
     const winner = result.winner === "A" ? A : B;

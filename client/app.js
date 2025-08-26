@@ -1,4 +1,295 @@
 const socket = io();
+
+
+// --- LEVEL/EXP UI & handlers ---
+function ensureLevelHUD() {
+  if (document.getElementById('levelHUD')) return;
+  const hud = document.createElement('div');
+  hud.id = 'levelHUD';
+  hud.style.position = 'fixed';
+  hud.style.left = '12px';
+  hud.style.top = '12px';
+  hud.style.background = 'rgba(0,0,0,0.6)';
+  hud.style.color = '#fff';
+  hud.style.padding = '8px';
+  hud.style.borderRadius = '8px';
+  hud.style.zIndex = 9999;
+  hud.style.fontSize = '14px';
+  hud.innerHTML = '<div id="levelHUDContent">Level: - | EXP: -</div>';
+  document.body.appendChild(hud);
+}
+
+function updateLevelHUD() {
+  ensureLevelHUD();
+  const p = window.GAME && window.GAME.players && window.GAME.players[MY_ID];
+  const el = document.getElementById('levelHUDContent');
+  if (p) {
+    const need = 2 + (p.level || 1);
+    el.innerHTML = `<strong>${p.name}</strong><br>Level: ${p.level || 1} | EXP: ${p.exp || 0}/${need}`;
+  } else {
+    el.innerHTML = 'Level: - | EXP: -';
+  }
+}
+
+function createLevelUpPanel() {
+  if (document.getElementById('levelUpPanel')) return;
+  const panel = document.createElement('div');
+  panel.id = 'levelUpPanel';
+  panel.style.position = 'fixed';
+  panel.style.left = '12px';
+  panel.style.top = '80px';
+  panel.style.background = 'rgba(18,18,18,0.95)';
+  panel.style.color = '#fff';
+  panel.style.padding = '10px';
+  panel.style.borderRadius = '8px';
+  panel.style.zIndex = 10000;
+  panel.style.boxShadow = '0 4px 10px rgba(0,0,0,0.4)';
+  panel.innerHTML = '<div style="font-weight:bold;margin-bottom:6px">Level up! Choose a stat to increase:</div>';
+  const stats = ['HP','ATK','DEF','PSY','RES'];
+  stats.forEach(st => {
+    const btn = document.createElement('button');
+    btn.textContent = st;
+    btn.style.margin = '4px';
+    btn.addEventListener('click', () => {
+      socket.emit('levelUpAssign', { stat: st });
+      hideLevelUpPanel();
+    });
+    panel.appendChild(btn);
+  });
+  const close = document.createElement('button');
+  close.textContent = 'Close';
+  close.style.display='block';
+  close.style.marginTop='8px';
+  close.addEventListener('click', hideLevelUpPanel);
+  panel.appendChild(close);
+  document.body.appendChild(panel);
+}
+
+function showLevelUpPanel() {
+  createLevelUpPanel();
+  document.getElementById('levelUpPanel').style.display = 'block';
+}
+
+function hideLevelUpPanel() {
+  const el = document.getElementById('levelUpPanel');
+  if (el) el.style.display = 'none';
+}
+
+// --- COMBAT OVERLAY (dice animation, enemy stats, result breakdown) ---
+let combatOverlay = null;
+let combatAnimIntervals = [];
+
+function createCombatOverlay(battleData) {
+  removeCombatOverlay();
+  const overlay = document.createElement('div');
+  overlay.id = 'combatOverlay';
+  overlay.style.position = 'fixed';
+  overlay.style.left = '50%';
+  overlay.style.top = '50%';
+  overlay.style.transform = 'translate(-50%,-50%)';
+  overlay.style.minWidth = '520px';
+  overlay.style.background = 'rgba(0,0,0,0.85)';
+  overlay.style.color = '#fff';
+  overlay.style.padding = '16px';
+  overlay.style.borderRadius = '12px';
+  overlay.style.zIndex = 20000;
+  overlay.style.display = 'flex';
+  overlay.style.gap = '12px';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.boxShadow = '0 8px 30px rgba(0,0,0,0.6)';
+
+  // Player panel
+  const playerPanel = document.createElement('div');
+  playerPanel.style.flex = '1';
+  playerPanel.style.textAlign = 'center';
+  playerPanel.innerHTML = `<div id="combatPlayerName" style="font-weight:bold;margin-bottom:6px"></div>
+    <div id="combatPlayerStats" style="font-size:12px;margin-bottom:8px"></div>
+    <div style="font-size:40px;font-weight:bold" id="combatPlayerDice">-</div>
+    <div style="font-size:12px;margin-top:8px" id="combatPlayerTotal"></div>`;
+
+  // VS separator
+  const vs = document.createElement('div');
+  vs.style.width='80px';
+  vs.style.textAlign='center';
+  vs.innerHTML = '<div style="font-size:18px;font-weight:bold">VS</div>';
+
+  // Enemy panel
+  const enemyPanel = document.createElement('div');
+  enemyPanel.style.flex = '1';
+  enemyPanel.style.textAlign = 'center';
+  enemyPanel.innerHTML = `<div id="combatEnemyName" style="font-weight:bold;margin-bottom:6px"></div>
+    <div id="combatEnemyStats" style="font-size:12px;margin-bottom:8px"></div>
+    <div style="font-size:40px;font-weight:bold" id="combatEnemyDice">-</div>
+    <div style="font-size:12px;margin-top:8px" id="combatEnemyTotal"></div>`;
+
+  // Result text
+  const resultDiv = document.createElement('div');
+  resultDiv.id = 'combatResultText';
+  resultDiv.style.position='absolute';
+  resultDiv.style.bottom='8px';
+  resultDiv.style.left='50%';
+  resultDiv.style.transform='translateX(-50%)';
+  resultDiv.style.fontSize='14px';
+  resultDiv.style.fontWeight='600';
+
+  overlay.appendChild(playerPanel);
+  overlay.appendChild(vs);
+  overlay.appendChild(enemyPanel);
+  overlay.appendChild(resultDiv);
+  document.body.appendChild(overlay);
+  combatOverlay = overlay;
+
+  // populate basic info
+  const meIsA = battleData.aId === MY_ID;
+  const playerName = meIsA ? (battleData.aName || 'You') : (battleData.bName || 'You');
+  const enemyName = meIsA ? (battleData.bName || 'Enemy') : (battleData.aName || 'Enemy');
+
+  document.getElementById('combatPlayerName').textContent = playerName;
+  document.getElementById('combatEnemyName').textContent = enemyName;
+
+  // stats display: show provided stats or empty
+  const pstats = meIsA ? (battleData.aStats || {}) : (battleData.bStats || {});
+  const estats = meIsA ? (battleData.bStats || {}) : (battleData.aStats || {});
+  function statsToStr(s) {
+    if (!s) return '';
+    return Object.entries(s).map(([k,v])=>`${k}:${v}`).join(' ');
+  }
+  document.getElementById('combatPlayerStats').textContent = statsToStr(pstats);
+  document.getElementById('combatEnemyStats').textContent = statsToStr(estats);
+
+  // start rolling animation for both dice placeholders
+  startCombatDiceAnimation();
+}
+
+function startCombatDiceAnimation() {
+  stopCombatDiceAnimation();
+  const pEl = document.getElementById('combatPlayerDice');
+  const eEl = document.getElementById('combatEnemyDice');
+  if (!pEl || !eEl) return;
+  const rng = () => Math.floor(Math.random()*6)+1;
+  const pi = setInterval(()=>{ pEl.textContent = rng(); }, 80);
+  const ei = setInterval(()=>{ eEl.textContent = rng(); }, 110);
+  combatAnimIntervals = [pi, ei];
+}
+
+function stopCombatDiceAnimation() {
+  combatAnimIntervals.forEach(id=>clearInterval(id));
+  combatAnimIntervals = [];
+}
+
+function removeCombatOverlay() {
+  stopCombatDiceAnimation();
+  if (combatOverlay) {
+    combatOverlay.remove();
+    combatOverlay = null;
+  }
+}
+
+function revealCombatResult(data) {
+  // data may contain result properties; try to extract rolls and totals
+  if (!combatOverlay) return;
+  stopCombatDiceAnimation();
+  const pEl = document.getElementById('combatPlayerDice');
+  const eEl = document.getElementById('combatEnemyDice');
+  const pTotEl = document.getElementById('combatPlayerTotal');
+  const eTotEl = document.getElementById('combatEnemyTotal');
+  const resText = document.getElementById('combatResultText');
+
+  const result = data.result || {};
+  // determine which side is player vs enemy
+  const myIsA = (data.aId === MY_ID);
+  // possible roll fields
+  const aRoll = result.aRoll ?? result.rollA ?? result.aRollValue ?? result.rollAValue ?? result.rollA ?? result.aDice ?? result.aDiceRoll;
+  const bRoll = result.bRoll ?? result.rollB ?? result.bRollValue ?? result.rollBValue ?? result.rollB ?? result.bDice ?? result.bDiceRoll;
+  const aTotal = result.aTotal ?? result.aComputed ?? result.aValue ?? result.aScore;
+  const bTotal = result.bTotal ?? result.bComputed ?? result.bValue ?? result.bScore;
+
+  const playerRoll = myIsA ? aRoll : bRoll;
+  const enemyRoll = myIsA ? bRoll : aRoll;
+  const playerTotal = myIsA ? aTotal : bTotal;
+  const enemyTotal = myIsA ? bTotal : aTotal;
+
+  // fallback: if rolls missing but totals exist, try to infer roll as total
+  if (playerRoll == null && playerTotal != null) {
+    pEl.textContent = playerTotal;
+  } else if (playerRoll != null) {
+    pEl.textContent = playerRoll;
+  }
+  if (enemyRoll == null && enemyTotal != null) {
+    eEl.textContent = enemyTotal;
+  } else if (enemyRoll != null) {
+    eEl.textContent = enemyRoll;
+  }
+
+  pTotEl.textContent = playerTotal != null ? `Total: ${playerTotal}` : '';
+  eTotEl.textContent = enemyTotal != null ? `Total: ${enemyTotal}` : '';
+
+  // show breakdown text if available
+  let breakdown = '';
+  if (result.breakdown) breakdown = result.breakdown;
+  else {
+    const parts = [];
+    if (playerRoll != null) parts.push(`You rolled ${playerRoll}`);
+    if (playerTotal != null) parts.push(`your total ${playerTotal}`);
+    if (enemyRoll != null) parts.push(`Enemy rolled ${enemyRoll}`);
+    if (enemyTotal != null) parts.push(`enemy total ${enemyTotal}`);
+    breakdown = parts.join(' — ');
+  }
+  resText.textContent = breakdown;
+
+  // highlight winner
+  const winner = result.winner ?? data.winner ?? result.won ?? null;
+  if (winner) {
+    let youWon = false;
+    if (typeof winner === 'string') {
+      // winner could be "A" or "B" or playerId
+      if (winner === 'A' || winner === 'B') {
+        youWon = (winner === 'A' && myIsA) || (winner === 'B' && !myIsA);
+      } else {
+        youWon = (winner === MY_ID || winner === socket.id);
+      }
+    } else if (typeof winner === 'object' && winner.id) {
+      youWon = winner.id === MY_ID;
+    }
+    if (youWon) {
+      resText.textContent += " — You WIN! 🎉";
+      resText.style.color = '#2bd12b';
+    } else {
+      resText.textContent += " — You LOSE";
+      resText.style.color = '#ff5c5c';
+    }
+  }
+  // remove overlay after a short delay
+  setTimeout(()=>{ removeCombatOverlay(); }, 5000);
+}
+
+
+
+// client socket handlers for levelup
+socket.on('levelUpAvailable', ({ playerId, level, exp, expNeeded }) => {
+  // if it's me, show panel and HUD update
+  updateLevelHUD();
+  if (playerId === MY_ID) {
+    showLevelUpPanel();
+  } else {
+    // notify briefly
+    showToast && showToast(`⭐ ${shortName(playerId)} reached level ${ (level||1)+1 }!`);
+  }
+});
+
+socket.on('playerLevelUpdated', ({ playerId, level, exp }) => {
+  // update local GAME state if present
+  if (window.GAME && window.GAME.players && window.GAME.players[playerId]) {
+    window.GAME.players[playerId].level = level;
+    window.GAME.players[playerId].exp = exp;
+    window.GAME.players[playerId].levelUpAvailable = false;
+  }
+  updateLevelHUD();
+  showToast && showToast(`🎉 ${shortName(playerId)} leveled up to ${level}!`);
+});
+
+// Call updateLevelHUD after updateGame rendering
 let MY_ID = null;
 window.GAME = null;
 let LAST_DICE = null;
@@ -126,6 +417,7 @@ socket.on("updateGame", (state) => {
   renderPlayers(GAME);
   updateTurnUI();
   if (!GAME.pvpPending) renderBattle(null);
+  updateLevelHUD();
 });
 
 // === TILT FUNKCIÓ ===
@@ -408,7 +700,10 @@ socket.on("itemLooted", ({ playerId, item }) => {
 
 
 
-socket.on("battleResult", (data) => {
+socket.on('battleResult', (data) => {
+  // show detailed combat overlay/result
+  try{ revealCombatResult(data); } catch(e){ console.error(e); }
+
   hideCardOverlay();
   renderBattle(data);
 
@@ -820,7 +1115,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-socket.on("battleStart", (battleData) => {
+socket.on('battleStart', (battleData) => {
+  console.log('[battleStart] új harc érkezett:', battleData);
+  createCombatOverlay(battleData);
+
   console.log("[battleStart] új harc érkezett:", battleData);
 
   // --- Állapotok reset ---
