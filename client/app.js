@@ -471,35 +471,36 @@ socket.on("turnChanged", (playerId) => {
   if (mine) canRoll = true;
 });
 
-socket.on("diceResult", ({ dice, targets, playerId }) => {
+// diceResult handler (cseréld ki a meglévő socket.on("diceResult", ...) blokkot erre)
+socket.on("diceResult", ({ dice, targets, playerId, paths, debug }) => {
+  // frissítsük a kliens oldali állapotot
   LAST_DICE = dice;
   LAST_TARGETS = targets;
 
+  // frissítsük a vizuális dobókockát is (a rollBtn végén üresre tettük)
+  const number = $("#diceNumber");
+  const icon = $("#diceIcon");
+  if (number) number.textContent = String(dice);
+  // ha valamilyen oknál fogva rolling osztály még rajta van, távolítsuk el
+  if (icon && icon.classList.contains("rolling")) icon.classList.remove("rolling");
+
+  // debug konzolba kiírás (segít a további vizsgálatban)
+  console.log("<< diceResult received >>", { dice, targets, playerId, paths, debug });
+
   if (playerId === MY_ID) {
-    const myCell = GAME.board.find(c => c.id === GAME.players[MY_ID].position);
-    if (!myCell) return;
-
-    const myRing = myCell.ring;
-    const ringCells = GAME.board
-    .filter(c => c.ring === myRing)
-    .sort((a,b) => a.id - b.id);
-
-    const myIdx = ringCells.findIndex(c => c.id === myCell.id);
-    const size = ringCells.length;
-
-    const target1 = ringCells[(myIdx + dice) % size].id;
-    const target2 = ringCells[(myIdx - dice + size) % size].id;
-
-    highlightTargets([target1, target2], (targetId) => {
-      socket.emit("confirmMove", { dice, targetCellId: targetId });
-      clearHighlights();
-    });
+    // Saját dobás: mutatjuk a toastot és highlightoljuk a szerver által számolt útvonalakat
+    showToast(`🎲 Te ${dice}-t dobtál!`);
+    // highlightTargets most egy id->path objektumot vár (paths),
+    // így kattintás után tényleg a szerver által számolt útvonal kerül felhasználásra.
+    highlightTargets(targets, paths || {});
   } else {
+    // Más játékos dobott
     showToast(`🎲 ${shortName(playerId)} dobott: ${dice}`);
+    // (opcionálisan: highlightolhatjuk a többiek céljait is, ha akarod)
+    // highlightTargets(targets, paths || {});
   }
 });
 
-;
 
 // ===== Állapotkezelés =====
 const cardQueue = [];
@@ -1091,22 +1092,30 @@ document.addEventListener("DOMContentLoaded", () => {
       LAST_CHAR = null;
     });
 
-    // Dice roll
+    // Dice roll (kicseréld a meglévő rollBtn.addEventListener blokkot erre)
     rollBtn.addEventListener("click", () => {
       if (!canRoll) return;
       canRoll = false;
       const icon = $("#diceIcon");
       const number = $("#diceNumber");
       icon.classList.add("rolling");
+
+      // animáció: véletlenszámok 1..6
       let animInterval = setInterval(() => {
         number.textContent = Math.floor(Math.random() * 6) + 1;
       }, 100);
+
+      // 1s után leállítjuk az animációt, eltüntetjük a véletlen számot
+      // és elküldjük a szervernek a tényleges roll kérését.
       setTimeout(() => {
         clearInterval(animInterval);
         icon.classList.remove("rolling");
+        // ne hagyjuk ott a véletlenszámot félrevezetésként
+        number.textContent = ""; // üresre állítjuk, a szerver fogja helyesen kitölteni
         socket.emit("rollDice");
       }, 1000);
     });
+
 
     // End turn
     endTurnBtn.addEventListener("click", () => {

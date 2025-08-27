@@ -523,22 +523,81 @@ socket.on('levelUpAssign', ({ stat }) => {
   });
 
   // Dobás
+  // Dobás
+  // --- teljes rollDice handler (helyettesítse a meglévőt) ---
   socket.on("rollDice", () => {
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
-    if (!isPlayersTurn(gameState, socket.id)) return socket.emit("errorMsg", "It's not your turn!");
+    if (!isPlayersTurn(gameState, socket.id)) {
+      return socket.emit("errorMsg", "Nem a te köröd!");
+    }
 
     const dice = Math.floor(Math.random() * 6) + 1;
     const player = gameState.players[socket.id];
     if (!player || !player.alive) return;
-    const targets = adjacencyAtDistance(gameState.board, player.position, dice);
 
+    // Aktuális cella és a hozzá tartozó ring mezői
+    const myCell = gameState.board.find(c => c.id === player.position);
+    if (!myCell) return;
+
+    // FONTOS: itt határozzuk meg a ring sorrendjét — alapból id szerint rendezünk.
+    // Ha a board-on van kifejezetten index/sequence mező (pl. `order`), akkor érdemes
+    // arra váltani: .sort((a,b) => a.order - b.order)
+    const ringCells = gameState.board
+    .filter(c => c.ring === myCell.ring)
+    .sort((a, b) => a.id - b.id);
+
+    const myIdx = ringCells.findIndex(c => c.id === myCell.id);
+    const size = ringCells.length;
+
+    // Két cél: előre (myIdx + dice) és hátra (myIdx - dice)
+    const forwardIdx = (myIdx + dice) % size;
+    const backwardIdx = (myIdx - dice + size) % size;
+    const target1 = ringCells[forwardIdx].id;
+    const target2 = ringCells[backwardIdx].id;
+    const targets = [target1, target2];
+
+    // Útvonalak összeállítása (lista: következő mezőtől a cél felé)
+    const pathForward = [];
+    const pathBackward = [];
+    for (let i = 1; i <= dice; i++) {
+      pathForward.push(ringCells[(myIdx + i) % size].id);
+      pathBackward.push(ringCells[(myIdx - i + size) % size].id);
+    }
+
+    // Szerveroldali debug log
+    console.log("[rollDice]", {
+      playerId: socket.id,
+      dice,
+      myIdx,
+      size,
+      ringCellIds: ringCells.map(c => c.id),
+                forwardIdx,
+                  backwardIdx,
+                  targets,
+                  pathForward,
+                  pathBackward
+    });
+
+    // Emit — küldünk részletes debug mezőt (ideiglenes)
     io.to(socket.currentRoom).emit("diceResult", {
       dice,
       targets,
-      playerId: socket.id
+      paths: {
+        [target1]: pathForward,
+        [target2]: pathBackward
+      },
+      playerId: socket.id,
+      debug: {
+        myIdx,
+        size,
+        ringCellIds: ringCells.map(c => c.id),
+                                   forwardIdx,
+                                     backwardIdx
+      }
     });
   });
+
 
   // Chat
   socket.on("sendChat", ({ message, playerId }) => {
@@ -572,7 +631,17 @@ socket.on('levelUpAssign', ({ stat }) => {
   });
 
 
+  // requestMove (helyettesítsd a meglévőt vagy szúrd be az elejére)
   socket.on("requestMove", ({ playerId, path, targetCellId, dice }) => {
+    console.log("[requestMove] recv:", {
+      fromSocket: socket.id,
+      playerId,
+      path,
+      targetCellId,
+      dice,
+      room: socket.currentRoom
+    });
+
     const gameState = rooms[socket.currentRoom];
     if (!gameState) return;
     if (!isPlayersTurn(gameState, socket.id)) return;
@@ -580,7 +649,6 @@ socket.on('levelUpAssign', ({ stat }) => {
     const player = gameState.players[playerId];
     if (!player || !player.alive) return;
 
-    // Azonnali mozgás broadcast
     io.to(socket.currentRoom).emit("playerStartMove", {
       playerId,
       path,
@@ -589,99 +657,112 @@ socket.on('levelUpAssign', ({ stat }) => {
     });
   });
 
-
   // Mozgás megerősítése
-socket.on("confirmMove", ({ dice, targetCellId, path }) => {
-  const gameState = rooms[socket.currentRoom];
-  if (!gameState) return;
-  if (!isPlayersTurn(gameState, socket.id))
-    return socket.emit("errorMsg", "Nem a te köröd!");
-
-  const player = gameState.players[socket.id];
-  if (!player || !player.alive) return;
-
-  /*const targets = adjacencyAtDistance(gameState.board, player.position, dice);
-  if (!targets.includes(targetCellId)) {
-    return socket.emit("errorMsg", "Invalid target cell.");
-  }*/
-
-  // Állítsuk be a cél cellát
-  player.position = targetCellId;
-
-  // --- TELEPORT CHECK ---
-  const beforeTeleport = player.position;
-  teleportPlayerIfOnSpecial(gameState.board, player);
-  const afterTeleport = player.position;
-
-  // Ha teleportált, küldünk egy új animációs lépést a túloldalra
-  if (afterTeleport !== beforeTeleport) {
-    io.to(socket.currentRoom).emit("playerMoved", {
-      playerId: player.id,
-      path: [beforeTeleport, afterTeleport]
+  socket.on("confirmMove", ({ dice, targetCellId, path }) => {
+    console.log("[confirmMove] recv:", {
+      fromSocket: socket.id,
+      dice,
+      targetCellId,
+      path,
+      room: socket.currentRoom
     });
-  }
 
-  // PvP vagy kártyaellenőrzés az aktuális (akár teleportált) pozíció alapján
-  // PvP vagy kártyaellenőrzés az aktuális (akár teleportált) pozíció alapján
-  const cell = cellById(gameState.board, player.position);
+    const gameState = rooms[socket.currentRoom];
+    if (!gameState) return;
+    if (!isPlayersTurn(gameState, socket.id)) {
+      return socket.emit("errorMsg", "Nem a te köröd!");
+    }
 
-  const othersHere = Object.values(gameState.players)
-  .filter(p => p.id !== player.id && p.alive && p.position === player.position);
-  const differentFaction = othersHere.find(p => p.faction !== player.faction);
+    const player = gameState.players[socket.id];
+    if (!player || !player.alive) return;
 
-  if (differentFaction) {
-    // PVP csata függőbe tétele
-    gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: player.position };
+    // 🔹 Ugyanazt a két targetet számoljuk, amit a rollDice is
+    const myCell = gameState.board.find(c => c.id === player.position);
+    const ringCells = gameState.board
+    .filter(c => c.ring === myCell.ring)
+    .sort((a, b) => a.id - b.id);
+    const myIdx = ringCells.findIndex(c => c.id === myCell.id);
+    const size = ringCells.length;
+    const target1 = ringCells[(myIdx + dice) % size].id;
+    const target2 = ringCells[(myIdx - dice + size) % size].id;
+    const targets = [target1, target2];
 
-    // Csak indulási adatokat küldünk, nem számolunk azonnal
-    io.to(socket.currentRoom).emit('battleStart', {
-        type: 'PVP',
-        id: Date.now(),
-        aId: player.id,
-        aName: player.name,
-        aStats: player.stats,
-        bId: differentFaction.id,
-        bName: differentFaction.name || differentFaction.characterName || 'Opponent',
-        bStats: differentFaction.stats || {},
-        cellId: pending.cellId
-      }); // ← itt zárjuk le az emit hívást
-  }
-  else {
-    if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
-      const card = drawFactionCard(cell.faction);
-      gameState.lastDrawn = {
-        type: "FACTION",
-        faction: cell.faction,
-        card,
-        playerId: player.id
-      };
-      io.to(socket.id).emit("cardDrawn", {
+    // 🔹 Validáció
+    if (!targets.includes(targetCellId)) {
+      return socket.emit("errorMsg", "Invalid target cell.");
+    }
+
+    // Állítsuk be a cél cellát
+    player.position = targetCellId;
+
+    // --- TELEPORT CHECK ---
+    const beforeTeleport = player.position;
+    teleportPlayerIfOnSpecial(gameState.board, player);
+    const afterTeleport = player.position;
+
+    if (afterTeleport !== beforeTeleport) {
+      io.to(socket.currentRoom).emit("playerMoved", {
         playerId: player.id,
-        playerName: player.characterName,
-        pawn: player.pawn,
-        type: "FACTION",
-        faction: cell.faction,
-        card
+        path: [beforeTeleport, afterTeleport]
       });
     }
-  }
 
-  broadcast(socket.currentRoom);
+    // PvP vagy kártyaellenőrzés
+    const cell = cellById(gameState.board, player.position);
+    const othersHere = Object.values(gameState.players)
+    .filter(p => p.id !== player.id && p.alive && p.position === player.position);
+    const differentFaction = othersHere.find(p => p.faction !== player.faction);
 
-  if (!gameState.pvpPending) {
-    gameState.turnCompleted[socket.id] = true;
-    const activePlayers = Object.keys(gameState.players);
-    const allPlayersCompleted = activePlayers.every(id => gameState.turnCompleted[id]);
-
-    if (allPlayersCompleted) {
-      checkAndRotateDayNight(gameState, socket.currentRoom);
-gameState.turnCompleted = {};
+    if (differentFaction) {
+      gameState.pvpPending = { aId: player.id, bId: differentFaction.id, cellId: player.position };
+      io.to(socket.currentRoom).emit('battleStart', {
+        type: 'PVP',
+        id: Date.now(),
+                                     aId: player.id,
+                                     aName: player.name,
+                                     aStats: player.stats,
+                                     bId: differentFaction.id,
+                                     bName: differentFaction.name || differentFaction.characterName || 'Opponent',
+                                     bStats: differentFaction.stats || {},
+                                     cellId: gameState.pvpPending.cellId
+      });
+    } else {
+      if (cell.faction && cell.faction !== "NEUTRAL" && player.alive) {
+        const card = drawFactionCard(cell.faction);
+        gameState.lastDrawn = {
+          type: "FACTION",
+          faction: cell.faction,
+          card,
+          playerId: player.id
+        };
+        io.to(socket.id).emit("cardDrawn", {
+          playerId: player.id,
+          playerName: player.characterName,
+          pawn: player.pawn,
+          type: "FACTION",
+          faction: cell.faction,
+          card
+        });
+      }
     }
 
-    advanceTurn(socket.currentRoom);
-  }
+    broadcast(socket.currentRoom);
 
-});
+    if (!gameState.pvpPending) {
+      gameState.turnCompleted[socket.id] = true;
+      const activePlayers = Object.keys(gameState.players);
+      const allPlayersCompleted = activePlayers.every(id => gameState.turnCompleted[id]);
+
+      if (allPlayersCompleted) {
+        checkAndRotateDayNight(gameState, socket.currentRoom);
+        gameState.turnCompleted = {};
+      }
+
+      advanceTurn(socket.currentRoom);
+    }
+  });
+
+
 
 socket.on("manualRoll", ({ battleId }) => {
   const gameState = rooms[socket.currentRoom];

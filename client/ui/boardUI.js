@@ -389,7 +389,7 @@ function clearHighlight(path) {
 }
 
 
-function highlightTargets(targetIds) {
+function highlightTargets(targetIds, pathsByTarget) {
   clearHighlights();
   const svg = document.getElementById("boardSVG");
 
@@ -399,39 +399,13 @@ function highlightTargets(targetIds) {
     g.classList.add("highlight");
 
     const handler = () => {
-      const me = GAME.players[MY_ID];
-      const myCell = GAME.board.find(c => c.id === me.position);
-      const ringCells = GAME.board
-      .filter(c => c.ring === myCell.ring)
-      .sort((a, b) => a.id - b.id);
-
-      const myIdx = ringCells.findIndex(c => c.id === myCell.id);
-      const N = ringCells.length;
-
-      let pathRight = [];
-      for (let step = 1; step <= LAST_DICE; step++) {
-        pathRight.push(ringCells[(myIdx + step) % N].id);
-      }
-
-      let pathLeft = [];
-      for (let step = 1; step <= LAST_DICE; step++) {
-        pathLeft.push(ringCells[(myIdx - step + N) % N].id);
-      }
-
-      let chosenPath = pathRight;
-      if (pathLeft[pathLeft.length - 1] === id) {
-        chosenPath = pathLeft;
-      }
-
-      // 🔹 Itt már nem hívjuk az animateMove-ot,
-      // hanem elküldjük a szervernek a mozgási szándékot
+      const chosenPath = pathsByTarget[id];
       socket.emit("requestMove", {
         playerId: MY_ID,
         path: chosenPath,
         targetCellId: id,
         dice: LAST_DICE
       });
-
       clearHighlights();
     };
 
@@ -439,6 +413,7 @@ function highlightTargets(targetIds) {
     HIGHLIGHTS.push({ g, handler });
   }
 }
+
 
 
 socket.on("playerStartMove", ({ playerId, path, targetCellId, dice }) => {
