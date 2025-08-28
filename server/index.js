@@ -88,8 +88,20 @@ function tryDeleteRoom(roomName) {
   }
 }
 
-
-
+// --- Helper normalizálás és d6 ---
+function getATK(entity) {
+  const s = entity?.stats ?? entity ?? {};
+  return Number(s.ATK ?? s.attack ?? 0);
+}
+function getDEF(entity) {
+  const s = entity?.stats ?? entity ?? {};
+  return Number(s.DEF ?? s.defense ?? 0);
+}
+function getHP(entity) {
+  const s = entity?.stats ?? entity ?? {};
+  return Number(s.HP ?? s.health ?? 0);
+}
+function d6(){ return Math.floor(Math.random()*6) + 1; }
 
 // ---- TEMP BUFF/DEBUFF RENDSZER ----
 function applyTempEffect(unit, effect, isBuff) {
@@ -764,132 +776,94 @@ socket.on('levelUpAssign', ({ stat }) => {
 
 
 
-socket.on("manualRoll", ({ battleId }) => {
-  const gameState = rooms[socket.currentRoom];
-  if (!gameState || !gameState.pendingBattle && !gameState.pvpPending) return;
+  socket.on("manualRoll", ({ battleId }) => {
+    const roomId = socket.currentRoom;
+    const gameState = rooms?.[roomId];
+    if (!gameState) return;
 
-  // --- PVE ---
-  if (gameState.pendingBattle) {
-    const { playerId, enemy, sameFaction, card } = gameState.pendingBattle;
-    const player = gameState.players[playerId];
-    if (!player || !player.alive) return;
+    // --- PVE ---
+    if (gameState.pendingBattle) {
+      const { playerId, enemy } = gameState.pendingBattle;
+      const player = gameState.players?.[playerId];
+      if (!player || !player.alive) return;
 
-    const result = battlePVE(player, enemy, io, socket.id);
+      // normalizált statok
+      const aStats = { ATK: getATK(player), DEF: getDEF(player), HP: getHP(player) };
+      const bStats = { ATK: getATK(enemy),  DEF: getDEF(enemy),  HP: getHP(enemy) };
 
-    io.to(socket.currentRoom).emit("battleResult", {
-      type: "PVE",
-      result,
-      playerId: player.id,
-      enemy
-    });
+      const aRoll = d6();
+      const bRoll = d6();
+      const aTotal = aRoll + aStats.ATK - bStats.DEF; // player formula
+      const bTotal = bRoll + bStats.ATK - aStats.DEF; // enemy formula
 
-// --- Award EXP for PVE winner ---
-try {
-  const winnerId = player.id;
-  if (gameState.players[winnerId]) {
-    const p = gameState.players[winnerId];
-    p.exp = (p.exp || 0) + 1;
-    const need = 2 + (p.level || 1); // level1 needs 3 (2+1), level2 needs 4,...
-    if (p.exp >= need) {
-      p.levelUpAvailable = true;
-      io.to(socket.currentRoom).emit('levelUpAvailable', { playerId: winnerId, level: p.level, exp: p.exp, expNeeded: need });
-    }
-    broadcast(socket.currentRoom);
-  }
-} catch (e) { console.error('exp award PVE err', e); }
+      const winner = (aTotal >= bTotal) ? "A" : "B";
 
+      // Küldjük explicit, egyszerű struktúrában
+      io.to(roomId).emit("battleResult", {
+        type: "PVE",
+        a: { id: player.id, name: player.name, stats: aStats, roll: aRoll, total: aTotal },
+        b: { id: "ENEMY", name: enemy.name || "Enemy", stats: bStats, roll: bRoll, total: bTotal },
+        winner
+      });
 
-    // Loot/HP logika
-    if (result.winner === "enemy") {
-      if (player.stats.HP <= 0) {
-        player.alive = false;
-        io.to(socket.currentRoom).emit("playerDied", { playerId: player.id, cause: "PVE" });
+      // opcionális: sebzés/HP update (megtarthatod a meglévő logikát)
+      if (winner === "B") {
+        player.stats.HP = (player.stats.HP ?? aStats.HP) - 1;
+        if (player.stats.HP <= 0) {
+          player.alive = false;
+          io.to(roomId).emit("playerDied", { playerId: player.id, cause: "PVE" });
+        }
+      } else {
+        // győztes loot/exp stb. (maradhat a meglévő logika)
       }
-    } else {
-      if (!sameFaction || card.loot) {
-        const item = drawEquipmentCard();
-        applyItemToPlayer(player, item);
-        io.to(socket.currentRoom).emit("itemLooted", { playerId: player.id, item });
 
-// --- Award EXP for PVP winner ---
-try {
-  const winner = result.winner === 'A' ? A : B;
-  if (winner && gameState.players[winner.id]) {
-    const p = gameState.players[winner.id];
-    p.exp = (p.exp || 0) + 1;
-    const need = 2 + (p.level || 1);
-    if (p.exp >= need) {
-      p.levelUpAvailable = true;
-      io.to(socket.currentRoom).emit('levelUpAvailable', { playerId: winner.id, level: p.level, exp: p.exp, expNeeded: need });
-    }
-    broadcast(socket.currentRoom);
-  }
-} catch (e) { console.error('exp award PVP err', e); }
-
-      }
-    }
-    broadcast(socket.currentRoom);
-
-    delete gameState.pendingBattle;
-  }
-
-  // --- PVP ---
-  else if (gameState.pvpPending) {
-    const { aId, bId, cellId } = gameState.pvpPending;
-    const A = gameState.players[aId];
-    const B = gameState.players[bId];
-    if (!A || !B || !A.alive || !B.alive) {
-      gameState.pvpPending = null;
-      broadcast(socket.currentRoom);
-      advanceTurn(socket.currentRoom);
+      delete gameState.pendingBattle;
+      broadcast(roomId);
       return;
     }
 
-    const result = battlePVP(A, B, io);
+    // --- PVP ---
+    if (gameState.pvpPending) {
+      const { aId, bId, cellId } = gameState.pvpPending;
+      const A = gameState.players?.[aId];
+      const B = gameState.players?.[bId];
+      if (!A || !B || !A.alive || !B.alive) {
+        gameState.pvpPending = null;
+        broadcast(roomId);
+        advanceTurn(roomId);
+        return;
+      }
 
-    io.to(socket.currentRoom).emit("battleResult", {
-      type: "PVP",
-      result,
-      aId: A.id,
-      bId: B.id,
-      cellId
-    });
+      const aStats = { ATK: getATK(A), DEF: getDEF(A), HP: getHP(A) };
+      const bStats = { ATK: getATK(B), DEF: getDEF(B), HP: getHP(B) };
 
-    const loser = result.winner === "A" ? B : A;
-    loser.stats.HP -= result.damage;
-    if (loser.stats.HP <= 0) {
-      loser.alive = false;
-      io.to(socket.currentRoom).emit("playerDied", { playerId: loser.id, cause: "PVP" });
+      const aRoll = d6();
+      const bRoll = d6();
+      const aTotal = aRoll + aStats.ATK - bStats.DEF;
+      const bTotal = bRoll + bStats.ATK - aStats.DEF;
+      const winner = (aTotal >= bTotal) ? "A" : "B";
 
-// --- Award EXP for PVP winner ---
-try {
-  const winner = result.winner === 'A' ? A : B;
-  if (winner && gameState.players[winner.id]) {
-    const p = gameState.players[winner.id];
-    p.exp = (p.exp || 0) + 1;
-    const need = 2 + (p.level || 1);
-    if (p.exp >= need) {
-      p.levelUpAvailable = true;
-      io.to(socket.currentRoom).emit('levelUpAvailable', { playerId: winner.id, level: p.level, exp: p.exp, expNeeded: need });
+      io.to(roomId).emit("battleResult", {
+        type: "PVP",
+        a: { id: A.id, name: A.name, stats: aStats, roll: aRoll, total: aTotal },
+        b: { id: B.id, name: B.name, stats: bStats, roll: bRoll, total: bTotal },
+        winner,
+        cellId
+      });
+
+      // vesztes HP csökkentés (példa)
+      const loser = (winner === "A") ? B : A;
+      loser.stats.HP = (loser.stats.HP ?? (winner === "A" ? getHP(B) : getHP(A))) - 1;
+      if (loser.stats.HP <= 0) {
+        loser.alive = false;
+        io.to(roomId).emit("playerDied", { playerId: loser.id, cause: "PVP" });
+      }
+
+      gameState.pvpPending = null;
+      broadcast(roomId);
+      advanceTurn(roomId);
     }
-    broadcast(socket.currentRoom);
-  }
-} catch (e) { console.error('exp award PVP err', e); }
-
-    }
-
-    const winner = result.winner === "A" ? A : B;
-    if (loser.inventory.length > 0) {
-      const stolen = loser.inventory.pop();
-      applyItemToPlayer(winner, stolen);
-      io.to(socket.currentRoom).emit("itemStolen", { from: loser.id, to: winner.id, item: stolen });
-    }
-
-    gameState.pvpPending = null;
-    broadcast(socket.currentRoom);
-    advanceTurn(socket.currentRoom);
-  }
-});
+  });
 
     // PVP megoldása
     socket.on("resolvePVP", () => {

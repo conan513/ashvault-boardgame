@@ -202,6 +202,30 @@
         <div id="cardFaction"></div>
         <div id="cardDescription"></div>
         <div id="cardEffect"></div>
+
+        <!-- 🔹 ÚJ Combat UI blokk -->
+        <div id="combatSection" style="margin-top:15px; display:none;">
+          <div class="combat-title">⚔️ Combat</div>
+          <div class="combat-row">
+            <span id="combatPlayerName" class="combat-name"></span>
+            <span id="combatEnemyName" class="combat-name"></span>
+          </div>
+          <div class="combat-row">
+            <div>
+              <div id="combatPlayerStats"></div>
+              <div id="combatPlayerDice" class="combat-dice">-</div>
+              <div id="combatPlayerTotal"></div>
+            </div>
+            <div>
+              <div id="combatEnemyStats"></div>
+              <div id="combatEnemyDice" class="combat-dice">-</div>
+              <div id="combatEnemyTotal"></div>
+            </div>
+          </div>
+          <div id="combatResultText"></div>
+        </div>
+        <!-- 🔹 Combat UI vége -->
+
         <button id="closeCardViewBtn">Bezár</button>
       </div>
     </div>
@@ -219,11 +243,6 @@
   <img id="tooltipImg" src="" alt="">
   <div id="tooltipLabel" class="tooltip-label"></div>
 </div>
-
-<script>
-const tilt = document.querySelector('.tilt-item');
-
-</script>
 
 </body>
 </html>
